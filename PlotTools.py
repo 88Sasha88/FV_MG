@@ -108,44 +108,9 @@ def PiecePlot(nh, numPoints, X, pieces):
     return
 
 
-# This function creates a matrix of cell-centered Fourier modes along with a linear space of the cell locations.
-
-# In[6]:
-
-
-def MakeWaves(nh, h):
-    x, y = BT.MakeXY(nh)
-    waves = np.zeros((nh, nh), float)
-    xCell = x[0:nh] + (h / 2.)
-    for k in range(int(nh / 2)):
-        waves[:, (2 * k) + 1] = (1.0 / (2.0 * np.pi * (k + 1) * h)) * (cos(2 * np.pi * (k + 1) * x[0:nh]) - cos(2 * np.pi * (k + 1) * x[1:nh + 1]))
-        if (k == 0):
-            waves[:, 2 * k] = np.ones(nh, float)
-        else:
-            waves[:, 2 * k] = (1.0 / (2.0 * np.pi * k * h)) * (sin(2 * np.pi * k * x[1:nh + 1]) - sin(2 * np.pi * k * x[0:nh]))
-    return xCell, waves
-
-
-# This function creates a matrix of node-centered Fourier modes along with a linear space of the node locations.
-
-# In[7]:
-
-
-def MakeNodeWaves(nh, h):
-    x = np.linspace(0, 1. - (1. / nh), num = nh)
-    waves = np.zeros((nh, nh), float)
-    for k in range(int(nh / 2)):
-        waves[:, (2 * k) + 1] = np.sin(2 * np.pi * (k + 1) * x)
-        if (k == 0):
-            waves[:, 2 * k] = np.ones(nh, float)
-        else:
-            waves[:, 2 * k] = np.cos(2 * np.pi * k * x)
-    return x, waves
-
-
 # This function allows for convenient control over ubiquitous plotting parameters and objects so that they don't have to be constantly passed around all over.
 
-# In[8]:
+# In[6]:
 
 
 def UsefulPlotVals(nh):
@@ -157,7 +122,7 @@ def UsefulPlotVals(nh):
 
 # This function overlays the piecewise cell average plots onto plots of their respective continuous wave functions alongside written labels of the equations they should each represent. It also gives the option of plotting the node point values. It also allows you to save those plots if desired. As the default, these two features are subdued.
 
-# In[9]:
+# In[7]:
 
 
 def PlotWaves(nh, waveCell, x, waveNode, plotNode = False, save = False):
@@ -197,7 +162,7 @@ def PlotWaves(nh, waveCell, x, waveNode, plotNode = False, save = False):
 
 # This function just plots the real and imaginary parts of an arbitrary matrix of functions alongside written notes of each of the wave equations to which they should correspond. It also allows you to save those plots and select their file names if desired. As the default, that feature is subdued.
 
-# In[10]:
+# In[8]:
 
 
 def PlotGeneralWaves(nh, x, waves, save = False, saveName = 'PlotOutputs'):
