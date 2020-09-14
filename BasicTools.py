@@ -19,11 +19,11 @@ import matplotlib.pyplot as plt
 # In[2]:
 
 
-def CheckSize(n, checkMatrix):
-    dim = size(shape(checkMatrix))
+def CheckSize(n, matrica):
+    dim = size(shape(matrica))
     problem = 0
     for i in range(dim):
-        if (n != shape(checkMatrix)[i]):
+        if (n != shape(matrica)[i]):
             problem = problem + 1
     return problem
 

@@ -184,8 +184,8 @@ def PlotGeneralWaves(nh, x, waves, save = False, saveName = 'PlotOutputs'):
                 plt.text(1.1, 0, r'$a_{%d}$' %(k / 2) + 'cos' + r'$%d \pi x$' %(k), fontsize = font)
         else:
             plt.text(1.1, 0, r'$b_{%d}$' %((k / 2) + 1) + 'sin' + r'$%d \pi x$' %(k + 1), fontsize = font)
-        plt.plot(x, waves[k, :].real, color = ColorDefault(0), zorder = 2)
-        plt.plot(x, waves[k, :].imag, color = ColorDefault(3), zorder = 3)
+        plt.plot(x, waves[:, k].real, color = ColorDefault(0), zorder = 2)
+        plt.plot(x, waves[:, k].imag, color = ColorDefault(3), zorder = 3)
         TickPlot(nh, ax)
         if (save):
             fig.savefig(savePath + saveName + str(nh - k) + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)

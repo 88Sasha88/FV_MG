@@ -13,6 +13,7 @@ import sys as sys
 import time
 import matplotlib.pyplot as plt
 import BasicTools as BT
+import OperatorTools as OT
 
 
 # This function creates a matrix of cell-centered Fourier modes along with a linear space of the cell locations.
@@ -48,6 +49,13 @@ def MakeNodeWaves(nh, h):
         else:
             waves[:, 2 * k] = np.cos(2 * np.pi * k * x)
     return x, waves
+
+
+# This function creates a matrix of node-centered Fourier modes along with a linear space of the node locations.
+
+# In[3]:
+
+
 
 
 # In[ ]:
