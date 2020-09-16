@@ -130,11 +130,11 @@ def PlotWaves(nh, waveCell, x, waveNode, plotNode = False, save = False):
     problemX = BT.CheckSize(nh, x)
     problemNode = BT.CheckSize(nh, waveNode)
     if (problemCell != 0):
-        sys.exit('ERROR:\nPlotWaves:\nnh does not match size of waveCell!')
+        sys.exit('ERROR:\nPlotTools:\nPlotWaves:\nnh does not match size of waveCell!')
     if (problemX != 0):
-        sys.exit('ERROR:\nPlotWaves:\nnh does not match size of x!')
+        sys.exit('ERROR:\nPlotTools:\nPlotWaves:\nnh does not match size of x!')
     if (problemNode != 0):
-        sys.exit('ERROR:\nPlotWaves:\nnh does not match size of waveNode!')
+        sys.exit('ERROR:\nPlotTools:\nPlotWaves:\nnh does not match size of waveNode!')
     numPoints, X, font = UsefulPlotVals(nh)
     for k in range(nh):
         fig, ax = plt.subplots(figsize = (5, 2.5))
@@ -169,9 +169,9 @@ def PlotGeneralWaves(nh, x, waves, save = False, saveName = 'PlotOutputs'):
     problemX = BT.CheckSize(nh, x)
     problemWave = BT.CheckSize(nh, waves)
     if (problemX != 0):
-        sys.exit('ERROR:\nPlotGeneralWaves:\nnh does not match size of x!')
+        sys.exit('ERROR:\nPlotTools:\nPlotGeneralWaves:\nnh does not match size of x!')
     if (problemWave != 0):
-        sys.exit('ERROR:\nPlotGeneralWaves:\nnh does not match size of waves!')
+        sys.exit('ERROR:\nPlotTools:\nPlotGeneralWaves:\nnh does not match size of waves!')
     numPoints, X, font = UsefulPlotVals(nh)
     for k in range(nh):
         fig, ax = plt.subplots(figsize = (5, 2.5))
