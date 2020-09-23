@@ -48,9 +48,11 @@ def ConstructPhaseShift(nh, waves):
     if (problem != 0):
         sys.exit('ERROR:\nFFTTools:\nConstructPhaseShift:\nnh does not match size of waves!')
     xhat = PerformFFT(waves)
+    xhat = xhat.T
     FFTCoef = ConstructFFTCoef(nh)
-    FFTFix = FFTCoef.T@LA.inv(xhat)
-    return FFTFix
+    FFTFix = np.round(FFTCoef.T @ LA.inv(xhat), 16)
+    FFTFixXhat = np.round(FFTFix @ xhat, 15)
+    return FFTFixXhat
 
 
 # This function performs an FFT on the input array.
