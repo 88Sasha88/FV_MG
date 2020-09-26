@@ -75,13 +75,16 @@ def FindLaplaceEigVals(nh, h, waves):
     wavesNorm = OT.NormalizeMatrix(nh, waves)
     wavesInv = wavesNorm.conj().T
     Laplacian = OT.MakeLaplacian1D(nh)
-    eigvals = np.diag(wavesInv @ Laplacian @ wavesNorm)
+    eigMat = np.round(wavesInv @ Laplacian @ wavesNorm, 14)
+    problem = BT.CheckDiag(eigMat)
+    if (problem != 0):
+        sys.exit('ERROR:\nWaveTools:\nFindLaplaceEigVals:\neigMat is not diagonal!')
+    eigvals = np.diag(eigMat)
     ks = MakeKs(nh)
     eigvalsShould = [2 * (np.cos(2 * np.pi * h * k) - 1) for k in ks]
-    problem = 1
     if (np.isclose(eigvals, eigvalsShould, 1e-14).all()):
-        problem = 0
-    if (problem != 0):
+        pass
+    else:
         print('Approximate Expected Eigenvalues:', eigvalsShould)
         print('Eigenvalues Found:', eigvals)
         sys.exit('ERROR:\nWaveTools:\nFindLaplaceEigVals:\nNot returning correct eigvals!')

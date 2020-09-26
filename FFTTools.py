@@ -24,18 +24,18 @@ import OperatorTools as OT
 
 
 def ConstructFFTCoef(nh):
-    kMax = int(nh / 2)
+    k_max = int(nh / 2)
     FFTCoef = np.zeros((nh, nh), dtype = complex)
-    FFTCoef[0, kMax] = 1 # k=0 mode in max_k+1 column
-    for k in range(1, kMax):
+    FFTCoef[0, k_max] = 1 # k=0 mode in max_k+1 column
+    for k in range(1, k_max):
         # sin mode
-        FFTCoef[(2 * k) - 1, kMax - k] = .5*1j
-        FFTCoef[(2 * k) - 1, kMax + k] = -.5*1j
+        FFTCoef[(2 * k) - 1, k_max - k] = .5*1j
+        FFTCoef[(2 * k) - 1, k_max + k] = -.5*1j
         # cos mode
-        FFTCoef[2 * k, kMax - k] = .5
-        FFTCoef[2 * k, kMax + k] = .5
-    FFTCoef[nh - 1, 0] = 1 # k=max_k mode in first column
-    return FFTCoef
+        FFTCoef[2 * k, k_max - k] = .5
+        FFTCoef[2 * k, k_max + k] = .5
+    FFTCoef[nh - 1, 0] = 1 # k = k_max mode in first column
+    return FFTCoef, k_max
 
 
 # This function finds our phase shifts (I think?)
@@ -43,16 +43,29 @@ def ConstructFFTCoef(nh):
 # In[3]:
 
 
-def ConstructPhaseShift(nh, waves):
+def ConstructShift(nh, waves):
     problem = BT.CheckSize(nh, waves)
     if (problem != 0):
         sys.exit('ERROR:\nFFTTools:\nConstructPhaseShift:\nnh does not match size of waves!')
-    xhat = PerformFFT(waves)
+    xhat = PerformFFT(waves, axes = 1)
     xhat = xhat.T
-    FFTCoef = ConstructFFTCoef(nh)
+    FFTCoef, k_max = ConstructFFTCoef(nh)
     FFTFix = np.round(FFTCoef.T @ LA.inv(xhat), 16)
-    FFTFixXhat = np.round(FFTFix @ xhat, 15)
-    return FFTFixXhat
+    problem = BT.CheckDiag(FFTFix)
+    if (problem != 0):
+        sys.exit('ERROR:\nFFTTools:\nConstructShift:\nFFTFix is not diagonal!')
+    phaseModes = (nh / np.pi) * np.angle(np.diag(FFTFix)) # This is what the k number for the phase shifts should be.
+    phaseModeCheck = -np.linspace(-k_max, k_max - 1, nh)
+    phaseModeCheck[0] = 0
+    if (np.isclose(phaseModes, phaseModeCheck, 1e-15).all()):
+        pass
+    else:
+        print('Approximate Expected Phase Modes:', phaseModeCheck)
+        print('Phase Modes Found:', phaseModes)
+        sys.exit('ERROR:\nFFTTools:\nConstructPhaseShift:\nPhase modes are incorrect!')
+    PhaseCorrect = np.exp((np.pi * phaseModeCheck * 1j) / nh)
+    AmpCorrect = np.diag(FFTFix) / PhaseCorrect
+    return PhaseCorrect, AmpCorrect
 
 
 # This function performs an FFT on the input array.
@@ -60,9 +73,9 @@ def ConstructPhaseShift(nh, waves):
 # In[4]:
 
 
-def PerformFFT(inputArray):
+def PerformFFT(inputArray, axes = 0):
     outputArray = np.fft.fft(inputArray.T)
-    outputArray = np.round(np.fft.fftshift(outputArray, axes = 1), 14)
+    outputArray = np.round(np.fft.fftshift(outputArray, axes = axes), 14)
     return outputArray
 
 

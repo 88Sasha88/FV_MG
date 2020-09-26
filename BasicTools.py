@@ -42,9 +42,27 @@ def CheckNumber(nh):
     return
 
 
-# This function outputs an $x$ array and a $y$ array of size $n^{h}$ + 1 of the locations of the tick marks.
+# This function checks if a given matrix is diagonal.
 
 # In[4]:
+
+
+def CheckDiag(matrica):
+    if (np.size(np.shape(matrica)) != 2):
+        sys.exit('ERROR:\nBasicTools:\nCheckDiag:\nmatrica must be a rank-2 array!')
+    if (np.shape(matrica)[0] != np.shape(matrica)[1]):
+        sys.exit('ERROR:\nBasicTools:\nCheckDiag:\nmatrica must be a square array!')
+    i, j = np.nonzero(matrica)
+    if (np.all(i == j)):
+        problem = 0
+    else:
+        problem = 1
+    return problem
+
+
+# This function outputs an $x$ array and a $y$ array of size $n^{h}$ + 1 of the locations of the tick marks.
+
+# In[5]:
 
 
 def MakeXY(nh):
