@@ -13,9 +13,6 @@ import sys as sys
 import time
 import matplotlib.pyplot as plt
 import BasicTools as BT
-import WaveTools as WT
-import PlotTools as PT
-import OperatorTools as OT
 
 
 # This function creates a matrix of the coefficients for our wave functions at the respective locations of the FFT values.
@@ -26,7 +23,7 @@ import OperatorTools as OT
 def ConstructFFTCoef(nh):
     k_max = int(nh / 2)
     FFTCoef = np.zeros((nh, nh), dtype = complex)
-    FFTCoef[0, k_max] = 1 # k=0 mode in max_k+1 column
+    FFTCoef[0, k_max] = 1 # k = 0 mode in k_max + 1 column
     for k in range(1, k_max):
         # sin mode
         FFTCoef[(2 * k) - 1, k_max - k] = .5*1j
@@ -38,7 +35,7 @@ def ConstructFFTCoef(nh):
     return FFTCoef, k_max
 
 
-# This function finds our phase shifts (I think?)
+# This function finds our phase and amplitude adjustments.
 
 # In[3]:
 
@@ -121,7 +118,7 @@ def GetKSpaceCoefs(nh, coefs, waves):
     linCombo = ChangeBasis(nh, coefs, waves)
     linComboFFT = PerformFFT(linCombo)
     phase, amp = ConstructShift(nh, waves)
-    kCoefs = np.round(phase * amp * linComboFFT, 14)
+    kCoefs = np.round(amp * phase * linComboFFT, 14)
     return kCoefs
 
 
