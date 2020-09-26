@@ -79,20 +79,69 @@ def PerformFFT(inputArray, axes = 0):
     return outputArray
 
 
-# This function takes in some vector of coefficients and expresses it in the basis of the input matrix.
+# This function performs an inverse FFT on the input array.
 
 # In[5]:
+
+
+def PerformIFFT(inputArray, axes = 0):
+    outputArray = np.round(np.fft.ifftshift(inputArray, axes = axes), 14)
+    outputArray = np.fft.ifft(outputArray.T)
+    return outputArray
+
+
+# This function takes in some vector of coefficients and expresses it in the basis of the input matrix.
+
+# In[6]:
 
 
 def ChangeBasis(nh, coefs, waves):
     problemCoef = BT.CheckSize(nh, coefs)
     problemWave = BT.CheckSize(nh, waves)
-    if (problemWave != 0):
-        sys.exit('ERROR:\nFFTTools:\nChangeBasis:\nnh does not match size of waves!')
     if (problemCoef != 0):
         sys.exit('ERROR:\nFFTTools:\nChangeBasis:\nnh does not match size of coefs!')
+    if (problemWave != 0):
+        sys.exit('ERROR:\nFFTTools:\nChangeBasis:\nnh does not match size of waves!')
     linCombo = waves @ coefs
     return linCombo
+
+
+# This takes in some vector in $x$ space and returns the coefficients in $k$ space.
+
+# In[7]:
+
+
+def GetKSpaceCoefs(nh, coefs, waves):
+    problemCoef = BT.CheckSize(nh, coefs)
+    problemWave = BT.CheckSize(nh, waves)
+    if (problemCoef != 0):
+        sys.exit('ERROR:\nFFTTools:\nGetKSpaceCoefs:\nnh does not match size of coefs!')
+    if (problemWave != 0):
+        sys.exit('ERROR:\nFFTTools:\nGetKSpaceCoefs:\nnh does not match size of waves!')
+    linCombo = ChangeBasis(nh, coefs, waves)
+    linComboFFT = PerformFFT(linCombo)
+    phase, amp = ConstructShift(nh, waves)
+    kCoefs = np.round(phase * amp * linComboFFT, 14)
+    return kCoefs
+
+
+# This takes in some vector in $k$ space and returns the coefficients in $x$ space.
+
+# In[8]:
+
+
+def GetXSpaceCoefs(nh, coefs, waves):
+    problemCoef = BT.CheckSize(nh, coefs)
+    problemWave = BT.CheckSize(nh, waves)
+    if (problemCoef != 0):
+        sys.exit('ERROR:\nFFTTools:\nGetXSpaceCoefs:\nnh does not match size of coefs!')
+    if (problemWave != 0):
+        sys.exit('ERROR:\nFFTTools:\nGetXSpaceCoefs:\nnh does not match size of waves!')
+    phase, amp = ConstructShift(nh, waves)
+    linCombo = np.round(coefs / (amp * phase), 14)
+    linComboIFFT = PerformIFFT(linCombo)
+    xCoefs = np.round(LA.inv(waves) @ linComboIFFT, 14)
+    return xCoefs
 
 
 # In[ ]:
