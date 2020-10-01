@@ -48,6 +48,23 @@ def MakeLaplacian1D(n):
     return Laplacian
 
 
+
+# This function takes in some vector of coefficients and expresses it in the basis of the input matrix.
+
+# In[4]:
+
+
+def ChangeBasis(nh, coefs, waves):
+    problemCoef = BT.CheckSize(nh, coefs)
+    problemWave = BT.CheckSize(nh, waves[0, :])
+    if (problemCoef != 0):
+        sys.exit('ERROR:\nOperatorTools:\nChangeBasis:\nnh does not match size of coefs!')
+    if (problemWave != 0):
+        sys.exit('ERROR:\nOperatorTools:\nChangeBasis:\nnh does not match size of waves!')
+    linCombo = waves @ coefs
+    return linCombo
+
+
 # In[ ]:
 
 

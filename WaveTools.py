@@ -39,13 +39,18 @@ def MakeWaves(nh, h):
 # In[3]:
 
 
-def MakeNodeWaves(nh, h):
-    x = np.linspace(0, 1. - (1. / nh), num = nh)
-    waves = np.zeros((nh, nh), float)
+def MakeNodeWaves(nh, h, nRes = 0):
+    if (nRes == 0):
+        nRes = nh
+        xMax = 1. - (1. / nRes)
+    else:
+        xMax = 1.
+    x = np.linspace(0, xMax, num = nRes)
+    waves = np.zeros((nRes, nh), float)
     for k in range(int(nh / 2)):
         waves[:, (2 * k) + 1] = np.sin(2 * np.pi * (k + 1) * x)
         if (k == 0):
-            waves[:, 2 * k] = np.ones(nh, float)
+            waves[:, 2 * k] = np.ones(nRes, float)
         else:
             waves[:, 2 * k] = np.cos(2 * np.pi * k * x)
     return x, waves
