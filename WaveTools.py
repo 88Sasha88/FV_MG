@@ -23,20 +23,34 @@ import OperatorTools as OT
 
 def MakeWaves(nh, h):
     x, y = BT.MakeXY(nh)
-    waves = np.zeros((nh, nh), float)
-    xCell = x[0:nh] + (h / 2.)
-    for k in range(int(nh / 2)):
-        waves[:, (2 * k) + 1] = (1.0 / (2.0 * np.pi * (k + 1) * h)) * (cos(2 * np.pi * (k + 1) * x[0:nh]) - cos(2 * np.pi * (k + 1) * x[1:nh + 1]))
-        if (k == 0):
-            waves[:, 2 * k] = np.ones(nh, float)
-        else:
-            waves[:, 2 * k] = (1.0 / (2.0 * np.pi * k * h)) * (sin(2 * np.pi * k * x[1:nh + 1]) - sin(2 * np.pi * k * x[0:nh]))
+    xCell = 0.5 * (x[0:nh] + x[1:nh + 1])
+    waves = CellWaves(nh, x)
+    hs = nh * np.eye(nh)
+    hs[0, 0] = 1.
+    waves = waves @ hs
     return xCell, waves
+
+
+# This function creates a matrix of cell-centered Fourier modes along with a linear space of the cell locations.
+
+# In[2]:
+
+
+def CellWaves(nh_max, x):
+    n = np.shape(x)[0] - 1
+    waves = np.zeros((n, nh_max), float)
+    for k in range(int(nh_max / 2)):
+        waves[:, (2 * k) + 1] = (1.0 / (2.0 * np.pi * (k + 1))) * (cos(2 * np.pi * (k + 1) * np.asarray(x[0:n])) - cos(2 * np.pi * (k + 1) * np.asarray(x[1:n + 1])))
+        if (k == 0):
+            waves[:, 2 * k] = np.ones(nh_max, float)
+        else:
+            waves[:, 2 * k] = (1.0 / (2.0 * np.pi * k)) * np.asarray(sin(2 * np.pi * k * np.asarray(x[1:n + 1])) - sin(2 * np.pi * k * np.asarray(x[0:n])))
+    return waves
 
 
 # This function creates a matrix of node-centered Fourier modes along with a linear space of the node locations.
 
-# In[3]:
+# In[4]:
 
 
 def MakeNodeWaves(nh, h, nRes = 0):
@@ -58,7 +72,7 @@ def MakeNodeWaves(nh, h, nRes = 0):
 
 # This function creates an array of all the $k$ values at their respective index locations.
 
-# In[4]:
+# In[5]:
 
 
 def MakeKs(nh):
@@ -70,7 +84,7 @@ def MakeKs(nh):
 
 # This function takes in a matrix of wave vectors and finds their respective eigenvalues as they relate to the Laplacian matrix. Note that this function assumes that the input matrix comprises Fourier modes but includes an error catcher in case the eigenvalues don't turn out as expected within a $10^{-14}$ tolerance.
 
-# In[5]:
+# In[6]:
 
 
 def FindLaplaceEigVals(nh, h, waves):

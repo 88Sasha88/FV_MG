@@ -70,8 +70,8 @@ def DrawLine(xCenter, yCenter, tickHeight):
 # In[4]:
 
 
-def TickPlot(nh, ax, tickHeight):
-    xAxis, yAxis = BT.MakeXY(nh)
+def TickPlot(nh, ax, tickHeight, xBound = []):
+    xAxis, yAxis = BT.MakeXY(nh, xBounds = xBound)
     for (xi, yi) in zip(xAxis, yAxis):
         if ((xi == 0) or (xi == 1)):
             height = tickHeight
@@ -92,14 +92,14 @@ def TickPlot(nh, ax, tickHeight):
 # In[5]:
 
 
-def PiecePlot(nh, numPoints, X, pieces):
+def PiecePlot(nh, numPoints, X, pieces, xBound = []):
     problemX = BT.CheckSize(numPoints, X)
     problemAve = BT.CheckSize(nh, pieces)
     if (problemX != 0):
         sys.exit('ERROR:\nPiecePlot:\nnumPoints does not match size of X!')
     if (problemAve != 0):
         sys.exit('ERROR:\nPiecePlot:\nnh does not match size of pieces!')
-    x, y = BT.MakeXY(nh)
+    x, y = BT.MakeXY(nh, xBounds = xBound)
     cellVals = np.ones(numPoints, float)
     lowIndex = 0
     for k in range(nh):
@@ -126,7 +126,7 @@ def UsefulPlotVals(nh):
 # In[7]:
 
 
-def PlotWaves(nh, h, waveCell, x, waveNode, plotNode = False, save = False):
+def PlotWaves(nh, h, waveCell, x, waveNode, xBound = [], plotNode = False, save = False):
     problemCell = BT.CheckSize(nh, waveCell)
     problemX = BT.CheckSize(nh, x)
     problemNode = BT.CheckSize(nh, waveNode)
@@ -252,12 +252,6 @@ def GetYBound(inputArray, scaleParam, sym = False):
     totRange = yMax - yMin
     tickHeight = totRange / 10
     return yMin, yMax, tickHeight
-
-
-# In[ ]:
-
-
-
 
 
 # In[ ]:

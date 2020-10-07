@@ -60,14 +60,57 @@ def CheckDiag(matrica):
     return problem
 
 
-# This function outputs an $x$ array and a $y$ array of size $n^{h}$ + 1 of the locations of the tick marks.
+# This function checks if a given matrix is diagonal.
 
 # In[5]:
 
 
-def MakeXY(nh):
-    x = np.linspace(0, 1, num = nh + 1)
-    y = np.zeros(nh + 1, float)
+def CheckBounds(nh_max, bounds):
+    problem = 0
+    loops = len(bounds)
+    levels = int(np.log(nh_max) / np.log(2))
+    if (loops != levels):
+        problem = 1
+    for i in range(loops):
+        if (len(bounds[i]) != 2):
+            problem = 2
+#     if ((bounds > nh_max).any()):
+#         problem = 3
+    return problem
+
+
+# This function outputs an $x$ array and a $y$ array of size $n^{h}$ + 1 of the locations of the tick marks.
+
+# In[6]:
+
+
+def MakeXY(nh_max, xBounds = []):
+    if (xBounds == []):
+        loops = int(np.log(nh_max) / np.log(2))
+        x = np.linspace(0, 1, num = nh_max + 1)
+    else:
+        loops = len(xBounds)
+        problem = CheckBounds(nh_max, xBounds)
+        if (problem == 1):
+            sys.exit('ERROR:\nBasicTools:\nMakeXY:\nnh_max does not match up with log of shape of xBounds!')
+        if (problem == 2):
+            sys.exit('ERROR:\nBasicTools:\nMakeXY:\nAll elements in xBounds must be of length 2!')
+        if (problem == 3):
+            sys.exit('ERROR:\nBasicTools:\nMakeXY:\nValues in xBounds must be less than nh_max!')
+        x = []
+        for i in range(loops):
+            h = 2**-(i + 1)
+            n = xBounds[i][1] - xBounds[i][0] + 1
+            xMin = h * xBounds[i][0]
+            xMax = h * xBounds[i][1]
+            if (i > 0):
+                n = n - 2
+                xMin = xMin + h
+                xMax = xMax - h
+            xPiece = np.linspace(xMin, xMax, num = n)
+            x = sorted(set(np.append(x, xPiece)))
+    n_max = np.shape(x)[0]
+    y = np.zeros(n_max, float)
     return x, y
 
 
