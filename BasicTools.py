@@ -74,8 +74,10 @@ def CheckBounds(nh_max, bounds):
     for i in range(loops):
         if (len(bounds[i]) != 2):
             problem = 2
-#     if ((bounds > nh_max).any()):
-#         problem = 3
+        if (bounds[i][0] > bounds[i][1]):
+            problem = 3
+        if ((bounds[i][0] > 2**(i + 1)) or (bounds[i][1] > 2**(i + 1))):
+            problem = 4
     return problem
 
 
@@ -96,7 +98,9 @@ def MakeXY(nh_max, xBounds = []):
         if (problem == 2):
             sys.exit('ERROR:\nBasicTools:\nMakeXY:\nAll elements in xBounds must be of length 2!')
         if (problem == 3):
-            sys.exit('ERROR:\nBasicTools:\nMakeXY:\nValues in xBounds must be less than nh_max!')
+            sys.exit('ERROR:\nBasicTools:\nMakeXY:\nLower-bound values in xBounds greater than upper bounds!')
+        if (problem == 4):
+            sys.exit('ERROR:\nBasicTools:\nMakeXY:\nValues in xBounds must correspond to the grid spacing of their respective level!')
         x = []
         for i in range(loops):
             h = 2**-(i + 1)
