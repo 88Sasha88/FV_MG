@@ -40,11 +40,11 @@ def CellWaves(nh_max, x):
     n = np.shape(x)[0] - 1
     waves = np.zeros((n, nh_max), float)
     for k in range(int(nh_max / 2)):
-        waves[:, (2 * k) + 1] = (1.0 / (2.0 * np.pi * (k + 1))) * (cos(2 * np.pi * (k + 1) * np.asarray(x[0:n])) - cos(2 * np.pi * (k + 1) * np.asarray(x[1:n + 1])))
+        waves[:, (2 * k) + 1] = (1.0 / (2.0 * np.pi * (k + 1))) * (cos(2 * np.pi * (k + 1) * x[0:n]) - cos(2 * np.pi * (k + 1) * x[1:n + 1]))
         if (k == 0):
-            waves[:, 2 * k] = np.ones(nh_max, float)
+            waves[:, 2 * k] = np.ones(n, float)
         else:
-            waves[:, 2 * k] = (1.0 / (2.0 * np.pi * k)) * np.asarray(sin(2 * np.pi * k * np.asarray(x[1:n + 1])) - sin(2 * np.pi * k * np.asarray(x[0:n])))
+            waves[:, 2 * k] = (1.0 / (2.0 * np.pi * k)) * (sin(2 * np.pi * k * x[1:n + 1]) - sin(2 * np.pi * k * x[0:n]))
     return waves
 
 

@@ -109,6 +109,7 @@ def MakeXY(nh_max, xBounds = []):
                 xMax = xMax - h
             xPiece = np.linspace(xMin, xMax, num = n)
             x = sorted(set(np.append(x, xPiece)))
+    x = np.asarray(x)
     n_max = np.shape(x)[0]
     y = np.zeros(n_max, float)
     return x, y
