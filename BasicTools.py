@@ -33,13 +33,16 @@ def CheckSize(n, matrica):
 # In[3]:
 
 
-def CheckNumber(nh):
+def CheckNumber(nh, showMess = True):
     check = nh
+    problem = 0
     while (check % 2 == 0):
         check = check / 2
     if (check != 1):
-        sys.exit('ERROR:\nnh must be a base-2 integer!')
-    return
+        problem = 1
+        if (showMess):
+            sys.exit('ERROR:\nnh must be a base-2 integer!')
+    return problem
 
 
 # This function checks if a given matrix is diagonal.
@@ -65,19 +68,17 @@ def CheckDiag(matrica):
 # In[5]:
 
 
-def CheckBounds(nh_max, bounds):
-    problem = 0
-    loops = len(bounds)
-    levels = int(np.log(nh_max) / np.log(2))
-    if (loops != levels):
-        problem = 1
+def CheckBounds(nh_min, loops, bounds):
+    problem = CheckNumber(nh_min, showMess = False)
+    if (bounds[0][0] != 0):
+        problem = 2
     for i in range(loops):
         if (len(bounds[i]) != 2):
-            problem = 2
-        if (bounds[i][0] > bounds[i][1]):
             problem = 3
-        if ((bounds[i][0] > 2**(i + 1)) or (bounds[i][1] > 2**(i + 1))):
+        if (bounds[i][0] > bounds[i][1]):
             problem = 4
+        if ((bounds[i][0] > nh_min * (2**(i + 1))) or (bounds[i][1] > nh_min * (2**(i + 1)))):
+            problem = 5
     return problem
 
 
@@ -86,33 +87,33 @@ def CheckBounds(nh_max, bounds):
 # In[6]:
 
 
-def MakeXY(nh_max, xBounds = []):
-    if (xBounds == []):
-        loops = int(np.log(nh_max) / np.log(2))
-        x = np.linspace(0, 1, num = nh_max + 1)
-    else:
-        loops = len(xBounds)
-        problem = CheckBounds(nh_max, xBounds)
-        if (problem == 1):
-            sys.exit('ERROR:\nBasicTools:\nMakeXY:\nnh_max does not match up with log of shape of xBounds!')
-        if (problem == 2):
-            sys.exit('ERROR:\nBasicTools:\nMakeXY:\nAll elements in xBounds must be of length 2!')
-        if (problem == 3):
-            sys.exit('ERROR:\nBasicTools:\nMakeXY:\nLower-bound values in xBounds greater than upper bounds!')
-        if (problem == 4):
-            sys.exit('ERROR:\nBasicTools:\nMakeXY:\nValues in xBounds must correspond to the grid spacing of their respective level!')
-        x = []
-        for i in range(loops):
-            h = 2**-(i + 1)
-            n = xBounds[i][1] - xBounds[i][0] + 1
-            xMin = h * xBounds[i][0]
-            xMax = h * xBounds[i][1]
-            if (i > 0):
-                n = n - 2
-                xMin = xMin + h
-                xMax = xMax - h
-            xPiece = np.linspace(xMin, xMax, num = n)
-            x = sorted(set(np.append(x, xPiece)))
+def MakeXY(xBounds):
+    nh_min = xBounds[0][1]
+    loops = len(xBounds)
+    nh_max = nh_min * (2**(loops - 1))
+    problem = CheckBounds(nh_min, loops, xBounds)
+    if (problem == 1):
+        sys.exit('ERROR:\nBasicTools:\nMakeXY:\nnh_min must be base_2 integer!')
+    if (problem == 2):
+        sys.exit('ERROR:\nBasicTools:\nMakeXY:\nFirst value in first boundary pair must be 0!')
+    if (problem == 3):
+        sys.exit('ERROR:\nBasicTools:\nMakeXY:\nAll elements in xBounds must be of length 2!')
+    if (problem == 4):
+        sys.exit('ERROR:\nBasicTools:\nMakeXY:\nLower-bound values in xBounds greater than upper bounds!')
+    if (problem == 5):
+        sys.exit('ERROR:\nBasicTools:\nMakeXY:\nValues in xBounds must correspond to the grid spacing of their respective level!')
+    x = []
+    for i in range(loops):
+        h = (2**-i) / nh_min
+        n = xBounds[i][1] - xBounds[i][0] + 1
+        xMin = h * xBounds[i][0]
+        xMax = h * xBounds[i][1]
+        if (i > 0):
+            n = n - 2
+            xMin = xMin + h
+            xMax = xMax - h
+        xPiece = np.linspace(xMin, xMax, num = n)
+        x = sorted(set(np.append(x, xPiece)))
     x = np.asarray(x)
     n_max = np.shape(x)[0]
     y = np.zeros(n_max, float)

@@ -16,22 +16,29 @@ import BasicTools as BT
 import OperatorTools as OT
 
 
-# This function creates a matrix of cell-centered Fourier modes along with a linear space of the cell locations.
+# This function creates a linear space of evenly-spaced cell locations and passes a matrix of cell-centered Fourier modes along with a linear space of the cell locations.
 
 # In[2]:
 
 
-def MakeWaves(nh, h):
-    x, y = BT.MakeXY(nh)
-    xCell = 0.5 * (x[0:nh] + x[1:nh + 1])
-    waves = CellWaves(nh, x)
-    hs = nh * np.eye(nh)
-    hs[0, 0] = 1.
-    waves = waves @ hs
+def MakeWaves(nh_max, xBound):
+    x, y = BT.MakeXY(xBound)
+    n = len(x) - 1
+    xCell = 0.5 * (x[0:n] + x[1:n + 1])
+    hDiag = x[1:n + 1] - x[0:n]
+    waves = CellWaves(nh_max, x)
+    hs = np.zeros((n, n), float)
+    np.fill_diagonal(hs, hDiag)
+    zeroMat = np.zeros((n, nh_max - n), float)
+    hMat = LA.inv(hs)
+    wave1up = 1 * waves
+    wave1up.T[::nh_max] = 0
+    wave0 = waves - wave1up
+    waves = (hMat @ wave1up) + wave0
     return xCell, waves
 
 
-# This function creates a matrix of cell-centered Fourier modes along with a linear space of the cell locations.
+# This function takes in a linear space of node locations and creates a matrix of `nh_max` many cell-centered Fourier modes.
 
 # In[3]:
 
@@ -53,7 +60,7 @@ def CellWaves(nh_max, x):
 # In[4]:
 
 
-def MakeNodeWaves(nh_max, h, nRes = 0):
+def MakeNodeWaves(nh_max, nRes = 0):
     if (nRes == 0):
         nRes = nh_max
         xMax = 1. - (1. / nRes)

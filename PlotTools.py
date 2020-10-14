@@ -70,8 +70,8 @@ def DrawLine(xCenter, yCenter, tickHeight):
 # In[4]:
 
 
-def TickPlot(nh, ax, tickHeight, xBound = []):
-    xAxis, yAxis = BT.MakeXY(nh, xBounds = xBound)
+def TickPlot(xBound, ax, tickHeight):
+    xAxis, yAxis = BT.MakeXY(xBound)
     for (xi, yi) in zip(xAxis, yAxis):
         if ((xi == 0) or (xi == 1)):
             height = tickHeight
@@ -80,8 +80,6 @@ def TickPlot(nh, ax, tickHeight, xBound = []):
         (xs, ys) = DrawLine(xi, yi, height)
         ax.plot(xs, ys, color = 'k', zorder = 1)
     ax.plot(xAxis, yAxis, color = 'k', zorder = 0)
-#     plt.xlim([-0.1, 1.25])
-#     plt.ylim([-2.5, 2.5])
     plt.tick_params(axis = 'x', which = 'both', bottom = False, top = False, labelbottom = False)
     plt.tick_params(axis = 'y', which = 'both', left = False, right = False, labelleft = False)
     return
@@ -92,14 +90,11 @@ def TickPlot(nh, ax, tickHeight, xBound = []):
 # In[5]:
 
 
-def PiecePlot(nh, numPoints, X, pieces, xBound = []):
+def PiecePlot(numPoints, X, pieces, xBound):
     problemX = BT.CheckSize(numPoints, X)
-    problemAve = BT.CheckSize(nh, pieces)
     if (problemX != 0):
         sys.exit('ERROR:\nPiecePlot:\nnumPoints does not match size of X!')
-#     if (problemAve != 0):
-#         sys.exit('ERROR:\nPiecePlot:\nnh does not match size of pieces!')
-    x, y = BT.MakeXY(nh, xBounds = xBound)
+    x, y = BT.MakeXY(xBound)
     n = len(x) - 1
     cellVals = np.ones(numPoints, float)
     lowIndex = 0
@@ -116,7 +111,7 @@ def PiecePlot(nh, numPoints, X, pieces, xBound = []):
 # In[6]:
 
 
-def UsefulPlotVals(nh):
+def UsefulPlotVals():
     numPoints = 129
     font = 15
     return numPoints, font
@@ -127,22 +122,13 @@ def UsefulPlotVals(nh):
 # In[7]:
 
 
-def PlotWaves(nh, h, waveCell, x, waveNode, xBound = [], plotNode = False, save = False):
-    problemCell = BT.CheckSize(nh, waveCell)
-    problemX = BT.CheckSize(nh, x)
-    problemNode = BT.CheckSize(nh, waveNode)
-#     if (problemCell != 0):
-#         sys.exit('ERROR:\nPlotTools:\nPlotWaves:\nnh does not match size of waveCell!')
-#     if (problemX != 0):
-#         sys.exit('ERROR:\nPlotTools:\nPlotWaves:\nnh does not match size of x!')
-#     if (problemNode != 0):
-#         sys.exit('ERROR:\nPlotTools:\nPlotWaves:\nnh does not match size of waveNode!')
-    numPoints, font = UsefulPlotVals(nh)
-    X, waveCont = WT.MakeNodeWaves(nh, h, nRes = numPoints)
+def PlotWaves(nh, waveCell, x, waveNode, xBound, plotNode = False, save = False):
+    numPoints, font = UsefulPlotVals()
+    X, waveCont = WT.MakeNodeWaves(nh, nRes = numPoints)
     for k in range(nh):
         saveName = 'FourierModes' + str(nh - k)
         yMin, yMax, tickHeight = GetYBound(waveCont[:, k], 0.5, sym = True)
-        PlotWave(nh, numPoints, tickHeight, X, waveCell[:, k], waveCont[:, k], save, xBound = xBound, saveName = saveName)
+        PlotWave(numPoints, tickHeight, X, waveCell[:, k], waveCont[:, k], save, xBound, saveName = saveName)
         if (plotNode):
             plt.scatter(x, waveNode[:, k], color = ColorDefault(2), s = 10, zorder = 4)
         plt.xlim([-0.1, 1.25])
@@ -170,7 +156,7 @@ def PlotGeneralWaves(nh, x, waves, save = False, saveName = 'PlotOutputs'):
         sys.exit('ERROR:\nPlotTools:\nPlotGeneralWaves:\nnh does not match size of x!')
     if (problemWave != 0):
         sys.exit('ERROR:\nPlotTools:\nPlotGeneralWaves:\nnh does not match size of waves!')
-    numPoints, font = UsefulPlotVals(nh)
+    numPoints, font = UsefulPlotVals()
     for k in range(nh):
         fig, ax = plt.subplots(figsize = (5, 2.5))
         ax.set_aspect(aspect = 4)
@@ -186,7 +172,7 @@ def PlotGeneralWaves(nh, x, waves, save = False, saveName = 'PlotOutputs'):
             plt.text(1.1, 0, r'$b_{%d}$' %((k / 2) + 1) + 'sin' + r'$%d \pi x$' %(k + 1), fontsize = font)
         plt.plot(x, waves[:, k].real, color = ColorDefault(0), zorder = 2)
         plt.plot(x, waves[:, k].imag, color = ColorDefault(3), zorder = 3)
-        TickPlot(nh, ax, 0.5)
+        TickPlot([[0, nh]], ax, 0.5)
         if (save):
             fig.savefig(savePath + saveName + str(nh - k) + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
         plt.show()
@@ -198,11 +184,11 @@ def PlotGeneralWaves(nh, x, waves, save = False, saveName = 'PlotOutputs'):
 # In[9]:
 
 
-def PlotWave(nh, numPoints, tickHeight, X, waveCell, fX, save, xBound = [], saveName = 'WavePlot'):
+def PlotWave(numPoints, tickHeight, X, waveCell, fX, save, xBound, saveName = 'WavePlot'):
     fig, ax = plt.subplots(figsize = (5, 2.5))
     ax = plt.axes(frameon = False)
-    PiecePlot(nh, numPoints, X, waveCell, xBound = xBound)
-    TickPlot(nh, ax, tickHeight, xBound = xBound)
+    PiecePlot(numPoints, X, waveCell, xBound)
+    TickPlot(xBound, ax, tickHeight)
     plt.plot(X, fX, color = ColorDefault(0), zorder = 2)
     if (save):
         fig.savefig(savePath + saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
@@ -214,14 +200,14 @@ def PlotWave(nh, numPoints, tickHeight, X, waveCell, fX, save, xBound = [], save
 # In[10]:
 
 
-def PlotMixedWave(nh, h, waveCell, waveCoef, save = False):
-    numPoints, font = UsefulPlotVals(nh)
-    X, waveCont = WT.MakeNodeWaves(nh, h, nRes = numPoints)
+def PlotMixedWave(nh, waveCell, waveCoef, xBound = [], save = False):
+    numPoints, font = UsefulPlotVals()
+    X, waveCont = WT.MakeNodeWaves(nh, nRes = numPoints)
     fXCell = OT.ChangeBasis(nh, waveCoef, waveCell)
     fXCont = OT.ChangeBasis(nh, waveCoef, waveCont)
     saveName = 'MixedWave'
     yMin, yMax, tickHeight = GetYBound(fXCont, 0.25)
-    PlotWave(nh, numPoints, tickHeight, X, fXCell, fXCont, save, saveName = saveName)
+    PlotWave(numPoints, tickHeight, X, fXCell, fXCont, save, xBound = xBound, saveName = saveName)
     plt.xlim([-0.1, 1.1])
     plt.ylim([yMin, yMax])
     return
