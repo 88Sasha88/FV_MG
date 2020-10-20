@@ -42,17 +42,18 @@ def ConstructFFTCoef(nh):
 
 
 def ConstructShift(nh, waves):
-    problem = BT.CheckSize(nh, waves)
-    if (problem != 0):
-        sys.exit('ERROR:\nFFTTools:\nConstructShift:\nnh does not match size of waves!')
+    errorLoc = 'ERROR:\nFFTTools:\nConstructShift:\n'
+    errorMess = BT.CheckSize(nh, waves, nName = 'nh', matricaName = 'waves')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
     xhat = PerformFFT(waves, axes = 1)
     xhat = xhat.T
     FFTCoef, k_max = ConstructFFTCoef(nh)
-    FFTFix = np.round(FFTCoef.T @ LA.inv(xhat), 15)
-    problem = BT.CheckDiag(FFTFix)
-    if (problem != 0):
-        print('FFTFix: \n', FFTFix)
-        sys.exit('ERROR:\nFFTTools:\nConstructShift:\nFFTFix is not diagonal!')
+    FFTFix = FFTCoef.T @ LA.inv(xhat)
+    FFTFix = OT.RoundDiag(FFTFix) # 15
+    errorMess = BT.CheckDiag(FFTFix, matricaName = 'FFTFix')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
     phaseModes = (nh / np.pi) * np.angle(np.diag(FFTFix)) # This is what the k number for the phase shifts should be.
     phaseModeCheck = -np.linspace(-k_max, k_max - 1, nh)
     phaseModeCheck[0] = 0
@@ -95,12 +96,13 @@ def PerformIFFT(inputArray, axes = 0):
 
 
 def GetKSpaceCoefs(nh, coefs, waves):
-    problemCoef = BT.CheckSize(nh, coefs)
-    problemWave = BT.CheckSize(nh, waves)
-    if (problemCoef != 0):
-        sys.exit('ERROR:\nFFTTools:\nGetKSpaceCoefs:\nnh does not match size of coefs!')
-    if (problemWave != 0):
-        sys.exit('ERROR:\nFFTTools:\nGetKSpaceCoefs:\nnh does not match size of waves!')
+    errorLoc = 'ERROR:\nFFTTools:\nGetKSpaceCoefs:\n'
+    errorMess = BT.CheckSize(nh, coefs, nName = 'nh', matricaName = 'coefs')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    errorMess = BT.CheckSize(nh, waves, nName = 'nh', matricaName = 'waves')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
     linCombo = OT.ChangeBasis(nh, coefs, waves)
     linComboFFT = PerformFFT(linCombo)
     phase, amp = ConstructShift(nh, waves)
@@ -114,12 +116,13 @@ def GetKSpaceCoefs(nh, coefs, waves):
 
 
 def GetXSpaceCoefs(nh, coefs, waves):
-    problemCoef = BT.CheckSize(nh, coefs)
-    problemWave = BT.CheckSize(nh, waves)
-    if (problemCoef != 0):
-        sys.exit('ERROR:\nFFTTools:\nGetXSpaceCoefs:\nnh does not match size of coefs!')
-    if (problemWave != 0):
-        sys.exit('ERROR:\nFFTTools:\nGetXSpaceCoefs:\nnh does not match size of waves!')
+    errorLoc = 'ERROR:\nFFTTools:\nGetXSpaceCoefs:\n'
+    errorMess = BT.CheckSize(nh, coefs, nName = 'nh', matricaName = 'coefs')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    errorMess = BT.CheckSize(nh, waves, nName = 'nh', matricaName = 'waves')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
     phase, amp = ConstructShift(nh, waves)
     linCombo = np.round(coefs / (amp * phase), 14)
     linComboIFFT = PerformIFFT(linCombo)
@@ -128,7 +131,7 @@ def GetXSpaceCoefs(nh, coefs, waves):
         xCoefs = np.real(xCoefs)
     else:
         print('xCoefs :', xCoefs)
-        sys.exit('ERROR:\nFFTTools:\nGetXSpaceCoefs:\nx coefficients are not real!')
+        sys.exit(errorLoc + 'x coefficients are not real!')
     return xCoefs
 
 

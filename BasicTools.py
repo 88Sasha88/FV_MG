@@ -19,13 +19,13 @@ import matplotlib.pyplot as plt
 # In[2]:
 
 
-def CheckSize(n, matrica):
+def CheckSize(n, matrica, nName = 'n', matricaName = 'matrica'):
     dim = size(shape(matrica))
-    problem = 0
+    message = ''
     for i in range(dim):
         if (n != shape(matrica)[i]):
-            problem = problem + 1
-    return problem
+            message = '%s does not match size of %s!' %(nName, matricaName)
+    return message
 
 
 # This function ensures that $n^{h}$ is an appropriate base-2 value.
@@ -33,16 +33,14 @@ def CheckSize(n, matrica):
 # In[3]:
 
 
-def CheckNumber(nh, showMess = True):
+def CheckNumber(nh, nhName = 'nh'):
     check = nh
-    problem = 0
+    message = ''
     while (check % 2 == 0):
         check = check / 2
     if (check != 1):
-        problem = 1
-        if (showMess):
-            sys.exit('ERROR:\nnh must be a base-2 integer!')
-    return problem
+        message = '%s must be a base-2 integer!' %nhName
+    return message
 
 
 # This function checks if a given matrix is diagonal.
@@ -50,17 +48,18 @@ def CheckNumber(nh, showMess = True):
 # In[4]:
 
 
-def CheckDiag(matrica):
+def CheckDiag(matrica, matricaName = 'matrica'):
+    message = ''
     if (np.size(np.shape(matrica)) != 2):
-        sys.exit('ERROR:\nBasicTools:\nCheckDiag:\nmatrica must be a rank-2 array!')
+        message = '%s must be a rank-2 array!' %matricaName
     if (np.shape(matrica)[0] != np.shape(matrica)[1]):
-        sys.exit('ERROR:\nBasicTools:\nCheckDiag:\nmatrica must be a square array!')
+        message = '%s must be a square array!' %matricaName
     i, j = np.nonzero(matrica)
     if (np.all(i == j)):
-        problem = 0
+        message = ''
     else:
-        problem = 1
-    return problem
+        message = '%s is not diagonal!' %matricaName
+    return message
 
 
 # This function checks if a given matrix is diagonal.
@@ -91,17 +90,17 @@ def MakeXY(xBounds):
     nh_min = xBounds[0][1]
     loops = len(xBounds)
     nh_max = nh_min * (2**(loops - 1))
-    problem = CheckBounds(nh_min, loops, xBounds)
-    if (problem == 1):
-        sys.exit('ERROR:\nBasicTools:\nMakeXY:\nnh_min must be base_2 integer!')
-    if (problem == 2):
-        sys.exit('ERROR:\nBasicTools:\nMakeXY:\nFirst value in first boundary pair must be 0!')
-    if (problem == 3):
-        sys.exit('ERROR:\nBasicTools:\nMakeXY:\nAll elements in xBounds must be of length 2!')
-    if (problem == 4):
-        sys.exit('ERROR:\nBasicTools:\nMakeXY:\nLower-bound values in xBounds greater than upper bounds!')
-    if (problem == 5):
-        sys.exit('ERROR:\nBasicTools:\nMakeXY:\nValues in xBounds must correspond to the grid spacing of their respective level!')
+#     problem = CheckBounds(nh_min, loops, xBounds)
+#     if (problem == 1):
+#         sys.exit('ERROR:\nBasicTools:\nMakeXY:\nnh_min must be base_2 integer!')
+#     if (problem == 2):
+#         sys.exit('ERROR:\nBasicTools:\nMakeXY:\nFirst value in first boundary pair must be 0!')
+#     if (problem == 3):
+#         sys.exit('ERROR:\nBasicTools:\nMakeXY:\nAll elements in xBounds must be of length 2!')
+#     if (problem == 4):
+#         sys.exit('ERROR:\nBasicTools:\nMakeXY:\nLower-bound values in xBounds greater than upper bounds!')
+#     if (problem == 5):
+#         sys.exit('ERROR:\nBasicTools:\nMakeXY:\nValues in xBounds must correspond to the grid spacing of their respective level!')
     x = []
     for i in range(loops):
         h = (2**-i) / nh_min

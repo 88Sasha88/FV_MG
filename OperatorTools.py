@@ -22,9 +22,10 @@ import BasicTools as BT
 
 
 def NormalizeMatrix(n, matrica, axis = 0):
-    problem = BT.CheckSize(n, matrica)
-    if (problem != 0):
-        sys.exit('ERROR:\nOperatorTools:\nNormalizeMatrix:\nn does not match size of matrica!')
+    errorLoc = 'ERROR:\nOperatorTools:\nNormalizeMatrix:\n'
+    errorMess = BT.CheckSize(n, matrica)
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
     zeroMat = np.zeros((n, n), float)
     norms = LA.norm(matrica, axis = axis)
     np.fill_diagonal(zeroMat, norms)
@@ -55,14 +56,28 @@ def MakeLaplacian1D(n):
 
 
 def ChangeBasis(nh, coefs, waves):
-    problemCoef = BT.CheckSize(nh, coefs)
-    problemWave = BT.CheckSize(nh, waves[0, :])
-    if (problemCoef != 0):
-        sys.exit('ERROR:\nOperatorTools:\nChangeBasis:\nnh does not match size of coefs!')
-    if (problemWave != 0):
-        sys.exit('ERROR:\nOperatorTools:\nChangeBasis:\nnh does not match size of waves!')
+    errorLoc = 'ERROR:\nOperatorTools:\nChangeBasis:\n'
+    errorMess = BT.CheckSize(nh, coefs)
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    errorMess = BT.CheckSize(nh, waves[0, :], nName = 'nh', matricaName = 'waves')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
     linCombo = waves @ coefs
     return linCombo
+
+
+# This function checks if a given matrix is diagonal.
+
+# In[5]:
+
+
+def RoundDiag(matrica, places = 14):
+    eigVals = np.diag(matrica)
+    idealMat = np.zeros(np.shape(matrica), float)
+    np.fill_diagonal(idealMat, eigVals)
+    matrica = np.round(matrica - idealMat, places) + idealMat
+    return matrica
 
 
 # In[ ]:

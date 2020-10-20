@@ -91,9 +91,10 @@ def TickPlot(xBound, ax, tickHeight):
 
 
 def PiecePlot(numPoints, X, pieces, xBound):
-    problemX = BT.CheckSize(numPoints, X)
-    if (problemX != 0):
-        sys.exit('ERROR:\nPiecePlot:\nnumPoints does not match size of X!')
+    errorLoc = 'ERROR:\nPlotTools:\nPiecePlot:\n'
+    errorMess = BT.CheckSize(numPoints, X, nName = 'numPoints', matricaName = 'X')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
     x, y = BT.MakeXY(xBound)
     n = len(x) - 1
     cellVals = np.ones(numPoints, float)
@@ -150,12 +151,13 @@ def PlotWaves(nh, waveCell, x, waveNode, xBound, plotNode = False, save = False)
 
 
 def PlotGeneralWaves(nh, x, waves, save = False, saveName = 'PlotOutputs'):
-    problemX = BT.CheckSize(nh, x)
-    problemWave = BT.CheckSize(nh, waves)
-    if (problemX != 0):
-        sys.exit('ERROR:\nPlotTools:\nPlotGeneralWaves:\nnh does not match size of x!')
-    if (problemWave != 0):
-        sys.exit('ERROR:\nPlotTools:\nPlotGeneralWaves:\nnh does not match size of waves!')
+    errorLoc = 'ERROR:\nPlotTools:\nPlotGeneralWaves:\n'
+    errorMess = BT.CheckSize(nh, x, nName = 'nh', matricaName = 'x')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    errorMess = BT.CheckSize(nh, waves, nName = 'nh', matricaName = 'waves')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
     numPoints, font = UsefulPlotVals()
     for k in range(nh):
         fig, ax = plt.subplots(figsize = (5, 2.5))

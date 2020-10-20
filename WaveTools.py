@@ -105,16 +105,18 @@ def MakeKs(nh):
 
 
 def FindLaplaceEigVals(nh, h, waves):
-    problem = BT.CheckSize(nh, waves)
-    if (problem != 0):
-        sys.exit('ERROR:\nWaveTools:\nFindLaplaceEigVals:\nnh does not match size of waves!')
+    errorLoc = 'ERROR:\nWaveTools:\nFindLaplaceEigVals:\n'
+    errorMess = BT.CheckSize(nh, waves, nName = 'nh', matricaName = 'waves')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
     wavesNorm = OT.NormalizeMatrix(nh, waves)
     wavesInv = wavesNorm.conj().T
     Laplacian = OT.MakeLaplacian1D(nh)
-    eigMat = np.round(wavesInv @ Laplacian @ wavesNorm, 14)
-    problem = BT.CheckDiag(eigMat)
-    if (problem != 0):
-        sys.exit('ERROR:\nWaveTools:\nFindLaplaceEigVals:\neigMat is not diagonal!')
+    eigMat = wavesInv @ Laplacian @ wavesNorm
+    eigMat = OT.RoundDiag(eigMat)
+    errorMess = BT.CheckDiag(eigMat, matricaName = 'eigMat')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
     eigvals = np.diag(eigMat)
     ks = MakeKs(nh)
     eigvalsShould = [2 * (np.cos(2 * np.pi * h * k) - 1) for k in ks]
