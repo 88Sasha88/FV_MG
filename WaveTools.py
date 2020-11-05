@@ -21,8 +21,9 @@ import OperatorTools as OT
 # In[2]:
 
 
-def MakeWaves(nh_max, xBound):
-    x, y = BT.MakeXY(xBound)
+def MakeWaves(omega):
+    nh_max = omega.nh_max
+    x = omega.xNode
     n = len(x) - 1
     xCell = 0.5 * (x[0:n] + x[1:n + 1])
     hDiag = x[1:n + 1] - x[0:n]
@@ -35,7 +36,7 @@ def MakeWaves(nh_max, xBound):
     wave1up.T[::nh_max] = 0
     wave0 = waves - wave1up
     waves = (hMat @ wave1up) + wave0
-    return xCell, waves
+    return waves
 
 
 # This function takes in a linear space of node locations and creates a matrix of `nh_max` many cell-centered Fourier modes.
@@ -60,7 +61,8 @@ def CellWaves(nh_max, x):
 # In[4]:
 
 
-def MakeNodeWaves(nh_max, nRes = 0):
+def MakeNodeWaves(omega, nRes = 0):
+    nh_max = omega.nh_max
     if (nRes == 0):
         nRes = nh_max
         xMax = 1. - (1. / nRes)

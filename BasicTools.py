@@ -119,6 +119,121 @@ def MakeXY(xBounds):
     return x, y
 
 
+class Grid:
+    patches = list([])
+    xNode = []
+    xPatches = [[]]
+    levels = 0
+    cells = list([])
+    def __init__(self, nh):
+        errorLoc = 'ERROR:\nBasicTools:\nGrid:\n__init__:\n'
+        self.AddCell(nh)
+        self.nh_min = nh
+        errorMess = CheckNumber(self.nh_min, nhName = 'nh_min')
+        if (errorMess != ''):
+            sys.exit(errorLoc + errorMess)
+    class Patch:
+        def __init__(self, nh, refRatio, cell):
+            nh = nh * refRatio
+            h = 1. / nh
+            if (cell == []):
+                regions = 1
+                cellPieces = [[0, nh - 1]]
+                xPatch = [[]]
+                cell = [0]
+            else:
+                spots = len(cell)
+                if (spots == 1):
+                    regions = spots
+                    cellPieces = [[cell[0], cell[0]]]
+                else:
+                    upper = np.asarray(cell[1:spots])
+                    lower = np.asarray(cell[0:spots - 1])
+                    cutWhere = np.append(np.where(lower != upper - 1)[0], spots - 1)
+                    regions = len(cutWhere)
+                    cellPieces = [[] for j in range(regions)]
+                    first = 0
+                    for j in range(regions):
+                        last = cutWhere[j]
+                        cellPieces[j] = [cell[first], cell[last]]
+                        first = last + 1
+                xPatch = [[] for j in range(regions)]
+            bounds = [[] for j in range(regions)]
+            for j in range(regions):
+                rangeVal = cellPieces[j][1] - cellPieces[j][0] + 1
+                n = rangeVal * refRatio
+                xMin = h * refRatio * cellPieces[j][0]
+                xMax = h * refRatio * (cellPieces[j][1] + 1)
+                xPatch[j] = np.linspace(xMin, xMax, num = n + 1)
+                bounds[j] = np.asarray([xMin, xMax])
+            self.nh = nh
+            self.xPatch = xPatch
+            self.cell = cell
+            self.bounds = bounds
+        def getNh(self):
+            return self.nh
+        def getRefRatio(self):
+            return self.refRatio
+        def getCell(self):
+            return self.cell
+        def getXPatch(self):
+            return self.xPatch
+    def AddCell(self, nh, refRatio = 1, cell = []):
+        self.levels = self.levels + 1
+        patch0 = self.Patch(nh, refRatio, cell)
+
+        # ERROR CHECKS:
+
+        errorLoc = 'ERROR:\nBasicTools:\nGrid:\nAddCell:\n'
+        if (cell != []):
+            errorMess = CheckNumber(self.refRatio, nhName = 'refRatio')
+            if (errorMess != ''):
+                sys.exit(errorLoc + errorMess)
+            for patchBound in patch0.bounds:
+                both = False
+                j = 0
+                while ((not both) and (j < len(self.bounds))):
+                    bound = self.bounds[j]
+                    aboveLower = np.all(patchBound >= bound[0])
+                    belowUpper = np.all(patchBound <= bound[1])
+                    both = np.all([aboveLower, belowUpper])
+                    j = j + 1
+                if (not both):
+                    errorMess = 'cell values out of range of previous patch!'
+                    sys.exit(errorLoc + errorMess)
+        else:
+            refRatio = 1
+        if (cell != sorted(cell)):
+            errorMess = 'cell must be in number order!'
+            sys.exit(errorLoc + errorMess)
+        if (len(cell) != len(set(cell))):
+            errorMess = 'cell contains repeats!'
+            sys.exit(errorLoc + errorMess)
+
+        # END OF ERROR CHECKS
+
+        self.patches.append(patch0)
+        xPatchesFiller = [[] for i in range(self.levels)]
+        cellsFiller = [[] for i in range(self.levels)]
+        for xPatch in patch0.xPatch:
+            self.xNode = np.asarray(sorted(set(np.append(self.xNode, xPatch))))
+        for i in range(self.levels):
+            if (i == self.levels - 1):
+                xPatchesFiller[i] = patch0.xPatch
+                cellsFiller[i] = patch0.cell
+            else:
+                xPatchesFiller[i] = self.xPatches[i]
+                cellsFiller[i] = self.cells[i]
+        n = len(self.xNode)
+        self.xPatches = xPatchesFiller
+        self.cells = cellsFiller
+        self.nh_max = patch0.nh
+        self.refRatio = refRatio
+        self.y = np.zeros(n, float)
+        self.xCell = 0.5 * (self.xNode[0:n - 1] + self.xNode[1:n])
+        self.bounds = patch0.bounds
+
+
 # In[ ]:
 
 
