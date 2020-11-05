@@ -215,7 +215,7 @@ def PlotMixedWave(nh, waveCell, waveCoef, xBound = [], save = False):
     return
 
 
-# This 
+# This function outputs the $y$ limits for a graph along with their respective tick height.
 
 # In[10]:
 
