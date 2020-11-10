@@ -28,21 +28,16 @@ def CheckSize(n, matrica, nName = 'n', matricaName = 'matrica'):
     return message
 
 
-# This function ensures that `n` is an appropriate base-2 value.
+# This function ensures that `n` is an appropriate base-two value.
 
 # In[3]:
 
 
 def CheckNumber(n, nName = 'n'):
-    check = n
     message = ''
-    if (check == 1):
-        message = '%s must be a base-2 integer!' %nName
-    else:
-        while (check % 2 == 0):
-            check = check / 2.
-        if (check != 1):
-            message = '%s must be a base-2 integer!' %nName
+    check = np.log(n) / np.log(2)
+    if ((check < 1) or (check != int(check))):
+        message = '%s must be a base-two integer greater than one!' %nName
     return message
 
 
