@@ -36,10 +36,13 @@ def CheckSize(n, matrica, nName = 'n', matricaName = 'matrica'):
 def CheckNumber(n, nName = 'n'):
     check = n
     message = ''
-    while (check % 2 == 0):
-        check = check / 2
-    if (check != 1):
-        message = '%s must be a base-2 integer!' %nhName
+    if (check == 1):
+        message = '%s must be a base-2 integer!' %nName
+    else:
+        while (check % 2 == 0):
+            check = check / 2.
+        if (check != 1):
+            message = '%s must be a base-2 integer!' %nName
     return message
 
 
@@ -134,7 +137,6 @@ class Grid:
                 xMax = h * refRatio * (cellPieces[j][1] + 1)
                 xPatch[j] = np.linspace(xMin, xMax, num = n + 1)
                 bounds[j] = np.asarray([xMin, xMax])
-            self.nh = nh
             self.xPatch = xPatch
             self.cell = cell
             self.bounds = bounds
@@ -147,7 +149,7 @@ class Grid:
 
         errorLoc = 'ERROR:\nBasicTools:\nGrid:\nAddCell:\n'
         if (cell != []):
-            errorMess = CheckNumber(self.refRatio, nName = 'refRatio')
+            errorMess = CheckNumber(refRatio, nName = 'refRatio')
             if (errorMess != ''):
                 sys.exit(errorLoc + errorMess)
             for patchBound in patch0.bounds:
