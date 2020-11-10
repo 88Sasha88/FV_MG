@@ -28,13 +28,13 @@ def CheckSize(n, matrica, nName = 'n', matricaName = 'matrica'):
     return message
 
 
-# This function ensures that $n^{h}$ is an appropriate base-2 value.
+# This function ensures that `n` is an appropriate base-2 value.
 
 # In[3]:
 
 
-def CheckNumber(nh, nhName = 'nh'):
-    check = nh
+def CheckNumber(n, nName = 'n'):
+    check = n
     message = ''
     while (check % 2 == 0):
         check = check / 2
@@ -81,60 +81,28 @@ def CheckBounds(nh_min, loops, bounds):
     return problem
 
 
-# This function outputs an $x$ array and a $y$ array of size $n^{h}$ + 1 of the locations of the tick marks.
+# This class creates an object which encompasses all the information one needs from an AMR grid. This includes `xNode`, an array containing all tick locations along the $x$ axis; `xCell`, an array of all cell center locations along the $x$ axis; `xPatches`, a list of all the smaller grids at their respective levels; `levels`, the total number of refinement levels; `cells`, a list of all the grid locations at their respective locations using the indexing of the previous level; 'nh_min', the step number at the coarsest level; 'nh_max', the step number at the finest level; `h`; an array of step-sizes at their respective locations; and `y`, an array of zeros corresponding to the locations of all of the tick marks.
 
 # In[6]:
 
 
-def MakeXY(xBounds):
-    nh_min = xBounds[0][1]
-    loops = len(xBounds)
-    nh_max = nh_min * (2**(loops - 1))
-#     problem = CheckBounds(nh_min, loops, xBounds)
-#     if (problem == 1):
-#         sys.exit('ERROR:\nBasicTools:\nMakeXY:\nnh_min must be base_2 integer!')
-#     if (problem == 2):
-#         sys.exit('ERROR:\nBasicTools:\nMakeXY:\nFirst value in first boundary pair must be 0!')
-#     if (problem == 3):
-#         sys.exit('ERROR:\nBasicTools:\nMakeXY:\nAll elements in xBounds must be of length 2!')
-#     if (problem == 4):
-#         sys.exit('ERROR:\nBasicTools:\nMakeXY:\nLower-bound values in xBounds greater than upper bounds!')
-#     if (problem == 5):
-#         sys.exit('ERROR:\nBasicTools:\nMakeXY:\nValues in xBounds must correspond to the grid spacing of their respective level!')
-    x = []
-    for i in range(loops):
-        h = (2**-i) / nh_min
-        n = xBounds[i][1] - xBounds[i][0] + 1
-        xMin = h * xBounds[i][0]
-        xMax = h * xBounds[i][1]
-        if (i > 0):
-            n = n - 2
-            xMin = xMin + h
-            xMax = xMax - h
-        xPiece = np.linspace(xMin, xMax, num = n)
-        x = sorted(set(np.append(x, xPiece)))
-    x = np.asarray(x)
-    n_max = np.shape(x)[0]
-    y = np.zeros(n_max, float)
-    return x, y
-
-
 class Grid:
-    patches = list([])
+    patches = []
     xNode = []
-    xPatches = [[]]
+    xPatches = []
+    cells = []
     levels = 0
-    cells = list([])
+    nh_max = 1
     def __init__(self, nh):
         errorLoc = 'ERROR:\nBasicTools:\nGrid:\n__init__:\n'
-        self.AddCell(nh)
         self.nh_min = nh
-        errorMess = CheckNumber(self.nh_min, nhName = 'nh_min')
+        self.nh_max = nh
+        self.AddCell()
+        errorMess = CheckNumber(self.nh_min, nName = 'nh_min')
         if (errorMess != ''):
             sys.exit(errorLoc + errorMess)
     class Patch:
         def __init__(self, nh, refRatio, cell):
-            nh = nh * refRatio
             h = 1. / nh
             if (cell == []):
                 regions = 1
@@ -170,23 +138,16 @@ class Grid:
             self.xPatch = xPatch
             self.cell = cell
             self.bounds = bounds
-        def getNh(self):
-            return self.nh
-        def getRefRatio(self):
-            return self.refRatio
-        def getCell(self):
-            return self.cell
-        def getXPatch(self):
-            return self.xPatch
-    def AddCell(self, nh, refRatio = 1, cell = []):
+    def AddCell(self, refRatio = 1, cell = []):
         self.levels = self.levels + 1
-        patch0 = self.Patch(nh, refRatio, cell)
+        self.nh_max = self.nh_max * refRatio
+        patch0 = self.Patch(self.nh_max, refRatio, cell)
 
         # ERROR CHECKS:
 
         errorLoc = 'ERROR:\nBasicTools:\nGrid:\nAddCell:\n'
         if (cell != []):
-            errorMess = CheckNumber(self.refRatio, nhName = 'refRatio')
+            errorMess = CheckNumber(self.refRatio, nName = 'refRatio')
             if (errorMess != ''):
                 sys.exit(errorLoc + errorMess)
             for patchBound in patch0.bounds:
@@ -202,7 +163,9 @@ class Grid:
                     errorMess = 'cell values out of range of previous patch!'
                     sys.exit(errorLoc + errorMess)
         else:
-            refRatio = 1
+            if (self.levels > 1):
+                errorMess = 'You must enter a list of cell locations!'
+                sys.exit(errorLoc + errorMess)
         if (cell != sorted(cell)):
             errorMess = 'cell must be in number order!'
             sys.exit(errorLoc + errorMess)
@@ -227,9 +190,9 @@ class Grid:
         n = len(self.xNode)
         self.xPatches = xPatchesFiller
         self.cells = cellsFiller
-        self.nh_max = patch0.nh
         self.refRatio = refRatio
         self.y = np.zeros(n, float)
+        self.h = self.xNode[1:n] - self.xNode[0:n - 1]
         self.xCell = 0.5 * (self.xNode[0:n - 1] + self.xNode[1:n])
         self.bounds = patch0.bounds
 

@@ -65,13 +65,14 @@ def DrawLine(xCenter, yCenter, tickHeight):
     return (x, y)
 
 
-# This function plots a number line with $n^{h}$ cells onto `ax`.
+# This function plots a number line marking off the grid onto `ax`.
 
 # In[4]:
 
 
-def TickPlot(xBound, ax, tickHeight):
-    xAxis, yAxis = BT.MakeXY(xBound)
+def TickPlot(omega, ax, tickHeight):
+    xAxis = omega.xNode
+    yAxis = omega.y
     for (xi, yi) in zip(xAxis, yAxis):
         if ((xi == 0) or (xi == 1)):
             height = tickHeight
@@ -90,12 +91,12 @@ def TickPlot(xBound, ax, tickHeight):
 # In[5]:
 
 
-def PiecePlot(numPoints, X, pieces, xBound):
+def PiecePlot(omega, numPoints, X, pieces):
     errorLoc = 'ERROR:\nPlotTools:\nPiecePlot:\n'
     errorMess = BT.CheckSize(numPoints, X, nName = 'numPoints', matricaName = 'X')
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
-    x, y = BT.MakeXY(xBound)
+    x = omega.xNode
     n = len(x) - 1
     cellVals = np.ones(numPoints, float)
     lowIndex = 0
@@ -115,7 +116,8 @@ def PiecePlot(numPoints, X, pieces, xBound):
 def UsefulPlotVals():
     numPoints = 129
     font = 15
-    return numPoints, font
+    X = np.linspace(0, 1, num = numPoints)
+    return numPoints, font, X
 
 
 # This function iterates through the modes and overlays the piecewise cell average plots onto plots of their respective continuous wave functions alongside written labels of the equations they should each represent. It also gives the option of plotting the node point values. It also allows you to save those plots if desired. As the default, these two features are subdued.
@@ -123,15 +125,18 @@ def UsefulPlotVals():
 # In[7]:
 
 
-def PlotWaves(nh, waveCell, x, waveNode, xBound, plotNode = False, save = False):
-    numPoints, font = UsefulPlotVals()
-    X, waveCont = WT.MakeNodeWaves(nh, nRes = numPoints)
+def PlotWaves(omega, waveCell, waveNode, plotNode = False, save = False):
+    nh = omega.nh_max
+    x = omega.xNode
+    n = len(x) - 1
+    numPoints, font, X = UsefulPlotVals()
+    waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
     for k in range(nh):
         saveName = 'FourierModes' + str(nh - k)
         yMin, yMax, tickHeight = GetYBound(waveCont[:, k], 0.5, sym = True)
-        PlotWave(numPoints, tickHeight, X, waveCell[:, k], waveCont[:, k], save, xBound, saveName = saveName)
+        PlotWave(omega, numPoints, tickHeight, X, waveCell[:, k], waveCont[:, k], save, saveName = saveName)
         if (plotNode):
-            plt.scatter(x, waveNode[:, k], color = ColorDefault(2), s = 10, zorder = 4)
+            plt.scatter(x[:n], waveNode[:, k], color = ColorDefault(2), s = 10, zorder = 4)
         plt.xlim([-0.1, 1.25])
         plt.ylim([yMin, yMax])
         if (k % 2 == 0):
@@ -174,42 +179,43 @@ def PlotGeneralWaves(nh, x, waves, save = False, saveName = 'PlotOutputs'):
             plt.text(1.1, 0, r'$b_{%d}$' %((k / 2) + 1) + 'sin' + r'$%d \pi x$' %(k + 1), fontsize = font)
         plt.plot(x, waves[:, k].real, color = ColorDefault(0), zorder = 2)
         plt.plot(x, waves[:, k].imag, color = ColorDefault(3), zorder = 3)
-        TickPlot([[0, nh]], ax, 0.5)
+        TickPlot(omega, ax, 0.5)
         if (save):
             fig.savefig(savePath + saveName + str(nh - k) + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
         plt.show()
     return
 
 
-# This 
+# This function overlays a particular piecewise cell average plot onto a plot of its continuous wave function. It also allows you to save this plot if desired. As the default, that feature is subdued.
 
 # In[9]:
 
 
-def PlotWave(numPoints, tickHeight, X, waveCell, fX, save, xBound, saveName = 'WavePlot'):
+def PlotWave(omega, numPoints, tickHeight, X, waveCell, fX, save, saveName = 'WavePlot'):
     fig, ax = plt.subplots(figsize = (5, 2.5))
     ax = plt.axes(frameon = False)
-    PiecePlot(numPoints, X, waveCell, xBound)
-    TickPlot(xBound, ax, tickHeight)
+    PiecePlot(omega, numPoints, X, waveCell)
+    TickPlot(omega, ax, tickHeight)
     plt.plot(X, fX, color = ColorDefault(0), zorder = 2)
     if (save):
         fig.savefig(savePath + saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
     return
 
 
-# This 
+# This function overlays a piecewise cell average plot of a linear combination of wave vectors onto a plot of its continuous wave function. It also allows you to save this plot if desired. As the default, that feature is subdued.
 
 # In[10]:
 
 
-def PlotMixedWave(nh, waveCell, waveCoef, xBound = [], save = False):
-    numPoints, font = UsefulPlotVals()
-    X, waveCont = WT.MakeNodeWaves(nh, nRes = numPoints)
+def PlotMixedWave(omega, waveCell, waveCoef, save = False):
+    nh = omega.nh_max
+    numPoints, font, X = UsefulPlotVals()
+    waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
     fXCell = OT.ChangeBasis(nh, waveCoef, waveCell)
     fXCont = OT.ChangeBasis(nh, waveCoef, waveCont)
     saveName = 'MixedWave'
     yMin, yMax, tickHeight = GetYBound(fXCont, 0.25)
-    PlotWave(numPoints, tickHeight, X, fXCell, fXCont, save, xBound = xBound, saveName = saveName)
+    PlotWave(omega, numPoints, tickHeight, X, fXCell, fXCont, save, saveName = saveName)
     plt.xlim([-0.1, 1.1])
     plt.ylim([yMin, yMax])
     return

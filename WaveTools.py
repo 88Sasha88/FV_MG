@@ -16,7 +16,7 @@ import BasicTools as BT
 import OperatorTools as OT
 
 
-# This function creates a linear space of evenly-spaced cell locations and passes a matrix of cell-centered Fourier modes along with a linear space of the cell locations.
+# This function extracts a linear space of node locations and the maximum $n^{h}$ value from the Grid object `omega` in its argument and passes those arguments into `CellWaves()` to obtain a matrix of cell-centered Fourier modes and then rescales each of their cells with their respective $h$ values.
 
 # In[2]:
 
@@ -24,12 +24,11 @@ import OperatorTools as OT
 def MakeWaves(omega):
     nh_max = omega.nh_max
     x = omega.xNode
+    h = omega.h
     n = len(x) - 1
-    xCell = 0.5 * (x[0:n] + x[1:n + 1])
-    hDiag = x[1:n + 1] - x[0:n]
     waves = CellWaves(nh_max, x)
     hs = np.zeros((n, n), float)
-    np.fill_diagonal(hs, hDiag)
+    np.fill_diagonal(hs, h)
     zeroMat = np.zeros((n, nh_max - n), float)
     hMat = LA.inv(hs)
     wave1up = 1 * waves
@@ -39,7 +38,7 @@ def MakeWaves(omega):
     return waves
 
 
-# This function takes in a linear space of node locations and creates a matrix of `nh_max` many cell-centered Fourier modes.
+# This function takes in a linear space of node locations and creates a matrix of `nh_max` many cell-centered Fourier modes, each of `nh_max` length.
 
 # In[3]:
 
@@ -56,7 +55,7 @@ def CellWaves(nh_max, x):
     return waves
 
 
-# This function creates a matrix of node-centered Fourier modes along with a linear space of the node locations.
+# This function extracts the maximum $n^{h}$ value from the Grid object `omega` in its argument to create a linear space of node locations and passes those arguments into `NodeWaves()` to obtain a matrix of node-centered Fourier modes.
 
 # In[4]:
 
@@ -64,16 +63,16 @@ def CellWaves(nh_max, x):
 def MakeNodeWaves(omega, nRes = 0):
     nh_max = omega.nh_max
     if (nRes == 0):
-        nRes = nh_max
-        xMax = 1. - (1. / nRes)
+        x = omega.xNode
+        nRes = len(x) - 1
+        x = x[:nRes]
     else:
-        xMax = 1.
-    x = np.linspace(0, xMax, num = nRes)
+        x = np.linspace(0, 1, num = nRes)
     waves = NodeWaves(nh_max, x, nRes)
-    return x, waves
+    return waves
 
 
-# This function creates a matrix of node-centered Fourier modes along with a linear space of the node locations.
+# This function takes in a linear space of node locations and creates a matrix of `nh_max` many node-centered Fourier modes, each of `nRes` length.
 
 # In[5]:
 
@@ -101,12 +100,14 @@ def MakeKs(nh):
     return ks
 
 
-# This function takes in a matrix of wave vectors and finds their respective eigenvalues as they relate to the Laplacian matrix. Note that this function assumes that the input matrix comprises Fourier modes but includes an error catcher in case the eigenvalues don't turn out as expected within a $10^{-14}$ tolerance.
+# This function takes in a matrix of wave vectors and finds their respective eigenvalues as they relate to the Laplacian matrix. Note that this function assumes that the input matrix comprises Fourier modes but includes an error catcher in case the eigenvalues don't turn out within two orders of what is expected with a $10^{-14}$ tolerance.
 
 # In[7]:
 
 
-def FindLaplaceEigVals(nh, h, waves):
+def FindLaplaceEigVals(omega, waves):
+    nh = omega.nh_max
+    h = 1. / nh
     errorLoc = 'ERROR:\nWaveTools:\nFindLaplaceEigVals:\n'
     errorMess = BT.CheckSize(nh, waves, nName = 'nh', matricaName = 'waves')
     if (errorMess != ''):

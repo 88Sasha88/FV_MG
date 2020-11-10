@@ -95,7 +95,8 @@ def PerformIFFT(inputArray, axes = 0):
 # In[6]:
 
 
-def GetKSpaceCoefs(nh, coefs, waves):
+def GetKSpaceCoefs(omega, coefs, waves):
+    nh = omega.nh_max
     errorLoc = 'ERROR:\nFFTTools:\nGetKSpaceCoefs:\n'
     errorMess = BT.CheckSize(nh, coefs, nName = 'nh', matricaName = 'coefs')
     if (errorMess != ''):
@@ -115,7 +116,8 @@ def GetKSpaceCoefs(nh, coefs, waves):
 # In[7]:
 
 
-def GetXSpaceCoefs(nh, coefs, waves):
+def GetXSpaceCoefs(omega, coefs, waves):
+    nh = omega.nh_max
     errorLoc = 'ERROR:\nFFTTools:\nGetXSpaceCoefs:\n'
     errorMess = BT.CheckSize(nh, coefs, nName = 'nh', matricaName = 'coefs')
     if (errorMess != ''):

@@ -67,7 +67,7 @@ def ChangeBasis(nh, coefs, waves):
     return linCombo
 
 
-# This function checks if a given matrix is diagonal.
+# This function rounds the off-diagonal elements of what should be a diagonal matrix.
 
 # In[5]:
 
