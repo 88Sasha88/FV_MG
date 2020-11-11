@@ -114,7 +114,7 @@ def PiecePlot(omega, numPoints, X, pieces):
 
 
 def UsefulPlotVals():
-    numPoints = 129
+    numPoints = 357
     font = 15
     X = np.linspace(0, 1, num = numPoints)
     return numPoints, font, X
@@ -132,7 +132,7 @@ def PlotWaves(omega, waveCell, waveNode, plotNode = False, save = False):
     numPoints, font, X = UsefulPlotVals()
     waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
     for k in range(nh):
-        saveName = 'FourierModes' + str(nh - k)
+        saveName = 'FourierModes' + str(k + 1)
         yMin, yMax, tickHeight = GetYBound(waveCont[:, k], 0.5, sym = True)
         PlotWave(omega, numPoints, tickHeight, X, waveCell[:, k], waveCont[:, k], save, saveName = saveName)
         if (plotNode):

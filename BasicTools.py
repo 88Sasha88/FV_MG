@@ -91,6 +91,7 @@ class Grid:
     cells = []
     levels = 0
     nh_max = 1
+    refRatios = []
     def __init__(self, nh):
         errorLoc = 'ERROR:\nBasicTools:\nGrid:\n__init__:\n'
         self.nh_min = nh
@@ -171,7 +172,11 @@ class Grid:
             sys.exit(errorLoc + errorMess)
 
         # END OF ERROR CHECKS
-
+        
+        if (refRatio == 1):
+            self.refRatios.append(self.nh_min)
+        else:
+            self.refRatios.append(refRatio)
         self.patches.append(patch0)
         xPatchesFiller = [[] for i in range(self.levels)]
         cellsFiller = [[] for i in range(self.levels)]
