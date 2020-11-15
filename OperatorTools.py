@@ -49,27 +49,9 @@ def MakeLaplacian1D(n):
     return Laplacian
 
 
-
-# This function takes in some vector of coefficients and expresses it in the basis of the input matrix.
-
-# In[4]:
-
-
-def ChangeBasis(nh, coefs, waves):
-    errorLoc = 'ERROR:\nOperatorTools:\nChangeBasis:\n'
-    errorMess = BT.CheckSize(nh, coefs)
-    if (errorMess != ''):
-        sys.exit(errorLoc + errorMess)
-    errorMess = BT.CheckSize(nh, waves[0, :], nName = 'nh', matricaName = 'waves')
-    if (errorMess != ''):
-        sys.exit(errorLoc + errorMess)
-    linCombo = waves @ coefs
-    return linCombo
-
-
 # This function rounds the off-diagonal elements of what should be a diagonal matrix.
 
-# In[5]:
+# In[4]:
 
 
 def RoundDiag(matrica, places = 14):

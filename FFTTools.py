@@ -104,7 +104,7 @@ def GetKSpaceCoefs(omega, coefs, waves):
     errorMess = BT.CheckSize(nh, waves, nName = 'nh', matricaName = 'waves')
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
-    linCombo = OT.ChangeBasis(nh, coefs, waves)
+    linCombo = waves @ coefs
     linComboFFT = PerformFFT(linCombo)
     phase, amp = ConstructShift(nh, waves)
     kCoefs = np.round(amp * phase * linComboFFT, 14)

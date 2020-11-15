@@ -14,7 +14,6 @@ import time
 import matplotlib.pyplot as plt
 import BasicTools as BT
 import WaveTools as WT
-import OperatorTools as OT
 
 
 # This function just allows me to have easy control over the prettier plotting colors.
@@ -91,7 +90,7 @@ def TickPlot(omega, ax, tickHeight):
 # In[5]:
 
 
-def PiecePlot(omega, numPoints, X, pieces):
+def PiecePlot(omega, numPoints, X, pieces, color = 3, linestyle = '-'):
     errorLoc = 'ERROR:\nPlotTools:\nPiecePlot:\n'
     errorMess = BT.CheckSize(numPoints, X, nName = 'numPoints', matricaName = 'X')
     if (errorMess != ''):
@@ -103,7 +102,7 @@ def PiecePlot(omega, numPoints, X, pieces):
     for k in range(n):
         highIndex = np.where(X <= x[k + 1])[0][::-1][0] + 1
         cellVals[lowIndex:highIndex] = pieces[k] * cellVals[lowIndex:highIndex]
-        plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(3), zorder = 3)
+        plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = linestyle, zorder = 3)
         lowIndex = highIndex
     return
 
@@ -117,7 +116,8 @@ def UsefulPlotVals():
     numPoints = 357
     font = 15
     X = np.linspace(0, 1, num = numPoints)
-    return numPoints, font, X
+    savePath = '/Users/sashacurcic/SashasDirectory/ANAG/Figures/'
+    return numPoints, font, X, savePath
 
 
 # This function iterates through the modes and overlays the piecewise cell average plots onto plots of their respective continuous wave functions alongside written labels of the equations they should each represent. It also gives the option of plotting the node point values. It also allows you to save those plots if desired. As the default, these two features are subdued.
@@ -125,20 +125,25 @@ def UsefulPlotVals():
 # In[7]:
 
 
-def PlotWaves(omega, waveCell, waveNode, plotNode = False, save = False):
+def PlotWaves(omega, waveCell, waveNode = [], waveTrans = [], save = False, rescale = 1):
     nh = omega.nh_max
     x = omega.xNode
     n = len(x) - 1
-    numPoints, font, X = UsefulPlotVals()
+    numPoints, font, X, savePath = UsefulPlotVals()
     waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
+    saveName = ''
     for k in range(nh):
-        saveName = 'FourierModes' + str(k + 1)
-        yMin, yMax, tickHeight = GetYBound(waveCont[:, k], 0.5, sym = True)
-        PlotWave(omega, numPoints, tickHeight, X, waveCell[:, k], waveCont[:, k], save, saveName = saveName)
-        if (plotNode):
+        if (save):
+            saveName = savePath + 'FourierModes' + str(k + 1)
+        if (waveTrans != []):
+            if (k < np.shape(waveTrans)[1]):
+                waveTransfer = waveTrans[:, k]
+        else:
+            waveTransfer = []
+        PlotWave(omega, numPoints, X, waveCell[:, k], waveCont[:, k], rescale, waveTrans = waveTransfer, saveName = saveName)
+        if (waveNode != []):
             plt.scatter(x[:n], waveNode[:, k], color = ColorDefault(2), s = 10, zorder = 4)
         plt.xlim([-0.1, 1.25])
-        plt.ylim([yMin, yMax])
         if (k % 2 == 0):
             if (k == 0):
                 plt.text(1.1, 0, r'$\frac{a_{0}}{2}$', fontsize = font)
@@ -163,7 +168,7 @@ def PlotGeneralWaves(nh, x, waves, save = False, saveName = 'PlotOutputs'):
     errorMess = BT.CheckSize(nh, waves, nName = 'nh', matricaName = 'waves')
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
-    numPoints, font = UsefulPlotVals()
+    numPoints, font, savePath = UsefulPlotVals()
     for k in range(nh):
         fig, ax = plt.subplots(figsize = (5, 2.5))
         ax.set_aspect(aspect = 4)
@@ -191,14 +196,33 @@ def PlotGeneralWaves(nh, x, waves, save = False, saveName = 'PlotOutputs'):
 # In[9]:
 
 
-def PlotWave(omega, numPoints, tickHeight, X, waveCell, fX, save, saveName = 'WavePlot'):
-    fig, ax = plt.subplots(figsize = (5, 2.5))
+def PlotWave(omega, numPoints, X, waveCell, fX, rescale, waveTrans = [], saveName = ''):
+    errorLoc = 'ERROR:\nPlotTools:\nPlotWave:\n'
+    yMin, yMax, tickHeight = GetYBound(fX, 0.5, sym = True)
+    if np.any(np.asarray(rescale) <= 0):
+        errorMess = 'All values of rescale must be greater than 0!'
+        sys.exit(errorLoc + errorMess)
+    if (np.shape(rescale) == ()):
+        size = [5 * rescale, 2.5 * rescale]
+        tickHeight = tickHeight / rescale
+    else:
+        if (np.shape(rescale) == (2,)):
+            size = [5 * rescale[0], 2.5 * rescale[1]]
+            tickHeight = tickHeight / rescale[1]
+        else:
+            errorMess = 'Invalid shape of rescale object entered!'
+            sys.exit(errorLoc + errorMess)
+    fig, ax = plt.subplots(figsize = size)
     ax = plt.axes(frameon = False)
     PiecePlot(omega, numPoints, X, waveCell)
+    if (waveTrans != []):
+        PiecePlot(omega, numPoints, X, waveTrans, color = 1)
     TickPlot(omega, ax, tickHeight)
     plt.plot(X, fX, color = ColorDefault(0), zorder = 2)
-    if (save):
-        fig.savefig(savePath + saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
+    plt.ylim([yMin, yMax])
+    if (saveName != ''):
+        fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
+        print('This image has been saved under ' + saveName + '.')
     return
 
 
@@ -207,17 +231,16 @@ def PlotWave(omega, numPoints, tickHeight, X, waveCell, fX, save, saveName = 'Wa
 # In[10]:
 
 
-def PlotMixedWave(omega, waveCell, waveCoef, save = False):
+def PlotMixedWave(omega, waveCell, waveCoef, rescale = 1, save = False):
     nh = omega.nh_max
-    numPoints, font, X = UsefulPlotVals()
+    numPoints, font, X, savePath = UsefulPlotVals()
     waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
-    fXCell = OT.ChangeBasis(nh, waveCoef, waveCell)
-    fXCont = OT.ChangeBasis(nh, waveCoef, waveCont)
-    saveName = 'MixedWave'
-    yMin, yMax, tickHeight = GetYBound(fXCont, 0.25)
-    PlotWave(omega, numPoints, tickHeight, X, fXCell, fXCont, save, saveName = saveName)
+    
+    fXCell = waveCell @ waveCoef
+    fXCont = waveCont @ waveCoef
+    saveName = savePath + 'MixedWave'
+    PlotWave(omega, numPoints, X, fXCell, fXCont, rescale, saveName = saveName)
     plt.xlim([-0.1, 1.1])
-    plt.ylim([yMin, yMax])
     return
 
 
