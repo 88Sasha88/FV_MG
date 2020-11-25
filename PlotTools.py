@@ -90,7 +90,7 @@ def TickPlot(omega, ax, tickHeight):
 # In[5]:
 
 
-def PiecePlot(omega, numPoints, X, pieces, color = 3, linestyle = '-'):
+def PiecePlot(omega, numPoints, X, pieces, color = 0, linestyle = '-'):
     errorLoc = 'ERROR:\nPlotTools:\nPiecePlot:\n'
     errorMess = BT.CheckSize(numPoints, X, nName = 'numPoints', matricaName = 'X')
     if (errorMess != ''):
@@ -131,16 +131,13 @@ def PlotWaves(omega, waveCell, waveNode = [], waveTrans = [], save = False, resc
     n = len(x) - 1
     numPoints, font, X, savePath = UsefulPlotVals()
     waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
-    saveName = ''
     for k in range(nh):
-        if (save):
-            saveName = savePath + 'FourierModes' + str(k + 1)
         if (waveTrans != []):
             if (k < np.shape(waveTrans)[1]):
                 waveTransfer = waveTrans[:, k]
         else:
             waveTransfer = []
-        PlotWave(omega, numPoints, X, waveCell[:, k], waveCont[:, k], rescale, waveTrans = waveTransfer, saveName = saveName)
+        fig = PlotWave(omega, numPoints, X, waveCell[:, k], waveCont[:, k], rescale, waveTrans = waveTransfer)
         if (waveNode != []):
             plt.scatter(x[:n], waveNode[:, k], color = ColorDefault(2), s = 10, zorder = 4)
         plt.xlim([-0.1, 1.25])
@@ -152,6 +149,10 @@ def PlotWaves(omega, waveCell, waveNode = [], waveTrans = [], save = False, resc
         else:
             plt.text(1.1, 0, r'$b_{%d}$' %((k / 2) + 1) + 'sin' + r'$%d \pi x$' %(k + 1), fontsize = font)
         plt.show()
+        if (save):
+            saveName = savePath + 'FourierModes' + str(k + 1)
+            fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
+            print('This image has been saved under ' + saveName + '.')
     return
 
 
@@ -196,7 +197,7 @@ def PlotGeneralWaves(nh, x, waves, save = False, saveName = 'PlotOutputs'):
 # In[9]:
 
 
-def PlotWave(omega, numPoints, X, waveCell, fX, rescale, waveTrans = [], saveName = ''):
+def PlotWave(omega, numPoints, X, waveCell, fX, rescale, waveTrans = []):
     errorLoc = 'ERROR:\nPlotTools:\nPlotWave:\n'
     yMin, yMax, tickHeight = GetYBound(fX, 0.5, sym = True)
     if np.any(np.asarray(rescale) <= 0):
@@ -216,14 +217,11 @@ def PlotWave(omega, numPoints, X, waveCell, fX, rescale, waveTrans = [], saveNam
     ax = plt.axes(frameon = False)
     PiecePlot(omega, numPoints, X, waveCell)
     if (waveTrans != []):
-        PiecePlot(omega, numPoints, X, waveTrans, color = 1)
+        PiecePlot(omega, numPoints, X, waveTrans, color = 3)
     TickPlot(omega, ax, tickHeight)
-    plt.plot(X, fX, color = ColorDefault(0), zorder = 2)
+    plt.plot(X, fX, color = ColorDefault(1), zorder = 2)
     plt.ylim([yMin, yMax])
-    if (saveName != ''):
-        fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
-        print('This image has been saved under ' + saveName + '.')
-    return
+    return fig
 
 
 # This function overlays a piecewise cell average plot of a linear combination of wave vectors onto a plot of its continuous wave function. It also allows you to save this plot if desired. As the default, that feature is subdued.
@@ -239,8 +237,11 @@ def PlotMixedWave(omega, waveCell, waveCoef, rescale = 1, save = False):
     fXCell = waveCell @ waveCoef
     fXCont = waveCont @ waveCoef
     saveName = savePath + 'MixedWave'
-    PlotWave(omega, numPoints, X, fXCell, fXCont, rescale, saveName = saveName)
+    fig = PlotWave(omega, numPoints, X, fXCell, fXCont, rescale)
     plt.xlim([-0.1, 1.1])
+    if (save):
+        fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
+        print('This image has been saved under ' + saveName + '.')
     return
 
 
