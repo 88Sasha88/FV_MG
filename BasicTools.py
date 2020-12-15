@@ -92,10 +92,12 @@ class Grid:
     levels = 0
     nh_max = 1
     refRatios = []
+    degFreed = 0
     def __init__(self, nh):
         errorLoc = 'ERROR:\nBasicTools:\nGrid:\n__init__:\n'
         self.nh_min = nh
         self.nh_max = nh
+        self.degFreed = nh
         self.AddCell()
         errorMess = CheckNumber(self.nh_min, nName = 'nh_min')
         if (errorMess != ''):
@@ -197,6 +199,7 @@ class Grid:
         self.h = self.xNode[1:n] - self.xNode[0:n - 1]
         self.xCell = 0.5 * (self.xNode[0:n - 1] + self.xNode[1:n])
         self.bounds = patch0.bounds
+        self.degFreed = self.degFreed + ((refRatio - 1) * len(cell))
 
 
 # In[ ]:

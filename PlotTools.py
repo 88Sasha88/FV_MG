@@ -90,7 +90,7 @@ def TickPlot(omega, ax, tickHeight):
 # In[5]:
 
 
-def PiecePlot(omega, numPoints, X, pieces, color = 0, linestyle = '-'):
+def PiecePlot(omega, numPoints, X, pieces, color = 3, linestyle = '-'):
     errorLoc = 'ERROR:\nPlotTools:\nPiecePlot:\n'
     errorMess = BT.CheckSize(numPoints, X, nName = 'numPoints', matricaName = 'X')
     if (errorMess != ''):
@@ -116,7 +116,7 @@ def UsefulPlotVals():
     numPoints = 357
     font = 15
     X = np.linspace(0, 1, num = numPoints)
-    savePath = '/Users/sashacurcic/SashasDirectory/ANAG/Figures/'
+    savePath = '/Users/sashacurcic/SashasDirectory/ANAG/FV_MG/Figures/'
     return numPoints, font, X, savePath
 
 
@@ -219,7 +219,7 @@ def PlotWave(omega, numPoints, X, waveCell, fX, rescale, waveTrans = []):
     if (waveTrans != []):
         PiecePlot(omega, numPoints, X, waveTrans, color = 3)
     TickPlot(omega, ax, tickHeight)
-    plt.plot(X, fX, color = ColorDefault(1), zorder = 2)
+    plt.plot(X, fX, color = ColorDefault(0), zorder = 2) # 1
     plt.ylim([yMin, yMax])
     return fig
 
