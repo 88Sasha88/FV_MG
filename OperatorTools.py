@@ -8,7 +8,9 @@ import os.path
 from scipy import *
 import numpy as np
 from numpy import *
+import sympy as sympy
 from numpy import linalg as LA
+from scipy import linalg as LA2
 import sys as sys
 import time
 import matplotlib.pyplot as plt
@@ -60,6 +62,53 @@ def RoundDiag(matrica, places = 14):
     np.fill_diagonal(idealMat, eigVals)
     matrica = np.round(matrica - idealMat, places) + idealMat
     return matrica
+
+
+# Explain.
+
+# In[5]:
+
+
+def FindNullspace(omega, waves):
+    # Include error checkers!
+    nh = omega.nh_max
+    refRatio = omega.refRatio
+    degFreed = omega.degFreed
+    oscNum = int(nh / refRatio)
+    
+    minCos = int(np.ceil(2. / refRatio))
+    maxCos = int(np.floor(refRatio - ((2. * refRatio) / nh)))
+    cosKs = int(nh / (2. * refRatio)) * np.arange(minCos, maxCos + 1)
+    cosInd = 2 * cosKs
+    minSin = int(np.ceil((1. / refRatio) + (refRatio / nh)))
+    maxSin = int(np.floor(refRatio / 2))
+    sinKs = int(nh / refRatio) * np.arange(minSin, maxSin + 1)
+    sinInd = (2 * sinKs) - 1
+    indices = np.sort(np.append(cosInd, sinInd))
+    allIndices = np.arange(int(nh / refRatio), nh)
+    otherIndices = np.setdiff1d(allIndices, indices)
+    oscWaves = np.delete(waves, indices, 1)
+    oscWaves = oscWaves[:, oscNum:]
+    
+    fineSpots = np.where(omega.h == np.min(omega.h))[0]
+    oscWaves = np.delete(oscWaves, fineSpots, 0)
+    oscWaves = np.round(oscWaves, 15)
+    nullspace = LA2.null_space(oscWaves)
+    nullspace = np.asarray(sympy.Matrix(nullspace.transpose()).rref()[0].transpose())
+    fixWaves = np.zeros((nh, degFreed), float)
+    fixWaves[0:oscNum, 0:oscNum] = np.eye(oscNum, oscNum)
+    j = oscNum
+    for i in indices:
+        if (j < degFreed):
+            fixWaves[i, j] = 1
+        j = j + 1
+    i = 0
+    while (j < degFreed):
+        fixWaves[otherIndices, j] = nullspace[:, i]
+        i = i + 1
+        j = j + 1
+    fixWaves = np.round(fixWaves, 14)
+    return fixWaves
 
 
 # In[ ]:

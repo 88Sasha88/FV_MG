@@ -125,13 +125,24 @@ def UsefulPlotVals():
 # In[7]:
 
 
-def PlotWaves(omega, waveCell, waveNode = [], waveTrans = [], save = False, rescale = 1):
+def PlotWaves(omega, waves, waveNode = [], waveTrans = [], save = False, rescale = 1, nullspace = []):
     nh = omega.nh_max
     x = omega.xNode
-    n = len(x) - 1
+    n = omega.degFreed
+    N = nh
     numPoints, font, X, savePath = UsefulPlotVals()
     waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
-    for k in range(nh):
+    if (nullspace == []):
+        nullspace = np.eye(nh, nh)
+        strings = omega.strings
+    else:
+        N = n
+        strings = FixStrings(omega, nullspace)
+    if (waveNode != []):
+        waveNodes = waveNode @ nullspace
+    waveCell = waves @ nullspace
+    waveCont = waveCont @ nullspace
+    for k in range(N):
         if (waveTrans != []):
             if (k < np.shape(waveTrans)[1]):
                 waveTransfer = waveTrans[:, k]
@@ -139,15 +150,9 @@ def PlotWaves(omega, waveCell, waveNode = [], waveTrans = [], save = False, resc
             waveTransfer = []
         fig = PlotWave(omega, numPoints, X, waveCell[:, k], waveCont[:, k], rescale, waveTrans = waveTransfer)
         if (waveNode != []):
-            plt.scatter(x[:n], waveNode[:, k], color = ColorDefault(2), s = 10, zorder = 4)
+            plt.scatter(x[:n], waveNodes[:, k], color = ColorDefault(2), s = 10, zorder = 4)
         plt.xlim([-0.1, 1.25])
-        if (k % 2 == 0):
-            if (k == 0):
-                plt.text(1.1, 0, r'$\frac{a_{0}}{2}$', fontsize = font)
-            else:
-                plt.text(1.1, 0, r'$a_{%d}$' %(k / 2) + 'cos' + r'$%d \pi x$' %(k), fontsize = font)
-        else:
-            plt.text(1.1, 0, r'$b_{%d}$' %((k / 2) + 1) + 'sin' + r'$%d \pi x$' %(k + 1), fontsize = font)
+        plt.text(1.1, 0, strings[k], fontsize = font)
         plt.show()
         if (save):
             saveName = savePath + 'FourierModes' + str(k + 1)
@@ -271,6 +276,26 @@ def GetYBound(inputArray, scaleParam, sym = False):
     totRange = yMax - yMin
     tickHeight = totRange / 10
     return yMin, yMax, tickHeight
+
+
+# Explain.
+
+# In[11]:
+
+
+def FixStrings(omega, nullspace):
+    strings = omega.strings
+    degFreed = omega.degFreed
+    locations = np.where(nullspace != 0)
+    stringsNew = ['' for i in range(degFreed)]
+    j = 0
+    for i in locations[1]:
+        if (stringsNew[i] == ''):
+            stringsNew[i] = strings[locations[0][j]]
+        else:
+            stringsNew[i] = stringsNew[i] + '+' + strings[locations[0][j]]
+        j = j + 1
+    return stringsNew
 
 
 # In[ ]:

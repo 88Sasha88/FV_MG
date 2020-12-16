@@ -93,11 +93,11 @@ class Grid:
     nh_max = 1
     refRatios = []
     degFreed = 0
+    strings = []
     def __init__(self, nh):
         errorLoc = 'ERROR:\nBasicTools:\nGrid:\n__init__:\n'
         self.nh_min = nh
         self.nh_max = nh
-        self.degFreed = nh
         self.AddCell()
         errorMess = CheckNumber(self.nh_min, nName = 'nh_min')
         if (errorMess != ''):
@@ -191,6 +191,19 @@ class Grid:
             else:
                 xPatchesFiller[i] = self.xPatches[i]
                 cellsFiller[i] = self.cells[i]
+        strings = []
+        for k in range(self.nh_max):
+            if (k % 2 == 0):
+                if (k == 0):
+                    name = '$' '\\' + 'frac{a_{0}}{2}$'
+                else:
+                    number = str(k)
+                    name = '$a_{' + number + '}$cos' + number + '$' + '\\' + 'pi x$'
+            else:
+                number1 = str(k)
+                number2 = str(k + 1)
+                name = '$a_{' + number1 + '}$sin' + number2 + '$' + '\\' + 'pi x$'
+            strings = np.append(strings, name)
         n = len(self.xNode)
         self.xPatches = xPatchesFiller
         self.cells = cellsFiller
@@ -199,7 +212,8 @@ class Grid:
         self.h = self.xNode[1:n] - self.xNode[0:n - 1]
         self.xCell = 0.5 * (self.xNode[0:n - 1] + self.xNode[1:n])
         self.bounds = patch0.bounds
-        self.degFreed = self.degFreed + ((refRatio - 1) * len(cell))
+        self.degFreed = n - 1
+        self.strings = strings
 
 
 # In[ ]:
