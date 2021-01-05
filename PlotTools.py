@@ -278,14 +278,18 @@ def GetYBound(inputArray, scaleParam, sym = False):
     return yMin, yMax, tickHeight
 
 
-# Explain.
+# This function fixes a list of strings such that linear combinations are represented appropriately.
 
 # In[11]:
 
 
 def FixStrings(omega, nullspace):
+    errorLoc = 'ERROR:\nPlotTools:\nFixStrings:\n'
     strings = omega.strings
     degFreed = omega.degFreed
+    errorMess = BT.CheckSize(degFreed, nullspace[0, :], nName = 'degFreed', matricaName = 'nullspace')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
     locations = np.where(nullspace != 0)
     stringsNew = ['' for i in range(degFreed)]
     j = 0

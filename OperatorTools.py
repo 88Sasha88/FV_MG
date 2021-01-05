@@ -64,16 +64,23 @@ def RoundDiag(matrica, places = 14):
     return matrica
 
 
-# Explain.
+# This function finds the nullspace of the oscillatory waves in the coarse grid region and outputs a matrix which, when multiplied to `waves`, will create the correct number of orthogonal wave modes (Should this be true 100% of the time?) which are zero in the coarse grid space.
 
 # In[5]:
 
 
 def FindNullspace(omega, waves):
-    # Include error checkers!
+    errorLoc = 'ERROR:\nOperatorTools:\nFindNullspace:\n'
     nh = omega.nh_max
     refRatio = omega.refRatio
     degFreed = omega.degFreed
+    errorMess = BT.CheckSize(nh, waves[0, :], nName = 'nh', matricaName = 'waves')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    errorMess = BT.CheckSize(degFreed, waves[:, 0], nName = 'degFreed', matricaName = 'waves')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    
     oscNum = int(nh / refRatio)
     
     minCos = int(np.ceil(2. / refRatio))
@@ -89,7 +96,6 @@ def FindNullspace(omega, waves):
     otherIndices = np.setdiff1d(allIndices, indices)
     oscWaves = np.delete(waves, indices, 1)
     oscWaves = oscWaves[:, oscNum:]
-    
     fineSpots = np.where(omega.h == np.min(omega.h))[0]
     oscWaves = np.delete(oscWaves, fineSpots, 0)
     oscWaves = np.round(oscWaves, 15)
@@ -97,6 +103,8 @@ def FindNullspace(omega, waves):
     nullspace = np.asarray(sympy.Matrix(nullspace.transpose()).rref()[0].transpose())
     fixWaves = np.zeros((nh, degFreed), float)
     fixWaves[0:oscNum, 0:oscNum] = np.eye(oscNum, oscNum)
+    nullspace = nullspace.astype(np.float64)
+    GramSchmidt(nullspace)
     j = oscNum
     for i in indices:
         if (j < degFreed):
@@ -107,8 +115,26 @@ def FindNullspace(omega, waves):
         fixWaves[otherIndices, j] = nullspace[:, i]
         i = i + 1
         j = j + 1
-    fixWaves = np.round(fixWaves, 14)
+    fixWaves = np.round(fixWaves, 14)    
     return fixWaves
+
+
+# Explain.
+
+# In[6]:
+
+
+def GramSchmidt(matrica):
+    n = np.shape(matrica)[1]
+    for i in range(n):
+        x = matrica[:, i]
+        for j in range(i):
+            constant = (x @ matrica[:, j].transpose()) / (LA.norm(matrica[:, j])**2)
+            term = constant * matrica[:, j]
+            matrica[:, i] = matrica[:, i] - term
+        norm = 1 / LA.norm(matrica[:, i])
+        matrica[:, i] = norm * matrica[:, i]
+    return matrica
 
 
 # In[ ]:
