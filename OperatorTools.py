@@ -71,50 +71,78 @@ def RoundDiag(matrica, places = 14):
 
 def FindNullspace(omega, waves):
     errorLoc = 'ERROR:\nOperatorTools:\nFindNullspace:\n'
+    levels = omega.levels
+    
     nh = omega.nh_max
-    refRatio = omega.refRatio
-    degFreed = omega.degFreed
-    errorMess = BT.CheckSize(nh, waves[0, :], nName = 'nh', matricaName = 'waves')
-    if (errorMess != ''):
-        sys.exit(errorLoc + errorMess)
-    errorMess = BT.CheckSize(degFreed, waves[:, 0], nName = 'degFreed', matricaName = 'waves')
-    if (errorMess != ''):
-        sys.exit(errorLoc + errorMess)
-    
-    oscNum = int(nh / refRatio)
-    
-    minCos = int(np.ceil(2. / refRatio))
-    maxCos = int(np.floor(refRatio - ((2. * refRatio) / nh)))
-    cosKs = int(nh / (2. * refRatio)) * np.arange(minCos, maxCos + 1)
-    cosInd = 2 * cosKs
-    minSin = int(np.ceil((1. / refRatio) + (refRatio / nh)))
-    maxSin = int(np.floor(refRatio / 2))
-    sinKs = int(nh / refRatio) * np.arange(minSin, maxSin + 1)
-    sinInd = (2 * sinKs) - 1
-    indices = np.sort(np.append(cosInd, sinInd))
-    allIndices = np.arange(int(nh / refRatio), nh)
-    otherIndices = np.setdiff1d(allIndices, indices)
-    oscWaves = np.delete(waves, indices, 1)
-    oscWaves = oscWaves[:, oscNum:]
-    fineSpots = np.where(omega.h == np.min(omega.h))[0]
-    oscWaves = np.delete(oscWaves, fineSpots, 0)
-    oscWaves = np.round(oscWaves, 15)
-    nullspace = LA2.null_space(oscWaves)
-    nullspace = np.asarray(sympy.Matrix(nullspace.transpose()).rref()[0].transpose())
+    degFreed = omega.degFreed[::-1][0]
     fixWaves = np.zeros((nh, degFreed), float)
-    fixWaves[0:oscNum, 0:oscNum] = np.eye(oscNum, oscNum)
-    nullspace = nullspace.astype(np.float64)
-    GramSchmidt(nullspace)
-    j = oscNum
-    for i in indices:
-        if (j < degFreed):
-            fixWaves[i, j] = 1
-        j = j + 1
-    i = 0
-    while (j < degFreed):
-        fixWaves[otherIndices, j] = nullspace[:, i]
-        i = i + 1
-        j = j + 1
+    nh = omega.nh_min
+    offset = 0
+    
+    for q in range(levels):
+        degFreed = omega.degFreed[q + 1]
+        refRatio = omega.refRatios[::-1][q]
+        nh = omega.nh[q + 1]
+        print(omega.nh)
+        if (q == levels - 1):
+            print('look:', nh, len(waves[0, :]))
+            errorMess = BT.CheckSize(nh, waves[0, :], nName = 'nh', matricaName = 'waves')
+            if (errorMess != ''):
+                sys.exit(errorLoc + errorMess)
+            errorMess = BT.CheckSize(degFreed, waves[:, 0], nName = 'degFreed', matricaName = 'waves')
+            if (errorMess != ''):
+                sys.exit(errorLoc + errorMess)
+            
+        h = refRatio / nh
+        oscNum = int(nh / refRatio)
+        print('h is', h)
+
+        maxCos = int(np.floor(refRatio - ((2. * refRatio) / nh)))
+        cosKs = int(nh / (2. * refRatio)) * np.arange(1, maxCos + 1)
+        cosInd = 2 * cosKs
+        maxSin = int(np.floor(refRatio / 2))
+        sinKs = int(nh / refRatio) * np.arange(1, maxSin + 1)
+        sinInd = (2 * sinKs) - 1
+        indices = np.sort(np.append(cosInd, sinInd))
+        
+        allIndices = np.arange(oscNum, nh)
+        print(allIndices)
+        otherIndices = np.setdiff1d(allIndices, indices)
+        print(otherIndices)
+        oscWaves = waves[:, oscNum:nh]
+        print(oscNum, nh)
+        print(oscWaves)
+        oscWaves = np.delete(oscWaves, indices-oscNum, 1)
+        print('')
+        print(oscWaves)
+        
+        fineSpots = np.where(omega.h != h)[0]
+        oscWaves = np.delete(oscWaves, fineSpots, 0)
+        oscWaves = np.round(oscWaves, 15)
+        print('oscWaves')
+        print(oscWaves)
+        print('')
+        nullspace = LA2.null_space(oscWaves)
+        nullspace = np.asarray(sympy.Matrix(nullspace.transpose()).rref()[0].transpose())
+        nullspace = np.round(nullspace.astype(np.float64), 14)
+        print('nullspace\n', nullspace)
+        print('')
+        GramSchmidt(nullspace)
+        print(nullspace)
+        j = oscNum + offset
+        print('j is', j)
+        if (q == 0):
+            fixWaves[0:oscNum, 0:oscNum] = np.eye(oscNum, oscNum)
+        for i in indices:
+            if (j < degFreed):
+                fixWaves[i, j] = 1
+            j = j + 1
+        i = 0
+        while (j < degFreed):
+            fixWaves[otherIndices, j] = nullspace[:, i]
+            i = i + 1
+            j = j + 1
+        offset = -1
     fixWaves = np.round(fixWaves, 14)    
     return fixWaves
 

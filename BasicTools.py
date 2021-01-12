@@ -92,8 +92,9 @@ class Grid:
     levels = 0
     nh_max = 1
     refRatios = []
-    degFreed = 0
+    degFreed = []
     strings = []
+    nh = []
     def __init__(self, nh):
         errorLoc = 'ERROR:\nBasicTools:\nGrid:\n__init__:\n'
         self.nh_min = nh
@@ -139,14 +140,16 @@ class Grid:
             self.cell = cell
             self.bounds = bounds
     def AddCell(self, refRatio = 1, cell = []):
-        self.levels = self.levels + 1
+        print('what the hell', self.nh)
         self.nh_max = self.nh_max * refRatio
+        print('even earlier', self.nh)
         patch0 = self.Patch(self.nh_max, refRatio, cell)
 
         # ERROR CHECKS:
 
         errorLoc = 'ERROR:\nBasicTools:\nGrid:\nAddCell:\n'
         if (cell != []):
+            self.levels = self.levels + 1
             errorMess = CheckNumber(refRatio, nName = 'refRatio')
             if (errorMess != ''):
                 sys.exit(errorLoc + errorMess)
@@ -163,7 +166,7 @@ class Grid:
                     errorMess = 'cell values out of range of previous patch!'
                     sys.exit(errorLoc + errorMess)
         else:
-            if (self.levels > 1):
+            if (self.levels > 0):
                 errorMess = 'You must enter a list of cell locations!'
                 sys.exit(errorLoc + errorMess)
         if (cell != sorted(cell)):
@@ -180,12 +183,12 @@ class Grid:
         else:
             self.refRatios.append(refRatio)
         self.patches.append(patch0)
-        xPatchesFiller = [[] for i in range(self.levels)]
-        cellsFiller = [[] for i in range(self.levels)]
+        xPatchesFiller = [[] for i in range(self.levels + 1)]
+        cellsFiller = [[] for i in range(self.levels + 1)]
         for xPatch in patch0.xPatch:
             self.xNode = np.asarray(sorted(set(np.append(self.xNode, xPatch))))
-        for i in range(self.levels):
-            if (i == self.levels - 1):
+        for i in range(self.levels + 1):
+            if (i == self.levels):
                 xPatchesFiller[i] = patch0.xPatch
                 cellsFiller[i] = patch0.cell
             else:
@@ -212,7 +215,11 @@ class Grid:
         self.h = self.xNode[1:n] - self.xNode[0:n - 1]
         self.xCell = 0.5 * (self.xNode[0:n - 1] + self.xNode[1:n])
         self.bounds = patch0.bounds
-        self.degFreed = n - 1
+        self.degFreed.append(n - 1)
+        blah = self.nh_max
+        print('before', self.nh)
+        self.nh.append(self.nh_max)
+        print('after', self.nh)
         self.strings = strings
 
 

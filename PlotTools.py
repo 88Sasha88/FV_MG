@@ -128,7 +128,7 @@ def UsefulPlotVals():
 def PlotWaves(omega, waves, waveNode = [], waveTrans = [], save = False, rescale = 1, nullspace = []):
     nh = omega.nh_max
     x = omega.xNode
-    n = omega.degFreed
+    n = omega.degFreed[::-1][0]
     N = nh
     numPoints, font, X, savePath = UsefulPlotVals()
     waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
@@ -286,7 +286,7 @@ def GetYBound(inputArray, scaleParam, sym = False):
 def FixStrings(omega, nullspace):
     errorLoc = 'ERROR:\nPlotTools:\nFixStrings:\n'
     strings = omega.strings
-    degFreed = omega.degFreed
+    degFreed = omega.degFreed[::-1][0]
     errorMess = BT.CheckSize(degFreed, nullspace[0, :], nName = 'degFreed', matricaName = 'nullspace')
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
