@@ -77,7 +77,7 @@ def FindNullspace(omega, waves):
     degFreed = omega.degFreed[::-1][0]
     fixWaves = np.zeros((nh, degFreed), float)
     nh = omega.nh_min
-    offset = 0
+    leftover = []
     
     for q in range(levels):
         degFreed = omega.degFreed[q + 1]
@@ -116,9 +116,9 @@ def FindNullspace(omega, waves):
         print('')
         print(oscWaves)
         
-        fineSpots = np.where(omega.h != h)[0]
+        fineSpots = np.where(omega.h < h)[0]
         oscWaves = np.delete(oscWaves, fineSpots, 0)
-        oscWaves = np.round(oscWaves, 15)
+        # oscWaves = np.round(oscWaves, 15)
         print('oscWaves')
         print(oscWaves)
         print('')
@@ -129,20 +129,30 @@ def FindNullspace(omega, waves):
         print('')
         GramSchmidt(nullspace)
         print(nullspace)
-        j = oscNum + offset
-        print('j is', j)
         if (q == 0):
             fixWaves[0:oscNum, 0:oscNum] = np.eye(oscNum, oscNum)
+            j = oscNum
+        print('LEFTOVER:', leftover)
+        for i in leftover:
+            if (j < degFreed):
+                fixWaves[i, j] = 1
+                leftover = leftover[1:]
+                print('i, j:', i, j)
+                j = j + 1
         for i in indices:
             if (j < degFreed):
                 fixWaves[i, j] = 1
-            j = j + 1
+                print('i, j:', i, j)
+                j = j + 1
+            else:
+                leftover.append(i)
         i = 0
+        print('new loop')
         while (j < degFreed):
             fixWaves[otherIndices, j] = nullspace[:, i]
+            print('i, j:', i, j)
             i = i + 1
             j = j + 1
-        offset = -1
     fixWaves = np.round(fixWaves, 14)    
     return fixWaves
 
