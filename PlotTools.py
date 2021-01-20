@@ -161,45 +161,9 @@ def PlotWaves(omega, waves, waveNode = [], waveTrans = [], save = False, rescale
     return
 
 
-# This function just plots the real and imaginary parts of an arbitrary matrix of functions alongside written notes of each of the wave equations to which they should correspond. It also allows you to save those plots and select their file names if desired. As the default, that feature is subdued.
-
-# In[8]:
-
-
-def PlotGeneralWaves(nh, x, waves, save = False, saveName = 'PlotOutputs'):
-    errorLoc = 'ERROR:\nPlotTools:\nPlotGeneralWaves:\n'
-    errorMess = BT.CheckSize(nh, x, nName = 'nh', matricaName = 'x')
-    if (errorMess != ''):
-        sys.exit(errorLoc + errorMess)
-    errorMess = BT.CheckSize(nh, waves, nName = 'nh', matricaName = 'waves')
-    if (errorMess != ''):
-        sys.exit(errorLoc + errorMess)
-    numPoints, font, savePath = UsefulPlotVals()
-    for k in range(nh):
-        fig, ax = plt.subplots(figsize = (5, 2.5))
-        ax.set_aspect(aspect = 4)
-        ax = plt.axes(frameon = False)
-        plt.xlim([-0.1, 1.25])
-        plt.ylim([-2.5, 2.5])
-        if (k % 2 == 0):
-            if (k == 0):
-                plt.text(1.1, 0, r'$\frac{a_{0}}{2}$', fontsize = font)
-            else:
-                plt.text(1.1, 0, r'$a_{%d}$' %(k / 2) + 'cos' + r'$%d \pi x$' %(k), fontsize = font)
-        else:
-            plt.text(1.1, 0, r'$b_{%d}$' %((k / 2) + 1) + 'sin' + r'$%d \pi x$' %(k + 1), fontsize = font)
-        plt.plot(x, waves[:, k].real, color = ColorDefault(0), zorder = 2)
-        plt.plot(x, waves[:, k].imag, color = ColorDefault(3), zorder = 3)
-        TickPlot(omega, ax, 0.5)
-        if (save):
-            fig.savefig(savePath + saveName + str(nh - k) + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
-        plt.show()
-    return
-
-
 # This function overlays a particular piecewise cell average plot onto a plot of its continuous wave function. It also allows you to save this plot if desired. As the default, that feature is subdued.
 
-# In[9]:
+# In[8]:
 
 
 def PlotWave(omega, numPoints, X, waveCell, fX, rescale, waveTrans = []):
@@ -231,7 +195,7 @@ def PlotWave(omega, numPoints, X, waveCell, fX, rescale, waveTrans = []):
 
 # This function overlays a piecewise cell average plot of a linear combination of wave vectors onto a plot of its continuous wave function. It also allows you to save this plot if desired. As the default, that feature is subdued.
 
-# In[10]:
+# In[9]:
 
 
 def PlotMixedWave(omega, waveCell, waveCoef, rescale = 1, save = False):
@@ -252,7 +216,7 @@ def PlotMixedWave(omega, waveCell, waveCoef, rescale = 1, save = False):
 
 # This function outputs the $y$ limits for a graph along with their respective tick height.
 
-# In[10]:
+# In[11]:
 
 
 def GetYBound(inputArray, scaleParam, sym = False):
@@ -280,7 +244,7 @@ def GetYBound(inputArray, scaleParam, sym = False):
 
 # This function fixes a list of strings such that linear combinations are represented appropriately.
 
-# In[11]:
+# In[12]:
 
 
 def FixStrings(omega, nullspace):

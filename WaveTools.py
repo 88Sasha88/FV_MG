@@ -25,11 +25,11 @@ def MakeWaves(omega):
     nh_max = omega.nh_max
     x = omega.xNode
     h = omega.h
-    n = len(x) - 1
+    n = omega.degFreed[::-1][0] # len(x) - 1
     waves = CellWaves(nh_max, x)
     hs = np.zeros((n, n), float)
     np.fill_diagonal(hs, h)
-    zeroMat = np.zeros((n, nh_max - n), float)
+#     zeroMat = np.zeros((n, nh_max - n), float)
     hMat = LA.inv(hs)
     wave1up = 1 * waves
     wave1up.T[::nh_max] = 0
@@ -47,11 +47,11 @@ def CellWaves(nh_max, x):
     n = len(x) - 1
     waves = np.zeros((n, nh_max), float)
     for k in range(int(nh_max / 2)):
-        waves[:, (2 * k) + 1] = (1.0 / (2.0 * np.pi * (k + 1))) * (cos(2 * np.pi * (k + 1) * x[0:n]) - cos(2 * np.pi * (k + 1) * x[1:n + 1]))
+        waves[:, (2 * k) + 1] = (1.0 / (2.0 * np.pi * (k + 1))) * (cos(2 * np.pi * (k + 1) * x[:-1]) - cos(2 * np.pi * (k + 1) * x[1:]))
         if (k == 0):
             waves[:, 2 * k] = np.ones(n, float)
         else:
-            waves[:, 2 * k] = (1.0 / (2.0 * np.pi * k)) * (sin(2 * np.pi * k * x[1:n + 1]) - sin(2 * np.pi * k * x[0:n]))
+            waves[:, 2 * k] = (1.0 / (2.0 * np.pi * k)) * (sin(2 * np.pi * k * x[1:]) - sin(2 * np.pi * k * x[:-1]))
     return waves
 
 

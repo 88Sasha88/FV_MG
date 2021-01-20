@@ -87,6 +87,7 @@ def CheckBounds(nh_min, loops, bounds):
 class Grid:
     patches = []
     xNode = []
+    xCell = []
     xPatches = []
     cells = []
     levels = 0
@@ -97,6 +98,19 @@ class Grid:
     nh = []
     def __init__(self, nh):
         errorLoc = 'ERROR:\nBasicTools:\nGrid:\n__init__:\n'
+        self.patches = []
+        self.xNode = []
+        self.xCell = []
+        self.h = []
+        self.dx = []
+        self.xPatches = []
+        self.cells = []
+        self.levels = 0
+        self.nh_max = 1
+        self.refRatios = []
+        self.degFreed = []
+        self.strings = []
+        self.nh = []
         self.nh_min = nh
         self.nh_max = nh
         self.AddCell()
@@ -140,9 +154,9 @@ class Grid:
             self.cell = cell
             self.bounds = bounds
     def AddCell(self, refRatio = 1, cell = []):
-        print('what the hell', self.nh)
+#         print('what the hell', self.nh)
         self.nh_max = self.nh_max * refRatio
-        print('even earlier', self.nh)
+#         print('even earlier', self.nh)
         patch0 = self.Patch(self.nh_max, refRatio, cell)
 
         # ERROR CHECKS:
@@ -212,14 +226,14 @@ class Grid:
         self.cells = cellsFiller
         self.refRatio = refRatio
         self.y = np.zeros(n, float)
-        self.h = self.xNode[1:n] - self.xNode[0:n - 1]
-        self.xCell = 0.5 * (self.xNode[0:n - 1] + self.xNode[1:n])
+        self.xCell = 0.5 * (self.xNode[:-1] + self.xNode[1:])
+        self.h = self.xNode[1:] - self.xNode[:-1]
+        self.dx = self.xCell[1:] - self.xCell[:-1]
         self.bounds = patch0.bounds
         self.degFreed.append(n - 1)
-        blah = self.nh_max
-        print('before', self.nh)
+#         print('before', self.nh)
         self.nh.append(self.nh_max)
-        print('after', self.nh)
+#         print('after', self.nh)
         self.strings = strings
 
 
