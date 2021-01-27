@@ -166,9 +166,9 @@ def PlotWaves(omega, waves, waveNode = [], waveTrans = [], save = False, rescale
 # In[8]:
 
 
-def PlotWave(omega, numPoints, X, waveCell, fX, rescale, waveTrans = []):
+def PlotWave(omega, numPoints, X, waveCell, fX, rescale, waveTrans = [], sym = True):
     errorLoc = 'ERROR:\nPlotTools:\nPlotWave:\n'
-    yMin, yMax, tickHeight = GetYBound(fX, 0.5, sym = True)
+    yMin, yMax, tickHeight = GetYBound(fX, sym = sym)
     if np.any(np.asarray(rescale) <= 0):
         errorMess = 'All values of rescale must be greater than 0!'
         sys.exit(errorLoc + errorMess)
@@ -198,7 +198,7 @@ def PlotWave(omega, numPoints, X, waveCell, fX, rescale, waveTrans = []):
 # In[9]:
 
 
-def PlotMixedWave(omega, waveCell, waveCoef, rescale = 1, save = False):
+def PlotMixedWave(omega, waveCell, waveCoef, rescale = 1, sym = False, save = False):
     nh = omega.nh_max
     numPoints, font, X, savePath = UsefulPlotVals()
     waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
@@ -206,7 +206,7 @@ def PlotMixedWave(omega, waveCell, waveCoef, rescale = 1, save = False):
     fXCell = waveCell @ waveCoef
     fXCont = waveCont @ waveCoef
     saveName = savePath + 'MixedWave'
-    fig = PlotWave(omega, numPoints, X, fXCell, fXCont, rescale)
+    fig = PlotWave(omega, numPoints, X, fXCell, fXCont, rescale, sym = sym)
     plt.xlim([-0.1, 1.1])
     if (save):
         fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
@@ -214,12 +214,12 @@ def PlotMixedWave(omega, waveCell, waveCoef, rescale = 1, save = False):
     return
 
 
-# This function outputs the $y$ limits for a graph along with their respective tick height.
+# This function outputs the $y$ limits for a graph along with their respective tick height. `scaleParam` is the percentage of the range which will be neutral space.
 
 # In[11]:
 
 
-def GetYBound(inputArray, scaleParam, sym = False):
+def GetYBound(inputArray, scaleParam = 0.25, sym = False):
     yMin = np.min(inputArray)
     yMax = np.max(inputArray)
     totRange = yMax - yMin
@@ -230,6 +230,7 @@ def GetYBound(inputArray, scaleParam, sym = False):
         yMax = np.max((np.abs(yMax), np.abs(yMin)))
         yMin = -yMax
     else:
+# If the positive range is less than a 20th of the total range (That is, it's less than a 19th of the negative range.) then the positive half of the tick mark won't fully show, and vice versa.
         if (yMin > -yMax / 19):
             yMin = -np.abs(yMax / 19)
         if (yMax < -yMin / 19):
