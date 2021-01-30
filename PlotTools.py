@@ -169,6 +169,10 @@ def PlotWaves(omega, waves, waveNode = [], waveTrans = [], save = False, rescale
 def PlotWave(omega, numPoints, X, waveCell, fX, rescale, waveTrans = [], sym = True):
     errorLoc = 'ERROR:\nPlotTools:\nPlotWave:\n'
     yMin, yMax, tickHeight = GetYBound(fX, sym = sym)
+    numGraphs = np.ndim(waveCell)
+    if (numGraphs != np.ndim(fX)):
+        errorMess = 'Dimensions of waveCell and fX do not match!'
+        sys.exit(errorLoc + errorMess)
     if np.any(np.asarray(rescale) <= 0):
         errorMess = 'All values of rescale must be greater than 0!'
         sys.exit(errorLoc + errorMess)
@@ -184,11 +188,20 @@ def PlotWave(omega, numPoints, X, waveCell, fX, rescale, waveTrans = [], sym = T
             sys.exit(errorLoc + errorMess)
     fig, ax = plt.subplots(figsize = size)
     ax = plt.axes(frameon = False)
-    PiecePlot(omega, numPoints, X, waveCell)
     if (waveTrans != []):
         PiecePlot(omega, numPoints, X, waveTrans, color = 3)
     TickPlot(omega, ax, tickHeight)
-    plt.plot(X, fX, color = ColorDefault(0), zorder = 2) # 1
+    if (numGraphs == 1):
+        PiecePlot(omega, numPoints, X, waveCell)
+        plt.plot(X, fX, color = ColorDefault(0), zorder = 2) # 1
+    else:
+        i = 0
+        for j in range(numGraphs):
+            PiecePlot(omega, numPoints, X, waveCell[:, j])
+            plt.plot(X, fX[:, j], color = ColorDefault(i), zorder = 2) # 1
+            i = i + 1
+            if (j == 2):
+                i = i + 1
     plt.ylim([yMin, yMax])
     return fig
 
@@ -201,12 +214,18 @@ def PlotWave(omega, numPoints, X, waveCell, fX, rescale, waveTrans = [], sym = T
 def PlotMixedWave(omega, waveCell, waveCoef, rescale = 1, sym = False, save = False):
     nh = omega.nh_max
     numPoints, font, X, savePath = UsefulPlotVals()
+    saveName = savePath + 'MixedWave'
     waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
-    
+    numGraphs = np.ndim(waveCoef)
+#     if (numGraphs == 1):
     fXCell = waveCell @ waveCoef
     fXCont = waveCont @ waveCoef
-    saveName = savePath + 'MixedWave'
     fig = PlotWave(omega, numPoints, X, fXCell, fXCont, rescale, sym = sym)
+#     else:
+#         for j in range(numGraphs):
+#             fXCell = waveCell @ waveCoef[j]
+#             fXCont = waveCont @ waveCoef[j]
+#             fig = PlotWave(omega, numPoints, X, fXCell, fXCont, rescale, sym = sym)
     plt.xlim([-0.1, 1.1])
     if (save):
         fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)

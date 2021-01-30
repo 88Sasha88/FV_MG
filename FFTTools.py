@@ -9,6 +9,7 @@ from scipy import *
 import numpy as np
 from numpy import *
 from numpy import linalg as LA
+from scipy import linalg as LA2
 import sys as sys
 import time
 import matplotlib.pyplot as plt
@@ -135,6 +136,52 @@ def GetXSpaceCoefs(omega, coefs, waves):
         print('xCoefs :', xCoefs)
         sys.exit(errorLoc + 'x coefficients are not real!')
     return xCoefs
+
+
+# This returns the Fourier coefficients of some waveform.
+
+# In[8]:
+
+
+def FourierCoefs(omega, waves, waveform):
+    errorLoc = 'ERROR:\nFFTTools:\nFourierCoefs:\n'
+    nh = omega.nh[::-1][0]
+    degFreed = omega.degFreed[::-1][0]
+    errorMess = BT.CheckSize(nh, waves[0, :], nName = 'nh', matricaName = 'waves')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    errorMess = BT.CheckSize(degFreed, waves[:, 0], nName = 'degFreed', matricaName = 'waves')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    errorMess = BT.CheckSize(degFreed, waveform, nName = 'degFreed', matricaName = 'waveform')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    norm = LA.inv(waves.transpose() @ waves)
+    FCoefs = waveform.transpose() @ waves @ norm
+    return FCoefs
+
+
+# This returns the Fourier coefficients of a time propogated waveform.
+
+# In[10]:
+
+
+def PropogateFCoefs(omega, FCoefs, c, t):
+    errorLoc = 'ERROR:\nFFTTools:\nPropogateFCoefs:\n'
+    nh = omega.nh[::-1][0]
+    degFreed = omega.degFreed[::-1][0]
+    errorMess = BT.CheckSize(degFreed, FCoefs, nName = 'degFreed', matricaName = 'FCoefs')
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    Cosine = lambda k: np.cos(2. * np.pi * k * c * t)
+    Sine = lambda k: np.sin(2. * np.pi * k * c * t)
+    RotMat = lambda k: np.asarray([Cosine(k), Sine(k), -Sine(k), Cosine(k)]).reshape(2, 2)
+    rotMats = [RotMat(k) for k in range(int(nh / 2) + 1)]
+    shift = LA2.block_diag(*rotMats)[1:-1, 1:-1]
+    shift[0, 0] = Cosine(0)
+    shift[::-1, ::-1][0, 0] = Sine(nh / 2)
+    propFCoefs = shift @ FCoefs
+    return propFCoefs
 
 
 # In[ ]:
