@@ -9,7 +9,7 @@ from scipy import *
 import numpy as np
 from numpy import *
 from numpy import linalg as LA
-
+from scipy import linalg as LA2
 import sys as sys
 import time
 import matplotlib.pyplot as plt
