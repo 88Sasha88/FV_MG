@@ -166,13 +166,31 @@ def PlotWaves(omega, waves, waveNode = [], waveTrans = [], save = False, rescale
 # In[8]:
 
 
-def PlotWave(omega, numPoints, X, waveCell, fX, rescale, waveTrans = [], sym = True):
+def PlotWave(omega, numPoints, X, waveCell, fX, rescale, labels = [], waveTrans = [], sym = True):
     errorLoc = 'ERROR:\nPlotTools:\nPlotWave:\n'
-    yMin, yMax, tickHeight = GetYBound(fX, sym = sym)
+    yMin, yMax, tickHeight = GetYBound(fX, sym)
     numGraphs = np.ndim(waveCell)
-    if (numGraphs != np.ndim(fX)):
-        errorMess = 'Dimensions of waveCell and fX do not match!'
+    errorMess = ''
+    if (numGraphs == 1):
+        if (numGraphs != np.ndim(fX)):
+            errorMess = 'Dimensions of waveCell and fX do not match!'
+    else:
+        numGraphs = np.shape(waveCell[0, :])[0]
+        if (np.ndim(fX) == 1):
+            errorMess = 'Dimensions of waveCell and fX do not match!'
+        else:
+            if (numGraphs != np.shape(fX[0, :])[0]):
+                errorMess = 'Dimensions of waveCell and fX do not match!'
+    if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
+    if (labels != []):
+        if (len(labels) != numGraphs):
+            errorMess = 'Dimensions of waveCell and does not match size of labels!'
+            sys.exit(errorLoc + errorMess)
+        else:
+            labelsOut = labels
+    else:
+        labelsOut = [str(i + 1) for i in range(numGraphs)]
     if np.any(np.asarray(rescale) <= 0):
         errorMess = 'All values of rescale must be greater than 0!'
         sys.exit(errorLoc + errorMess)
@@ -193,15 +211,18 @@ def PlotWave(omega, numPoints, X, waveCell, fX, rescale, waveTrans = [], sym = T
     TickPlot(omega, ax, tickHeight)
     if (numGraphs == 1):
         PiecePlot(omega, numPoints, X, waveCell)
-        plt.plot(X, fX, color = ColorDefault(0), zorder = 2) # 1
+        plt.plot(X, fX, color = ColorDefault(0), zorder = 2, label = labelsOut[0]) # 1
     else:
         i = 0
         for j in range(numGraphs):
             PiecePlot(omega, numPoints, X, waveCell[:, j])
-            plt.plot(X, fX[:, j], color = ColorDefault(i), zorder = 2) # 1
+            plt.plot(X, fX[:, j], color = ColorDefault(i), zorder = 2, label = labelsOut[j]) # 1
             i = i + 1
             if (j == 2):
                 i = i + 1
+        if (labels != []):
+            plt.legend()
+            print('Are you *sure* your labels are ordered correctly?')
     plt.ylim([yMin, yMax])
     return fig
 
@@ -211,21 +232,15 @@ def PlotWave(omega, numPoints, X, waveCell, fX, rescale, waveTrans = [], sym = T
 # In[9]:
 
 
-def PlotMixedWave(omega, waveCell, waveCoef, rescale = 1, sym = False, save = False):
+def PlotMixedWave(omega, waveCell, waveCoef, labels = [], rescale = 1, sym = False, save = False):
     nh = omega.nh_max
     numPoints, font, X, savePath = UsefulPlotVals()
     saveName = savePath + 'MixedWave'
     waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
     numGraphs = np.ndim(waveCoef)
-#     if (numGraphs == 1):
     fXCell = waveCell @ waveCoef
     fXCont = waveCont @ waveCoef
-    fig = PlotWave(omega, numPoints, X, fXCell, fXCont, rescale, sym = sym)
-#     else:
-#         for j in range(numGraphs):
-#             fXCell = waveCell @ waveCoef[j]
-#             fXCont = waveCont @ waveCoef[j]
-#             fig = PlotWave(omega, numPoints, X, fXCell, fXCont, rescale, sym = sym)
+    fig = PlotWave(omega, numPoints, X, fXCell, fXCont, rescale, sym = sym, labels = labels)
     plt.xlim([-0.1, 1.1])
     if (save):
         fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
@@ -238,7 +253,7 @@ def PlotMixedWave(omega, waveCell, waveCoef, rescale = 1, sym = False, save = Fa
 # In[11]:
 
 
-def GetYBound(inputArray, scaleParam = 0.25, sym = False):
+def GetYBound(inputArray, sym, scaleParam = 0.25):
     yMin = np.min(inputArray)
     yMax = np.max(inputArray)
     totRange = yMax - yMin
@@ -286,8 +301,34 @@ def FixStrings(omega, nullspace):
     return stringsNew
 
 
+# This function zips together several vectors so that they may be graphed simultaneously.
+
+# In[13]:
+
+
+def Load(*vecs):
+    errorLoc = 'ERROR:\nPlotTools:\nLoad:\n'
+    i = 0
+    for vec in vecs:
+        i = i + 1
+        if (len(vec) != len(vecs[0])):
+            if (i % 10 == 1):
+                appendage = 'st'
+            else:
+                if (i % 10 == 2):
+                    appendage = 'nd'
+                else:
+                    if (i % 10 == 3):
+                        appendage = 'rd'
+                    else:
+                        appendage = 'th'
+            indexString = str(i) + appendage
+            errorMess = '%s vector\'s size does not match size of 1st vector!' %indexString
+            sys.exit(errorLoc + errorMess)
+    loadedVecs = np.asarray(list(zip(*vecs)))
+    return loadedVecs
+
+
 # In[ ]:
-
-
 
 

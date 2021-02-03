@@ -106,7 +106,6 @@ class Grid:
         self.xPatches = []
         self.cells = []
         self.levels = 0
-        self.nh_max = 1
         self.refRatios = []
         self.degFreed = []
         self.strings = []
