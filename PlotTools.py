@@ -166,7 +166,7 @@ def PlotWaves(omega, waves, waveNode = [], waveTrans = [], save = False, rescale
 # In[8]:
 
 
-def PlotWave(omega, numPoints, X, waveCell, fX, rescale, labels = [], waveTrans = [], sym = True):
+def PlotWave(omega, numPoints, X, waveCell, fX, rescale, title = '', labels = [], waveTrans = [], sym = True):
     errorLoc = 'ERROR:\nPlotTools:\nPlotWave:\n'
     yMin, yMax, tickHeight = GetYBound(fX, sym)
     numGraphs = np.ndim(waveCell)
@@ -223,6 +223,8 @@ def PlotWave(omega, numPoints, X, waveCell, fX, rescale, labels = [], waveTrans 
         if (labels != []):
             plt.legend()
             print('Are you *sure* your labels are ordered correctly?')
+    if (title != ''):
+        plt.title(title)
     plt.ylim([yMin, yMax])
     return fig
 
@@ -232,7 +234,7 @@ def PlotWave(omega, numPoints, X, waveCell, fX, rescale, labels = [], waveTrans 
 # In[9]:
 
 
-def PlotMixedWave(omega, waveCell, waveCoef, labels = [], rescale = 1, sym = False, save = False):
+def PlotMixedWave(omega, waveCell, waveCoef, title = '', labels = [], rescale = 1, sym = False, save = False):
     nh = omega.nh_max
     numPoints, font, X, savePath = UsefulPlotVals()
     saveName = savePath + 'MixedWave'
@@ -240,7 +242,7 @@ def PlotMixedWave(omega, waveCell, waveCoef, labels = [], rescale = 1, sym = Fal
     numGraphs = np.ndim(waveCoef)
     fXCell = waveCell @ waveCoef
     fXCont = waveCont @ waveCoef
-    fig = PlotWave(omega, numPoints, X, fXCell, fXCont, rescale, sym = sym, labels = labels)
+    fig = PlotWave(omega, numPoints, X, fXCell, fXCont, rescale, title = title, sym = sym, labels = labels)
     plt.xlim([-0.1, 1.1])
     if (save):
         fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)

@@ -24,7 +24,7 @@ np.set_printoptions( linewidth = 1000)
 # In[2]:
 
 
-def ForwardEuler(omega, waves, u0, nt, const, CFL = 1., periodic = True):
+def ForwardEuler(omega, waves, u0, nt, const, CFL, periodic = True):
     degFreed = omega.degFreed[::-1][0]
     x = omega.xCell
     dx = omega.dx

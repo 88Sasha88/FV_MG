@@ -179,7 +179,7 @@ def PropogateFCoefs(omega, FCoefs, c, t):
     rotMats = [RotMat(k) for k in range(int(nh / 2) + 1)]
     shift = LA2.block_diag(*rotMats)[1:-1, 1:-1]
     shift[0, 0] = Cosine(0)
-    shift[::-1, ::-1][0, 0] = Sine(nh / 2)
+    shift[::-1, ::-1][0, 0] = Cosine(nh / 2)
     propFCoefs = shift @ FCoefs
     return propFCoefs
 

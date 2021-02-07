@@ -17,6 +17,13 @@ import time
 import matplotlib.pyplot as plt
 import itertools as it
 from IPython.core.display import HTML
+import BasicTools as BT
+import WaveTools as WT
+import PlotTools as PT
+import FFTTools as FFTT
+import OperatorTools as OT
+import GridTransferTools as GTT
+import SolverTools as ST
 
 
 # This function returns a Gaussian waveform with standard deviation `sigma` centered about `mu`. As the default, it returns the cell-averaged values of the Gaussian using Boole's Rule.
@@ -49,3 +56,60 @@ def BoolesAve(f):
     f_ave = (1. / 90.) * ((7 * f[:-1:4]) + (32 * f[1::4]) + (12 * f[2::4]) + (32 * f[3::4]) + (7 * f[4::4]))
     return f_ave
 
+
+# This function calculates either the absolute or percent error between the theoretical and actual solutions.
+
+# In[4]:
+
+
+def CalcError(omega, theoretical, actual, errorType = 'percent'):
+    # Check size of theoretical and actual.
+    nh = omega.nh_max
+    error = abs(actual - theoretical)
+    if (errorType == 'percent'):
+        error = abs(error / theoretical)
+    ks = np.linspace(0, (nh / 2) - 1, num = nh)
+    return ks, error
+
+
+# This function calculates the error given by an arbitrary time solver as compared to that given through Fourier analysis.
+
+# In[5]:
+
+
+def NormVersusCFL(func, omega, waves, u_0, const, CFL_0, nt_0, normType = 'max', errorType = 'absolute', plot = False):
+    # Check size of waves and u_0, and check that nt_0 isn't negative?
+    errorLoc = 'ERROR:\nTestTools:\nNormVersusCFL:\n'
+    nt = nt_0
+    CFL = CFL_0
+    nh = omega.nh_max
+    dx = omega.dx[0]
+    FCoefs = FFTT.FourierCoefs(omega, waves, u_0)
+    norms = []
+    CFLs = []
+    while (CFL > 0.1):
+        calcCoefs, t = func(omega, waves, u_0, nt, const, CFL = CFL)
+        if (CFL == CFL_0):
+            t_0 = t
+        propCoefs = FFTT.PropogateFCoefs(omega, FCoefs, const, t)
+        ks, error = CalcError(omega, propCoefs, calcCoefs, errorType = errorType)
+        if (plot):
+            if (nt % 10 == 0):
+                allCoefs = PT.Load(FCoefs, propCoefs, calcCoefs)
+                title = 'CFL = ' + str(CFL)
+                PT.PlotMixedWave(omega, waves, allCoefs, rescale = [2, 3], title = title, labels = [r'$u_{0} (x)$', r'Reference $u_{0} (x - c t)$', r'Solver $u_{0} (x - c t)$'])
+        if (normType == 'max'):
+            norm = max(error)
+        else:
+            norm = sum(error) / nh
+        norms.append(norm)
+        CFLs.append(CFL)
+        nt = nt + 1
+        CFL = (CFL * const * t_0) / ((CFL * dx) + (const * t_0))
+        if (not np.isclose(t, t_0, atol = 1e-15, rtol = 0)):
+            errorMess = 't does not match t_0!\nt_0 = ' + str(t_0) + '\nt = ' + str(t)
+            sys.exit(errorLoc + errorMess)
+    return norms, CFLs
+
+
+# In[ ]:
