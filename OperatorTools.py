@@ -74,13 +74,13 @@ def FindNullspace(omega, waves):
     levels = omega.levels
     
     nh = omega.nh_max
-    degFreed = omega.degFreed[::-1][0]
+    degFreed = omega.degFreed# [::-1][0]
     fixWaves = np.zeros((nh, degFreed), float)
     nh = omega.nh_min
     leftover = []
     
     for q in range(levels):
-        degFreed = omega.degFreed[q + 1]
+        degFreed = omega.degFreeds[q + 1]
         refRatio = omega.refRatios[::-1][q]
         nh = omega.nh[q + 1]
         print(omega.nh)

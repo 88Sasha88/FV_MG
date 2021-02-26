@@ -146,7 +146,7 @@ def GetXSpaceCoefs(omega, coefs, waves):
 def FourierCoefs(omega, waves, waveform):
     errorLoc = 'ERROR:\nFFTTools:\nFourierCoefs:\n'
     nh = omega.nh[::-1][0]
-    degFreed = omega.degFreed[::-1][0]
+    degFreed = omega.degFreed# [::-1][0]
     errorMess = BT.CheckSize(nh, waves[0, :], nName = 'nh', matricaName = 'waves')
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
@@ -169,7 +169,7 @@ def FourierCoefs(omega, waves, waveform):
 def PropogateFCoefs(omega, FCoefs, c, t):
     errorLoc = 'ERROR:\nFFTTools:\nPropogateFCoefs:\n'
     nh = omega.nh[::-1][0]
-    degFreed = omega.degFreed[::-1][0]
+    degFreed = omega.degFreed# [::-1][0]
     errorMess = BT.CheckSize(degFreed, FCoefs, nName = 'degFreed', matricaName = 'FCoefs')
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)

@@ -25,7 +25,7 @@ def MakeWaves(omega):
     nh_max = omega.nh_max
     x = omega.xNode
     h = omega.h
-    n = omega.degFreed[::-1][0] # len(x) - 1
+    n = omega.degFreed# [::-1][0] # len(x) - 1
     waves = CellWaves(nh_max, x)
     hs = np.zeros((n, n), float)
     np.fill_diagonal(hs, h)

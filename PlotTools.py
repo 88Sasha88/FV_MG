@@ -70,6 +70,7 @@ def DrawLine(xCenter, yCenter, tickHeight):
 
 
 def TickPlot(omega, ax, tickHeight):
+    ax = plt.axes(frameon = False)
     xAxis = omega.xNode
     yAxis = omega.y
     for (xi, yi) in zip(xAxis, yAxis):
@@ -125,12 +126,16 @@ def UsefulPlotVals():
 # In[7]:
 
 
-def PlotWaves(omega, waves, waveNode = [], waveTrans = [], save = False, rescale = 1, nullspace = []):
+def PlotWaves(omega, waves = [], waveNode = [], waveTrans = [], save = False, saveName = '', rescale = 1, nullspace = []):
     nh = omega.nh_max
     x = omega.xNode
-    n = omega.degFreed[::-1][0]
+    n = omega.degFreed
     N = nh
     numPoints, font, X, savePath = UsefulPlotVals()
+    if (saveName != ''):
+        save = True
+    else:
+        saveName = 'FourierMode'
     waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
     if (nullspace == []):
         nullspace = np.eye(nh, nh)
@@ -140,7 +145,10 @@ def PlotWaves(omega, waves, waveNode = [], waveTrans = [], save = False, rescale
         strings = FixStrings(omega, nullspace)
     if (waveNode != []):
         waveNodes = waveNode @ nullspace
-    waveCell = waves @ nullspace
+    if (waves == []):
+        waveCell = np.asarray([[[] for i in range(N)] for j in range(n)])
+    else:
+        waveCell = waves @ nullspace
     waveCont = waveCont @ nullspace
     for k in range(N):
         if (waveTrans != []):
@@ -155,9 +163,10 @@ def PlotWaves(omega, waves, waveNode = [], waveTrans = [], save = False, rescale
         plt.text(1.1, 0, strings[k], fontsize = font)
         plt.show()
         if (save):
-            saveName = savePath + 'FourierModes' + str(k + 1)
-            fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
-            print('This image has been saved under ' + saveName + '.')
+            saveString = savePath + saveName + str(k)
+            Save(fig, saveString)
+#             fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
+#             print('This image has been saved under ' + saveName + '.')
     return
 
 
@@ -169,53 +178,43 @@ def PlotWaves(omega, waves, waveNode = [], waveTrans = [], save = False, rescale
 def PlotWave(omega, numPoints, X, waveCell, fX, rescale, title = '', labels = [], waveTrans = [], sym = True):
     errorLoc = 'ERROR:\nPlotTools:\nPlotWave:\n'
     yMin, yMax, tickHeight = GetYBound(fX, sym)
-    numGraphs = np.ndim(waveCell)
+    numGraphs = np.ndim(fX)
     errorMess = ''
-    if (numGraphs == 1):
-        if (numGraphs != np.ndim(fX)):
-            errorMess = 'Dimensions of waveCell and fX do not match!'
-    else:
-        numGraphs = np.shape(waveCell[0, :])[0]
-        if (np.ndim(fX) == 1):
-            errorMess = 'Dimensions of waveCell and fX do not match!'
-        else:
-            if (numGraphs != np.shape(fX[0, :])[0]):
+    if (waveCell != []):
+        if (numGraphs == 1):
+            if (numGraphs != np.ndim(waveCell)):
                 errorMess = 'Dimensions of waveCell and fX do not match!'
+        else:
+            numGraphs = np.shape(waveCell[0, :])[0]
+            if (np.ndim(fX) == 1):
+                errorMess = 'Dimensions of waveCell and fX do not match!'
+            else:
+                if (numGraphs != np.shape(fX[0, :])[0]):
+                    errorMess = 'Dimensions of waveCell and fX do not match!'
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
     if (labels != []):
         if (len(labels) != numGraphs):
-            errorMess = 'Dimensions of waveCell and does not match size of labels!'
+            errorMess = 'Dimensions of fX and does not match size of labels!'
             sys.exit(errorLoc + errorMess)
         else:
             labelsOut = labels
     else:
         labelsOut = [str(i + 1) for i in range(numGraphs)]
-    if np.any(np.asarray(rescale) <= 0):
-        errorMess = 'All values of rescale must be greater than 0!'
-        sys.exit(errorLoc + errorMess)
-    if (np.shape(rescale) == ()):
-        size = [5 * rescale, 2.5 * rescale]
-        tickHeight = tickHeight / rescale
-    else:
-        if (np.shape(rescale) == (2,)):
-            size = [5 * rescale[0], 2.5 * rescale[1]]
-            tickHeight = tickHeight / rescale[1]
-        else:
-            errorMess = 'Invalid shape of rescale object entered!'
-            sys.exit(errorLoc + errorMess)
+    size, tickHeight = Resize(rescale, tickHeight)
     fig, ax = plt.subplots(figsize = size)
-    ax = plt.axes(frameon = False)
     if (waveTrans != []):
         PiecePlot(omega, numPoints, X, waveTrans, color = 3)
     TickPlot(omega, ax, tickHeight)
     if (numGraphs == 1):
-        PiecePlot(omega, numPoints, X, waveCell)
+        if (waveCell != []):
+            PiecePlot(omega, numPoints, X, waveCell)
         plt.plot(X, fX, color = ColorDefault(0), zorder = 2, label = labelsOut[0]) # 1
     else:
         i = 0
         for j in range(numGraphs):
-            PiecePlot(omega, numPoints, X, waveCell[:, j])
+            if (waveCell != []):
+                PiecePlot(omega, numPoints, X, waveCell[:, j])
             plt.plot(X, fX[:, j], color = ColorDefault(i), zorder = 2, label = labelsOut[j]) # 1
             i = i + 1
             if (j == 2):
@@ -234,10 +233,14 @@ def PlotWave(omega, numPoints, X, waveCell, fX, rescale, title = '', labels = []
 # In[9]:
 
 
-def PlotMixedWave(omega, waveCell, waveCoef, title = '', labels = [], rescale = 1, sym = False, save = False):
+def PlotMixedWave(omega, waveCell, waveCoef, title = '', labels = [], rescale = 1, sym = False, save = False, saveName = ''):
     nh = omega.nh_max
     numPoints, font, X, savePath = UsefulPlotVals()
-    saveName = savePath + 'MixedWave'
+    if (saveName != ''):
+        save = True
+    else:
+        saveName = 'MixedWave'
+    saveString = savePath + saveName
     waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
     numGraphs = np.ndim(waveCoef)
     fXCell = waveCell @ waveCoef
@@ -245,8 +248,9 @@ def PlotMixedWave(omega, waveCell, waveCoef, title = '', labels = [], rescale = 
     fig = PlotWave(omega, numPoints, X, fXCell, fXCont, rescale, title = title, sym = sym, labels = labels)
     plt.xlim([-0.1, 1.1])
     if (save):
-        fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
-        print('This image has been saved under ' + saveName + '.')
+        Save(fig, saveString)
+#         fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
+#         print('This image has been saved under ' + saveName + '.')
     return
 
 
@@ -259,7 +263,7 @@ def GetYBound(inputArray, sym, scaleParam = 0.25):
     yMin = np.min(inputArray)
     yMax = np.max(inputArray)
     totRange = yMax - yMin
-    if (totRange == 0 and yMin != yMax):
+    if (totRange == 0 and yMin == 0):
         yMax = 0.1
         yMin = -0.1
     if (sym):
@@ -287,7 +291,7 @@ def GetYBound(inputArray, sym, scaleParam = 0.25):
 def FixStrings(omega, nullspace):
     errorLoc = 'ERROR:\nPlotTools:\nFixStrings:\n'
     strings = omega.strings
-    degFreed = omega.degFreed[::-1][0]
+    degFreed = omega.degFreed# [::-1][0]
     errorMess = BT.CheckSize(degFreed, nullspace[0, :], nName = 'degFreed', matricaName = 'nullspace')
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
@@ -332,5 +336,45 @@ def Load(*vecs):
 
 
 # In[ ]:
+
+def Resize(rescale, tickHeight):
+    if np.any(np.asarray(rescale) <= 0):
+        errorMess = 'All values of rescale must be greater than 0!'
+        sys.exit(errorLoc + errorMess)
+    if (np.shape(rescale) == ()):
+        size = [5 * rescale, 2.5 * rescale]
+        tickHeight = tickHeight / rescale
+    else:
+        if (np.shape(rescale) == (2,)):
+            size = [5 * rescale[0], 2.5 * rescale[1]]
+            tickHeight = tickHeight / rescale[1]
+        else:
+            errorMess = 'Invalid shape of rescale object entered!'
+            sys.exit(errorLoc + errorMess)
+    return size, tickHeight
+
+
+def PlotGrid(omega, rescale = 1, save = False, saveName = ''):
+    numPoints, font, X, savePath = UsefulPlotVals()
+    if (saveName != ''):
+        save = True
+    else:
+        saveName = 'Grid'
+    saveString = savePath + saveName
+    yMin, yMax, tickHeight = GetYBound(0, True)
+    size, tickHeight = Resize(rescale, tickHeight)
+    fig, ax = plt.subplots(figsize = size)
+    TickPlot(omega, ax, tickHeight)
+    plt.ylim([yMin, yMax])
+    plt.show()
+    if (save):
+        Save(fig, saveString)
+    return
+
+
+def Save(fig, saveString):
+    fig.savefig(saveString + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
+    print('This image has been saved under ' + saveString + '.')
+    return
 
 

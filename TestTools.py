@@ -62,12 +62,12 @@ def BoolesAve(f):
 # In[4]:
 
 
-def CalcError(omega, theoretical, actual, errorType = 'percent'):
+def CalcError(omega, theoretical, actual, errorType = 'absolute', tol = 1e-14):
     # Check size of theoretical and actual.
     nh = omega.nh_max
     error = abs(actual - theoretical)
-    if (errorType == 'percent'):
-        error = abs(error / theoretical)
+    if (errorType == 'relative'):
+        error = abs(error / (theoretical + tol))
     ks = np.linspace(0, (nh / 2) - 1, num = nh)
     return ks, error
 
@@ -110,6 +110,23 @@ def NormVersusCFL(func, omega, waves, u_0, const, CFL_0, nt_0, normType = 'max',
             errorMess = 't does not match t_0!\nt_0 = ' + str(t_0) + '\nt = ' + str(t)
             sys.exit(errorLoc + errorMess)
     return norms, CFLs
+
+
+# This function calculates either the amplitude error between the theoretical and actual solutions.
+
+# In[6]:
+
+
+def AmpError(omega, theoretical, actual, tol = 1e-20):
+    # Check size of theoretical and actual.
+    nh = omega.nh_max
+    numKs = int((nh / 2) + 1)
+    error = np.zeros(numKs, float)
+    error[0] = 1 - abs(actual[0] / np.sqrt((theoretical[0]**2) + tol))
+    error[::-1][0] = 1 - abs(actual[::-1][0] / np.sqrt((theoretical[::-1][0]**2) + tol))
+    error[1:-1] = 1 - np.sqrt(((actual[1::2][:-1]**2) + (actual[::2][1:]**2)) / ((theoretical[1::2][:-1]**2) + (theoretical[::2][1:]**2) + tol))
+    ks = np.arange(numKs)
+    return ks, error
 
 
 # In[ ]:

@@ -93,7 +93,7 @@ class Grid:
     levels = 0
     nh_max = 1
     refRatios = []
-    degFreed = []
+    degFreeds = []
     strings = []
     nh = []
     def __init__(self, nh):
@@ -106,8 +106,9 @@ class Grid:
         self.xPatches = []
         self.cells = []
         self.levels = 0
+        self.degFreed = 0
         self.refRatios = []
-        self.degFreed = []
+        self.degFreeds = []
         self.strings = []
         self.nh = []
         self.nh_min = nh
@@ -221,6 +222,7 @@ class Grid:
                 name = '$a_{' + number1 + '}$sin' + number2 + '$' + '\\' + 'pi x$'
             strings = np.append(strings, name)
         n = len(self.xNode)
+        self.degFreed = n - 1
         self.xPatches = xPatchesFiller
         self.cells = cellsFiller
         self.refRatio = refRatio
@@ -229,7 +231,7 @@ class Grid:
         self.h = self.xNode[1:] - self.xNode[:-1]
         self.dx = self.xCell[1:] - self.xCell[:-1]
         self.bounds = patch0.bounds
-        self.degFreed.append(n - 1)
+        self.degFreeds.append(self.degFreed)
 #         print('before', self.nh)
         self.nh.append(self.nh_max)
 #         print('after', self.nh)
