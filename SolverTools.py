@@ -28,10 +28,11 @@ def ForwardEuler(omega, waves, u0, nt, const, CFL, periodic = True):
     degFreed = omega.degFreed# [::-1][0]
     x = omega.xCell
     dx = omega.dx
+    dx_min = np.min(dx)
     dx_0 = 1 - x[::-1][0] + x[0]
-    dt = CFL * dx / const
+    dt = CFL * dx_min / const
     dt_0 = CFL * dx_0 / const
-    t = nt * dt[0]
+    t = nt * dt
     u = u0.copy()
     for n in range(nt):
         u_f = u[::-1][0]

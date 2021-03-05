@@ -72,13 +72,17 @@ def RoundDiag(matrica, places = 14):
 def FindNullspace(omega, waves):
     errorLoc = 'ERROR:\nOperatorTools:\nFindNullspace:\n'
     levels = omega.levels
-    
+    alias = omega.alias
     nh = omega.nh_max
     degFreed = omega.degFreed# [::-1][0]
     fixWaves = np.zeros((nh, degFreed), float)
     nh = omega.nh_min
     leftover = []
-    
+    if (levels == 0):
+        np.fill_diagonal(fixWaves, 1)
+        if (alias):
+            N = int(2 * nh)
+            fixWaves = np.eye(N, N)
     for q in range(levels):
         degFreed = omega.degFreeds[q + 1]
         refRatio = omega.refRatios[::-1][q]
@@ -92,7 +96,7 @@ def FindNullspace(omega, waves):
             errorMess = BT.CheckSize(degFreed, waves[:, 0], nName = 'degFreed', matricaName = 'waves')
             if (errorMess != ''):
                 sys.exit(errorLoc + errorMess)
-            
+
         h = refRatio / nh
         oscNum = int(nh / refRatio)
         print('h is', h)
@@ -104,7 +108,7 @@ def FindNullspace(omega, waves):
         sinKs = int(nh / refRatio) * np.arange(1, maxSin + 1)
         sinInd = (2 * sinKs) - 1
         indices = np.sort(np.append(cosInd, sinInd))
-        
+
         allIndices = np.arange(oscNum, nh)
         print(allIndices)
         otherIndices = np.setdiff1d(allIndices, indices)
@@ -115,7 +119,7 @@ def FindNullspace(omega, waves):
         oscWaves = np.delete(oscWaves, indices-oscNum, 1)
         print('')
         print(oscWaves)
-        
+
         fineSpots = np.where(omega.h < h)[0]
         oscWaves = np.delete(oscWaves, fineSpots, 0)
         # oscWaves = np.round(oscWaves, 15)

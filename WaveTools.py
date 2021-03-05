@@ -23,13 +23,15 @@ import OperatorTools as OT
 
 def MakeWaves(omega):
     nh_max = omega.nh_max
-    x = omega.xNode
     h = omega.h
-    n = omega.degFreed# [::-1][0] # len(x) - 1
+    if (omega.alias):
+        nh_max = int(2 * nh_max)
+        np.append(h, h)
+    x = omega.xNode
+    n = omega.degFreed
     waves = CellWaves(nh_max, x)
     hs = np.zeros((n, n), float)
     np.fill_diagonal(hs, h)
-#     zeroMat = np.zeros((n, nh_max - n), float)
     hMat = LA.inv(hs)
     wave1up = 1 * waves
     wave1up.T[::nh_max] = 0
@@ -43,10 +45,10 @@ def MakeWaves(omega):
 # In[3]:
 
 
-def CellWaves(nh_max, x):
+def CellWaves(N, x):
     n = len(x) - 1
-    waves = np.zeros((n, nh_max), float)
-    for k in range(int(nh_max / 2)):
+    waves = np.zeros((n, N), float)
+    for k in range(int(N / 2)):
         waves[:, (2 * k) + 1] = (1.0 / (2.0 * np.pi * (k + 1))) * (cos(2 * np.pi * (k + 1) * x[:-1]) - cos(2 * np.pi * (k + 1) * x[1:]))
         if (k == 0):
             waves[:, 2 * k] = np.ones(n, float)
@@ -62,10 +64,12 @@ def CellWaves(nh_max, x):
 
 def MakeNodeWaves(omega, nRes = 0):
     nh_max = omega.nh_max
+    if (omega.alias):
+        nh_max = int(2 * nh_max)
     if (nRes == 0):
         x = omega.xNode
-        nRes = len(x) - 1
-        x = x[:nRes]
+        nRes = len(x)# - 1
+        # x = x[:nRes]
     else:
         x = np.linspace(0, 1, num = nRes)
     waves = NodeWaves(nh_max, x, nRes)

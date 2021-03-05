@@ -147,15 +147,15 @@ def FourierCoefs(omega, waves, waveform):
     errorLoc = 'ERROR:\nFFTTools:\nFourierCoefs:\n'
     nh = omega.nh[::-1][0]
     degFreed = omega.degFreed# [::-1][0]
-    errorMess = BT.CheckSize(nh, waves[0, :], nName = 'nh', matricaName = 'waves')
-    if (errorMess != ''):
-        sys.exit(errorLoc + errorMess)
-    errorMess = BT.CheckSize(degFreed, waves[:, 0], nName = 'degFreed', matricaName = 'waves')
-    if (errorMess != ''):
-        sys.exit(errorLoc + errorMess)
-    errorMess = BT.CheckSize(degFreed, waveform, nName = 'degFreed', matricaName = 'waveform')
-    if (errorMess != ''):
-        sys.exit(errorLoc + errorMess)
+#     errorMess = BT.CheckSize(nh, waves[0, :], nName = 'nh', matricaName = 'waves')
+#     if (errorMess != ''):
+#         sys.exit(errorLoc + errorMess)
+#     errorMess = BT.CheckSize(degFreed, waves[:, 0], nName = 'degFreed', matricaName = 'waves')
+#     if (errorMess != ''):
+#         sys.exit(errorLoc + errorMess)
+#     errorMess = BT.CheckSize(degFreed, waveform, nName = 'degFreed', matricaName = 'waveform')
+#     if (errorMess != ''):
+#         sys.exit(errorLoc + errorMess)
     norm = LA.inv(waves.transpose() @ waves)
     FCoefs = waveform.transpose() @ waves @ norm
     return FCoefs

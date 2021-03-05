@@ -91,7 +91,7 @@ def TickPlot(omega, ax, tickHeight):
 # In[5]:
 
 
-def PiecePlot(omega, numPoints, X, pieces, color = 3, linestyle = '-'):
+def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-'):
     errorLoc = 'ERROR:\nPlotTools:\nPiecePlot:\n'
     errorMess = BT.CheckSize(numPoints, X, nName = 'numPoints', matricaName = 'X')
     if (errorMess != ''):
@@ -103,7 +103,10 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, linestyle = '-'):
     for k in range(n):
         highIndex = np.where(X <= x[k + 1])[0][::-1][0] + 1
         cellVals[lowIndex:highIndex] = pieces[k] * cellVals[lowIndex:highIndex]
-        plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = linestyle, zorder = 3)
+        if ((k == 0) and (label != [])):
+            plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = linestyle, zorder = 3, label = label)
+        else:
+            plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = linestyle, zorder = 3)
         lowIndex = highIndex
     return
 
@@ -130,6 +133,8 @@ def PlotWaves(omega, waves = [], waveNode = [], waveTrans = [], save = False, sa
     nh = omega.nh_max
     x = omega.xNode
     n = omega.degFreed
+    if (omega.alias):
+        nh = int(2 * nh)
     N = nh
     numPoints, font, X, savePath = UsefulPlotVals()
     if (saveName != ''):
@@ -156,9 +161,9 @@ def PlotWaves(omega, waves = [], waveNode = [], waveTrans = [], save = False, sa
                 waveTransfer = waveTrans[:, k]
         else:
             waveTransfer = []
-        fig = PlotWave(omega, numPoints, X, waveCell[:, k], waveCont[:, k], rescale, waveTrans = waveTransfer)
+        fig = PlotWave(omega, numPoints, X, rescale, waveCell[:, k], waveCont[:, k], waveTrans = waveTransfer)
         if (waveNode != []):
-            plt.scatter(x[:n], waveNodes[:, k], color = ColorDefault(2), s = 10, zorder = 4)
+            plt.scatter(x[:], waveNodes[:, k], color = ColorDefault(2), s = 10, zorder = 4)
         plt.xlim([-0.1, 1.25])
         plt.text(1.1, 0, strings[k], fontsize = font)
         plt.show()
@@ -175,47 +180,64 @@ def PlotWaves(omega, waves = [], waveNode = [], waveTrans = [], save = False, sa
 # In[8]:
 
 
-def PlotWave(omega, numPoints, X, waveCell, fX, rescale, title = '', labels = [], waveTrans = [], sym = True):
+def PlotWave(omega, numPoints, X, rescale, waveCell = [], fX = [], title = '', labels = [], waveTrans = [], sym = True):
     errorLoc = 'ERROR:\nPlotTools:\nPlotWave:\n'
-    yMin, yMax, tickHeight = GetYBound(fX, sym)
-    numGraphs = np.ndim(fX)
     errorMess = ''
-    if (waveCell != []):
-        if (numGraphs == 1):
-            if (numGraphs != np.ndim(waveCell)):
-                errorMess = 'Dimensions of waveCell and fX do not match!'
-        else:
-            numGraphs = np.shape(waveCell[0, :])[0]
-            if (np.ndim(fX) == 1):
-                errorMess = 'Dimensions of waveCell and fX do not match!'
-            else:
-                if (numGraphs != np.shape(fX[0, :])[0]):
+    if (fX != []):
+        yMin, yMax, tickHeight = GetYBound(fX, sym)
+        numGraphs = np.ndim(fX)
+        if (waveCell != []):
+            if (numGraphs == 1):
+                if (numGraphs != np.ndim(waveCell)):
                     errorMess = 'Dimensions of waveCell and fX do not match!'
-    if (errorMess != ''):
-        sys.exit(errorLoc + errorMess)
+            else:
+                numGraphs = np.shape(waveCell[0, :])[0]
+                if (np.ndim(fX) == 1):
+                    errorMess = 'Dimensions of waveCell and fX do not match!'
+                else:
+                    if (numGraphs != np.shape(fX[0, :])[0]):
+                        errorMess = 'Dimensions of waveCell and fX do not match!'
+    else:
+        if (waveCell != []):
+            yMin, yMax, tickHeight = GetYBound(waveCell, sym)
+            numGraphs = np.shape(waveCell[0, :])[0]
+        else:
+            errorMess = 'Must have argument for either fX or waveCell!'
     if (labels != []):
         if (len(labels) != numGraphs):
-            errorMess = 'Dimensions of fX and does not match size of labels!'
+            errorMess = 'Dimensions of input graph(s) do(es) not match size of labels!'
             sys.exit(errorLoc + errorMess)
         else:
             labelsOut = labels
     else:
         labelsOut = [str(i + 1) for i in range(numGraphs)]
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
     size, tickHeight = Resize(rescale, tickHeight)
     fig, ax = plt.subplots(figsize = size)
     if (waveTrans != []):
         PiecePlot(omega, numPoints, X, waveTrans, color = 3)
     TickPlot(omega, ax, tickHeight)
     if (numGraphs == 1):
+        if (fX != []):
+            plt.plot(X, fX, color = ColorDefault(0), zorder = 2, label = labelsOut[0])
+            pieceLabel = []
+        else:
+            pieceLabel = labelsOut[0]
         if (waveCell != []):
-            PiecePlot(omega, numPoints, X, waveCell)
-        plt.plot(X, fX, color = ColorDefault(0), zorder = 2, label = labelsOut[0]) # 1
+            PiecePlot(omega, numPoints, X, waveCell, label = pieceLabel)
     else:
         i = 0
         for j in range(numGraphs):
+            if (fX != []):
+                plt.plot(X, fX[:, j], color = ColorDefault(i), zorder = 2, label = labelsOut[j])
+                pieceColor = 3
+                pieceLabel = []
+            else:
+                pieceColor = j
+                pieceLabel = labelsOut[j]
             if (waveCell != []):
-                PiecePlot(omega, numPoints, X, waveCell[:, j])
-            plt.plot(X, fX[:, j], color = ColorDefault(i), zorder = 2, label = labelsOut[j]) # 1
+                PiecePlot(omega, numPoints, X, waveCell[:, j], color = pieceColor, label = pieceLabel)
             i = i + 1
             if (j == 2):
                 i = i + 1
@@ -233,19 +255,26 @@ def PlotWave(omega, numPoints, X, waveCell, fX, rescale, title = '', labels = []
 # In[9]:
 
 
-def PlotMixedWave(omega, waveCell, waveCoef, title = '', labels = [], rescale = 1, sym = False, save = False, saveName = ''):
+def PlotMixedWave(omega, waves, waveCoef, title = '', labels = [], rescale = 1, plotCont = True, sym = False, save = False, saveName = ''):
     nh = omega.nh_max
     numPoints, font, X, savePath = UsefulPlotVals()
+    
     if (saveName != ''):
         save = True
     else:
         saveName = 'MixedWave'
     saveString = savePath + saveName
-    waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
+    
+    
     numGraphs = np.ndim(waveCoef)
-    fXCell = waveCell @ waveCoef
-    fXCont = waveCont @ waveCoef
-    fig = PlotWave(omega, numPoints, X, fXCell, fXCont, rescale, title = title, sym = sym, labels = labels)
+    
+    fXCell = waves @ waveCoef
+    if (plotCont):
+        waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
+        fXCont = waveCont @ waveCoef
+    else:
+        fXCont = []
+    fig = PlotWave(omega, numPoints, X, rescale, fXCell, fXCont, title = title, sym = sym, labels = labels)
     plt.xlim([-0.1, 1.1])
     if (save):
         Save(fig, saveString)
