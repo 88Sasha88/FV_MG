@@ -69,17 +69,39 @@ def DrawLine(xCenter, yCenter, tickHeight):
 # In[4]:
 
 
-def TickPlot(omega, ax, tickHeight):
+def TickPlot(omega, ax, tickHeight, label = False):
     ax = plt.axes(frameon = False)
     xAxis = omega.xNode
     yAxis = omega.y
+    nh = omega.nh_max
+    shiftX = 0.02
+    i = 0
     for (xi, yi) in zip(xAxis, yAxis):
         if ((xi == 0) or (xi == 1)):
             height = tickHeight
+            shiftY = tickHeight
+            if (label):
+                plt.text(xi - shiftX, yi + shiftY, int(xi), fontsize = 12)
         else:
             height = tickHeight / 2
         (xs, ys) = DrawLine(xi, yi, height)
         ax.plot(xs, ys, color = 'k', zorder = 1)
+        if (label):
+            print(i)
+            if ((i < 3) or (i > nh - 2)):
+                prestring = r'$j = $'
+                istring = prestring + str(i)
+                shiftExtra = 2 * shiftX
+                if (i == nh - 1):
+                    print('hi')
+                    istring = prestring + r'$n - 1$'
+                    shiftExtra = 4 * shiftX
+                if (i == nh):
+                    print('ho')
+                    istring = prestring + r'$n$'
+                    shiftExtra = shiftX
+                plt.text(xi - shiftX - shiftExtra, yi - (1.5 * shiftY), istring, fontsize = 12)
+        i = i + 1
     ax.plot(xAxis, yAxis, color = 'k', zorder = 0)
     plt.tick_params(axis = 'x', which = 'both', bottom = False, top = False, labelbottom = False)
     plt.tick_params(axis = 'y', which = 'both', left = False, right = False, labelleft = False)
@@ -117,7 +139,7 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
 
 
 def UsefulPlotVals():
-    numPoints = 357
+    numPoints = 1025
     font = 15
     X = np.linspace(0, 1, num = numPoints)
     savePath = '/Users/sashacurcic/SashasDirectory/ANAG/FV_MG/Figures/'
@@ -129,7 +151,7 @@ def UsefulPlotVals():
 # In[7]:
 
 
-def PlotWaves(omega, waves = [], waveNode = [], waveTrans = [], save = False, saveName = '', rescale = 1, nullspace = []):
+def PlotWaves(omega, waves = [], waveNode = [], waveTrans = [], save = False, saveName = '', rescale = 1, nullspace = [], dpi = 600):
     nh = omega.nh_max
     x = omega.xNode
     n = omega.degFreed
@@ -169,8 +191,7 @@ def PlotWaves(omega, waves = [], waveNode = [], waveTrans = [], save = False, sa
         plt.show()
         if (save):
             saveString = savePath + saveName + str(k)
-            Save(fig, saveString)
-#             fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
+            Save(fig, saveString, dpi + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
 #             print('This image has been saved under ' + saveName + '.')
     return
 
@@ -255,7 +276,7 @@ def PlotWave(omega, numPoints, X, rescale, waveCell = [], fX = [], title = '', l
 # In[9]:
 
 
-def PlotMixedWave(omega, waves, waveCoef, title = '', labels = [], rescale = 1, plotCont = True, sym = False, save = False, saveName = ''):
+def PlotMixedWave(omega, waves, waveCoef, title = '', labels = [], rescale = 1, plotCont = True, sym = False, save = False, saveName = '', dpi = 600):
     nh = omega.nh_max
     numPoints, font, X, savePath = UsefulPlotVals()
     
@@ -277,7 +298,7 @@ def PlotMixedWave(omega, waves, waveCoef, title = '', labels = [], rescale = 1, 
     fig = PlotWave(omega, numPoints, X, rescale, fXCell, fXCont, title = title, sym = sym, labels = labels)
     plt.xlim([-0.1, 1.1])
     if (save):
-        Save(fig, saveString)
+        Save(fig, saveString, dpi)
 #         fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
 #         print('This image has been saved under ' + saveName + '.')
     return
@@ -383,7 +404,7 @@ def Resize(rescale, tickHeight):
     return size, tickHeight
 
 
-def PlotGrid(omega, rescale = 1, save = False, saveName = ''):
+def PlotGrid(omega, rescale = 1, save = False, saveName = '', dpi = 600):
     numPoints, font, X, savePath = UsefulPlotVals()
     if (saveName != ''):
         save = True
@@ -393,16 +414,16 @@ def PlotGrid(omega, rescale = 1, save = False, saveName = ''):
     yMin, yMax, tickHeight = GetYBound(0, True)
     size, tickHeight = Resize(rescale, tickHeight)
     fig, ax = plt.subplots(figsize = size)
-    TickPlot(omega, ax, tickHeight)
+    TickPlot(omega, ax, tickHeight, label = True)
     plt.ylim([yMin, yMax])
     plt.show()
     if (save):
-        Save(fig, saveString)
+        Save(fig, saveString, dpi)
     return
 
 
-def Save(fig, saveString):
-    fig.savefig(saveString + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
+def Save(fig, saveString, dpi):
+    fig.savefig(saveString + '.png', bbox_inches = 'tight', dpi = dpi, transparent = True)
     print('This image has been saved under ' + saveString + '.')
     return
 

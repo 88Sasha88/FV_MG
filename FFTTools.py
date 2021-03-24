@@ -166,13 +166,15 @@ def FourierCoefs(omega, waves, waveform):
 # In[10]:
 
 
-def PropogateFCoefs(omega, FCoefs, c, t):
+def PropogateFCoefs(omega, FCoefs, c, t, nullspace = []):
     errorLoc = 'ERROR:\nFFTTools:\nPropogateFCoefs:\n'
-    nh = omega.nh[::-1][0]
+    nh = omega.nh_max
+    if (nullspace != []):
+        omega = BT.Grid(nh)
     degFreed = omega.degFreed# [::-1][0]
-    errorMess = BT.CheckSize(degFreed, FCoefs, nName = 'degFreed', matricaName = 'FCoefs')
-    if (errorMess != ''):
-        sys.exit(errorLoc + errorMess)
+#     errorMess = BT.CheckSize(degFreed, FCoefs, nName = 'degFreed', matricaName = 'FCoefs')
+#     if (errorMess != ''):
+#         sys.exit(errorLoc + errorMess)
     Cosine = lambda k: np.cos(2. * np.pi * k * c * t)
     Sine = lambda k: np.sin(2. * np.pi * k * c * t)
     RotMat = lambda k: np.asarray([Cosine(k), Sine(k), -Sine(k), Cosine(k)]).reshape(2, 2)
@@ -180,7 +182,15 @@ def PropogateFCoefs(omega, FCoefs, c, t):
     shift = LA2.block_diag(*rotMats)[1:-1, 1:-1]
     shift[0, 0] = Cosine(0)
     shift[::-1, ::-1][0, 0] = Cosine(nh / 2)
+    print(np.round(shift, 14))
+    print('shape shift before:', np.shape(shift))
+    if (nullspace != []):
+        shift = nullspace.transpose() @ shift @ nullspace
+        print(np.round(shift, 14))
+        print('shape shift after:', np.shape(shift))
+    print('shift coefs before:', np.shape(FCoefs))
     propFCoefs = shift @ FCoefs
+    print('shift coefs after:', np.shape(propFCoefs))
     return propFCoefs
 
 

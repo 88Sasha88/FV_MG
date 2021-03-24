@@ -114,7 +114,7 @@ class Grid:
         self.nh_min = nh
         self.nh_max = nh
         self.alias = alias
-        self.AddCell()
+        self.AddPatch()
         errorMess = CheckNumber(self.nh_min, nName = 'nh_min')
         if (errorMess != ''):
             sys.exit(errorLoc + errorMess)
@@ -154,7 +154,7 @@ class Grid:
             self.xPatch = xPatch
             self.cell = cell
             self.bounds = bounds
-    def AddCell(self, refRatio = 1, cell = []):
+    def AddPatch(self, refRatio = 1, cell = []):
 #         print('what the hell', self.nh)
         self.nh_max = self.nh_max * refRatio
 #         print('even earlier', self.nh)
@@ -162,7 +162,7 @@ class Grid:
 
         # ERROR CHECKS:
 
-        errorLoc = 'ERROR:\nBasicTools:\nGrid:\nAddCell:\n'
+        errorLoc = 'ERROR:\nBasicTools:\nGrid:\nAddPatch:\n'
         if (cell != []):
             self.levels = self.levels + 1
             errorMess = CheckNumber(refRatio, nName = 'refRatio')
