@@ -58,9 +58,11 @@ def ColorDefault(k):
 # In[3]:
 
 
-def DrawLine(xCenter, yCenter, tickHeight):
+def DrawLine(xCenter, yCenter, tickHeight, center = True):
     x = xCenter * np.ones(2)
-    y = linspace(yCenter - (tickHeight / 2), yCenter + (tickHeight / 2), num = 2)
+    y = linspace(yCenter, yCenter + tickHeight, num = 2)
+    if (center):
+        y = y - (tickHeight / 2.)
     return (x, y)
 
 
@@ -69,12 +71,19 @@ def DrawLine(xCenter, yCenter, tickHeight):
 # In[4]:
 
 
-def TickPlot(omega, ax, tickHeight, label = False):
+def TickPlot(omega, ax, tickHeight, label = False, u = []):
     ax = plt.axes(frameon = False)
     xAxis = omega.xNode
     yAxis = omega.y
+    xCell = omega.xCell
     nh = omega.nh_max
     shiftX = 0.02
+    shiftY = tickHeight
+    if (u != []):
+        label = False
+        xAxis = xAxis[1:4]
+        yAxis = yAxis[1:4]
+        shiftX = shiftX / 4
     i = 0
     for (xi, yi) in zip(xAxis, yAxis):
         if ((xi == 0) or (xi == 1)):
@@ -101,8 +110,30 @@ def TickPlot(omega, ax, tickHeight, label = False):
                     istring = prestring + r'$n$'
                     shiftExtra = shiftX
                 plt.text(xi - shiftX - shiftExtra, yi - (1.5 * shiftY), istring, fontsize = 12)
+        if ( u != []):
+            if (i == 0):
+                topString = r'$v_{j - 1}$'
+                botString = r'$x_{j - 1}$'
+                midString = r'$\left<x\right>_{j - 1}$'
+            else:
+                if (i == 1):
+                    shiftX = shiftX / 2
+                    topString = r'$v_{j}$'
+                    botString = r'$x_{j}$'
+                    midString = r'$\left<x\right>_{j}$'
+                else:
+                    shiftX = 2 * shiftX
+                    topString = r'$v_{j + 1}$'
+                    botString = r'$x_{j + 1}$'
+                    midString = r'$\left<x\right>_{j + 1}$'
+            (xs, ys) = DrawLine(xi, yi, u[i + 1], center = False)
+            ax.plot(xs, ys, color = ColorDefault(2), zorder = 2, linestyle = ':')
+            plt.text(xi - shiftX, u[i + 1] + (shiftY / 2), topString, fontsize = 12)
+            plt.text(xi - shiftX, yi - shiftY, botString, fontsize = 12)
+            plt.text(xCell[i + 1] - shiftX, yi - shiftY, midString, fontsize = 12)
         i = i + 1
-    ax.plot(xAxis, yAxis, color = 'k', zorder = 0)
+    if (u == []):
+        ax.plot(xAxis, yAxis, color = 'k', zorder = 0)
     plt.tick_params(axis = 'x', which = 'both', bottom = False, top = False, labelbottom = False)
     plt.tick_params(axis = 'y', which = 'both', left = False, right = False, labelleft = False)
     return
@@ -113,13 +144,19 @@ def TickPlot(omega, ax, tickHeight, label = False):
 # In[5]:
 
 
-def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-'):
+def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-', tickHeight = 0):
     errorLoc = 'ERROR:\nPlotTools:\nPiecePlot:\n'
     errorMess = BT.CheckSize(numPoints, X, nName = 'numPoints', matricaName = 'X')
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
     x = omega.xNode
+    xCell = omega.xCell
     n = len(x) - 1
+    if (tickHeight != 0):
+        label = []
+        n = 4
+        shiftX = 0.005
+        shiftY = tickHeight / 2
     cellVals = np.ones(numPoints, float)
     lowIndex = 0
     for k in range(n):
@@ -128,7 +165,19 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
         if ((k == 0) and (label != [])):
             plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = linestyle, zorder = 3, label = label)
         else:
-            plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = linestyle, zorder = 3)
+            if ((k != 0) or (tickHeight == 0)):
+                plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = linestyle, zorder = 3)
+            if ((k != 0) and (tickHeight != 0)):
+                if (k == 1):
+                    topString = r'$\left<v\right>_{j - 1}$'
+                else:
+                    if (k == 2):
+                        shiftX = shiftX / 2
+                        topString = r'$\left<v\right>_{j}$'
+                    else:
+                        shiftX = 2 * shiftX
+                        topString = r'$\left<v\right>_{j + 1}$'
+                plt.text(xCell[k] - shiftX, pieces[k] + shiftY, topString, fontsize = 12)
         lowIndex = highIndex
     return
 
@@ -191,8 +240,7 @@ def PlotWaves(omega, waves = [], waveNode = [], waveTrans = [], save = False, sa
         plt.show()
         if (save):
             saveString = savePath + saveName + str(k)
-            Save(fig, saveString, dpi + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
-#             print('This image has been saved under ' + saveName + '.')
+            Save(fig, saveString + '.png', dpi)
     return
 
 
@@ -425,6 +473,39 @@ def PlotGrid(omega, rescale = 1, save = False, saveName = '', dpi = 600):
 def Save(fig, saveString, dpi):
     fig.savefig(saveString + '.png', bbox_inches = 'tight', dpi = dpi, transparent = True)
     print('This image has been saved under ' + saveString + '.')
+    return
+
+def DivergVis(save = False, saveName = '', dpi = 600):
+    if (saveName != ''):
+        save = True
+    else:
+        saveName = 'DivergenceVisual'
+    nh = 32
+    omega = BT.Grid(nh)
+    h = omega.h[0]
+    x = omega.xNode
+    length = 2 * h
+    k = 2
+    Cosine = lambda x: np.cos(2. * np.pi * k * x)
+    Sine = lambda x: np.sin(2. * np.pi * k * x)
+    factor = 1. / (2 * pi * k * h)
+    uNode = Sine(x)
+    uCell = factor * (Cosine(x[:-1]) - Cosine(x[1:]))
+    xCell = omega.xCell
+    fig, ax = plt.subplots()
+    numPoints, font, X, savePath = UsefulPlotVals()
+    yMin, yMax, tickHeight = GetYBound(uNode[1:4], False)
+    TickPlot(omega, ax, tickHeight, u = uNode)
+    plt.scatter(x[1:4], uNode[1:4], s = 10, color = ColorDefault(2))
+    PiecePlot(omega, numPoints, X, uCell, tickHeight = tickHeight)
+    plt.quiver([length], [0], [length], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
+    plt.quiver([length], [0], [-length], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
+    plt.xlim([-0.1 * length, 2.1 * length])
+    plt.ylim([yMin, yMax])
+    plt.show()
+    if (save):
+        saveString = savePath + saveName
+        Save(fig, saveString + '.png', dpi)
     return
 
 

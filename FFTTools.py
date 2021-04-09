@@ -175,15 +175,17 @@ def PropogateFCoefs(omega, FCoefs, c, t, nullspace = []):
 #     errorMess = BT.CheckSize(degFreed, FCoefs, nName = 'degFreed', matricaName = 'FCoefs')
 #     if (errorMess != ''):
 #         sys.exit(errorLoc + errorMess)
-    Cosine = lambda k: np.cos(2. * np.pi * k * c * t)
-    Sine = lambda k: np.sin(2. * np.pi * k * c * t)
-    RotMat = lambda k: np.asarray([Cosine(k), Sine(k), -Sine(k), Cosine(k)]).reshape(2, 2)
-    rotMats = [RotMat(k) for k in range(int(nh / 2) + 1)]
-    shift = LA2.block_diag(*rotMats)[1:-1, 1:-1]
-    shift[0, 0] = Cosine(0)
-    shift[::-1, ::-1][0, 0] = Cosine(nh / 2)
-    print(np.round(shift, 14))
-    print('shape shift before:', np.shape(shift))
+#     Cosine = lambda k: np.cos(2. * np.pi * k * c * t)
+#     Sine = lambda k: np.sin(2. * np.pi * k * c * t)
+#     RotMat = lambda k: np.asarray([Cosine(k), Sine(k), -Sine(k), Cosine(k)]).reshape(2, 2)
+#     rotMats = [RotMat(k) for k in range(int(nh / 2) + 1)]
+#     shift = LA2.block_diag(*rotMats)[1:-1, 1:-1]
+#     shift[0, 0] = Cosine(0)
+#     shift[::-1, ::-1][0, 0] = Cosine(nh / 2)
+#     print(np.round(shift, 14))
+#     print('shape shift before:', np.shape(shift))
+    shift = OT.MakeRotMat(omega, c * t)
+    print(shift)
     if (nullspace != []):
         shift = nullspace.transpose() @ shift @ nullspace
         print(np.round(shift, 14))
@@ -193,6 +195,34 @@ def PropogateFCoefs(omega, FCoefs, c, t, nullspace = []):
     print('shift coefs after:', np.shape(propFCoefs))
     return propFCoefs
 
+
+def PropWaves(omega, waves, c, t):
+    nh = omega.nh_max
+    nhs = omega.nh
+    hs = omega.h
+    levels = omega.levels
+    refRatios = omega.refRatios
+    rotMat = OT.MakeRotMat(omega, c * t)
+    backRotMat = rotMat[::-1, ::-1] + 0
+    np.fill_diagonal(backRotMat[1:], np.diagonal(backRotMat, offset = 1))
+    np.fill_diagonal(backRotMat[:, 1:], -np.diagonal(backRotMat, offset = 1))
+    h = 1. / nh
+    aliasedWaves = int(nhs[0])
+    fineSpots = np.where(hs == h)[0]
+    wavesAlias = waves + 0
+    wavesAlias[:, :aliasedWaves] = 0
+    wavesAlias[fineSpots, :] = 0
+    workingWaves = waves - wavesAlias
+    propMat = workingWaves @ rotMat
+    for q in range(levels):
+        nh = nhs[::-1][q + 1]
+        h = 1. / nh
+        workingWaves = wavesAlias + 0
+        fineSpots = np.where(hs != h)[0]
+        workingWaves[fineSpots, :] = 0
+        propMat = propMat + (workingWaves @ backRotMat)
+        wavesAlias = wavesAlias - workingWaves
+    return propMat
 
 # In[ ]:
 

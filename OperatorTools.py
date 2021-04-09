@@ -179,6 +179,19 @@ def GramSchmidt(matrica):
     return matrica
 
 
+def MakeRotMat(omega, ct):
+    nh = omega.nh_max
+    Cosine = lambda k: np.cos(2. * np.pi * k * ct)
+    Sine = lambda k: np.sin(2. * np.pi * k * ct)
+    RotMat = lambda k: np.asarray([Cosine(k), Sine(k), -Sine(k), Cosine(k)]).reshape(2, 2)
+    rotMats = [RotMat(k) for k in range(int(nh / 2) + 1)]
+    shift = LA2.block_diag(*rotMats)[1:-1, 1:-1]
+    shift[0, 0] = Cosine(0)
+    shift[::-1, ::-1][0, 0] = Cosine(int(nh / 2))
+    return shift
+
+
+
 # In[ ]:
 
 
