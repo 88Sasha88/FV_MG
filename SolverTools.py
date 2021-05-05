@@ -24,21 +24,15 @@ np.set_printoptions( linewidth = 1000)
 # In[2]:
 
 
-def ForwardEuler(omega, waves, u0, nt, const, CFL, periodic = True):
-    degFreed = omega.degFreed# [::-1][0]
-    x = omega.xCell
-    dx = omega.dx
+def ForwardEuler(omega, waves, u0, nt, const, CFL, func):
+    dx = omega.h
     dx_min = np.min(dx)
-    dx_0 = 1 - x[::-1][0] + x[0]
     dt = CFL * dx_min / const
-    dt_0 = CFL * dx_0 / const
-    t = nt * dt
     u = u0.copy()
+    t = 0
     for n in range(nt):
-        u_f = u[::-1][0]
-        u[1:] = u[1:] - (const * (dt / dx) * (u[1:] - u[:-1]))
-        if (periodic == True):
-            u[0] = u[0] - (const * (dt_0 / dx_0) * (u[0] - u_f))
+        u = u + (dt * func(omega, t, u, const))
+        t = t + dt
     uCoefs = LA.inv(waves) @ u
     return uCoefs
 
@@ -61,3 +55,49 @@ def CalcTime(omega, CFL, const, nt = 0, t = 0):
             sys.exit(errorLoc + errorMess)
         t = nt * dt
     return t, nt
+
+def Upwind(omega, t, u0, const):
+    degFreed = omega.degFreed
+    dx = omega.h
+    f = -(const / dx) * (u0 - np.roll(u0, 1))
+    return f
+
+def CenterDiff(omega, t, u0, const):
+    degFreed = omega.degFreed
+    dx = omega.h
+    f = -(const / (2 * dx)) * (np.roll(u0, -1) - np.roll(u0, 1))
+    return f
+
+def MidpointMeth(omega, waves, u0, nt, const, CFL, func):
+    dx = omega.dx
+    dx_min = np.min(dx)
+    dt = CFL * dx_min / const
+    u = u0.copy()
+    t = 0
+    for n in range(nt):
+        k1 = func(omega, t, u, const)
+        k2 = func(omega, t + (dt / 2.), u + ((dt / 2.) * k1), const)
+        u = u + (dt * k2)
+        t = t + dt
+    uCoefs = LA.inv(waves) @ u
+    return uCoefs
+
+def RK4(omega, waves, u0, nt, const, CFL, func):
+    dx = omega.dx
+    dx_min = np.min(dx)
+    dt = CFL * dx_min / const
+    u = u0.copy()
+    t = 0
+    for n in range(nt):
+        k1 = func(omega, t, u, const)
+        k2 = func(omega, t + (dt / 2.), u + ((dt / 2.) * k1), const)
+        k3 = func(omega, t + (dt / 2.), u + ((dt / 2.) * k2), const)
+        k4 = func(omega, t + dt, u + (dt * k3), const)
+        u = u + ((dt / 6.) * (k1 + (2. * k2) + (2. * k3) + k4))
+        t = t + dt
+    uCoefs = LA.inv(waves) @ u
+    return uCoefs
+
+# def PolyTime(omega, t, u0, const):
+    
+#     return

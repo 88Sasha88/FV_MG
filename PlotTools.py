@@ -13,6 +13,7 @@ import sys as sys
 import time
 import matplotlib.pyplot as plt
 import BasicTools as BT
+import OperatorTools as OT
 import WaveTools as WT
 
 
@@ -71,8 +72,10 @@ def DrawLine(xCenter, yCenter, tickHeight, center = True):
 # In[4]:
 
 
-def TickPlot(omega, ax, tickHeight, label = False, u = []):
+def TickPlot(omega, ax, tickHeight, yGrid, label = False, u = []):
     ax = plt.axes(frameon = False)
+    if (yGrid):
+        ax.grid(True, axis = 'y', zorder = 0)
     xAxis = omega.xNode
     yAxis = omega.y
     xCell = omega.xCell
@@ -135,7 +138,7 @@ def TickPlot(omega, ax, tickHeight, label = False, u = []):
     if (u == []):
         ax.plot(xAxis, yAxis, color = 'k', zorder = 0)
     plt.tick_params(axis = 'x', which = 'both', bottom = False, top = False, labelbottom = False)
-    plt.tick_params(axis = 'y', which = 'both', left = False, right = False, labelleft = False)
+    plt.tick_params(axis = 'y', which = 'both', left = False, right = False, labelleft = yGrid)
     return
 
 
@@ -200,7 +203,7 @@ def UsefulPlotVals():
 # In[7]:
 
 
-def PlotWaves(omega, waves = [], waveNode = [], waveTrans = [], save = False, saveName = '', rescale = 1, nullspace = [], dpi = 600):
+def PlotWaves(omega, waves = [], waveNode = [], waveTrans = [], ct = 0, save = False, saveName = '', rescale = 1, nullspace = [], dpi = 600):
     nh = omega.nh_max
     x = omega.xNode
     n = omega.degFreed
@@ -213,26 +216,35 @@ def PlotWaves(omega, waves = [], waveNode = [], waveTrans = [], save = False, sa
     else:
         saveName = 'FourierMode'
     waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
+    if (ct != 0):
+        omega2 = BT.Grid(nh)
+        rotMat = OT.MakeRotMat(omega2, ct)
+        shift = True
+    else:
+        rotMat = np.eye(nh, nh)
+        shift = False
+    strings = FixStrings(omega, nullspace, shift)
     if (nullspace == []):
         nullspace = np.eye(nh, nh)
-        strings = omega.strings
+#         strings = omega.strings
     else:
         N = n
-        strings = FixStrings(omega, nullspace)
+    
+    
     if (waveNode != []):
-        waveNodes = waveNode @ nullspace
+        waveNodes = waveNode @ rotMat @ nullspace
     if (waves == []):
         waveCell = np.asarray([[[] for i in range(N)] for j in range(n)])
     else:
         waveCell = waves @ nullspace
-    waveCont = waveCont @ nullspace
+    waveCont = waveCont @ rotMat @ nullspace
     for k in range(N):
         if (waveTrans != []):
             if (k < np.shape(waveTrans)[1]):
                 waveTransfer = waveTrans[:, k]
         else:
             waveTransfer = []
-        fig = PlotWave(omega, numPoints, X, rescale, waveCell[:, k], waveCont[:, k], waveTrans = waveTransfer)
+        fig = PlotWave(omega, numPoints, X, rescale, waveCell[:, k], waveCont[:, k], waveTrans = waveTransfer, yGrid = False)
         if (waveNode != []):
             plt.scatter(x[:], waveNodes[:, k], color = ColorDefault(2), s = 10, zorder = 4)
         plt.xlim([-0.1, 1.25])
@@ -240,7 +252,7 @@ def PlotWaves(omega, waves = [], waveNode = [], waveTrans = [], save = False, sa
         plt.show()
         if (save):
             saveString = savePath + saveName + str(k)
-            Save(fig, saveString + '.png', dpi)
+            Save(fig, saveString, dpi)
     return
 
 
@@ -249,7 +261,7 @@ def PlotWaves(omega, waves = [], waveNode = [], waveTrans = [], save = False, sa
 # In[8]:
 
 
-def PlotWave(omega, numPoints, X, rescale, waveCell = [], fX = [], title = '', labels = [], waveTrans = [], sym = True):
+def PlotWave(omega, numPoints, X, rescale, waveCell = [], fX = [], title = '', labels = [], waveTrans = [], sym = True, yGrid = False):
     errorLoc = 'ERROR:\nPlotTools:\nPlotWave:\n'
     errorMess = ''
     if (fX != []):
@@ -286,7 +298,7 @@ def PlotWave(omega, numPoints, X, rescale, waveCell = [], fX = [], title = '', l
     fig, ax = plt.subplots(figsize = size)
     if (waveTrans != []):
         PiecePlot(omega, numPoints, X, waveTrans, color = 3)
-    TickPlot(omega, ax, tickHeight)
+    TickPlot(omega, ax, tickHeight, yGrid)
     if (numGraphs == 1):
         if (fX != []):
             plt.plot(X, fX, color = ColorDefault(0), zorder = 2, label = labelsOut[0])
@@ -324,7 +336,7 @@ def PlotWave(omega, numPoints, X, rescale, waveCell = [], fX = [], title = '', l
 # In[9]:
 
 
-def PlotMixedWave(omega, waves, waveCoef, title = '', labels = [], rescale = 1, plotCont = True, sym = False, save = False, saveName = '', dpi = 600):
+def PlotMixedWave(omega, waves, waveCoef, title = '', labels = [], rescale = 1, plotCont = True, sym = False, save = False, saveName = '', dpi = 600, ct = 0, yGrid = False):
     nh = omega.nh_max
     numPoints, font, X, savePath = UsefulPlotVals()
     
@@ -340,10 +352,14 @@ def PlotMixedWave(omega, waves, waveCoef, title = '', labels = [], rescale = 1, 
     fXCell = waves @ waveCoef
     if (plotCont):
         waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
+        if (ct != 0):
+            omega2 = BT.Grid(nh)
+            rotMat = OT.MakeRotMat(omega2, ct)
+            waveCont = waveCont @ rotMat
         fXCont = waveCont @ waveCoef
     else:
         fXCont = []
-    fig = PlotWave(omega, numPoints, X, rescale, fXCell, fXCont, title = title, sym = sym, labels = labels)
+    fig = PlotWave(omega, numPoints, X, rescale, fXCell, fXCont, title = title, sym = sym, labels = labels, yGrid = yGrid)
     plt.xlim([-0.1, 1.1])
     if (save):
         Save(fig, saveString, dpi)
@@ -386,21 +402,35 @@ def GetYBound(inputArray, sym, scaleParam = 0.25):
 # In[12]:
 
 
-def FixStrings(omega, nullspace):
+def FixStrings(omega, nullspace, shift):
     errorLoc = 'ERROR:\nPlotTools:\nFixStrings:\n'
     strings = omega.strings
     degFreed = omega.degFreed# [::-1][0]
-    errorMess = BT.CheckSize(degFreed, nullspace[0, :], nName = 'degFreed', matricaName = 'nullspace')
-    if (errorMess != ''):
-        sys.exit(errorLoc + errorMess)
-    locations = np.where(nullspace != 0)
-    stringsNew = ['' for i in range(degFreed)]
+    nh = omega.nh_max
+    if (nullspace == []):
+        N = nh
+        location = np.arange(nh)
+        locations = [np.asarray(location), np.asarray(location)]
+    else:
+        errorMess = BT.CheckSize(degFreed, nullspace[0, :], nName = 'degFreed', matricaName = 'nullspace')
+        if (errorMess != ''):
+            sys.exit(errorLoc + errorMess)
+        N = degFreed
+        locations = np.where(nullspace != 0)
+    stringsNew = ['' for i in range(N)]
+    if (shift):
+        x = '$(x - c t)$'
+    else:
+        x = '$x$'
     j = 0
     for i in locations[1]:
         if (stringsNew[i] == ''):
-            stringsNew[i] = strings[locations[0][j]]
+            if ((i == 0) and (j == 0)):
+                stringsNew[i] = strings[locations[0][j]]
+            else:
+                stringsNew[i] = strings[locations[0][j]] + x
         else:
-            stringsNew[i] = stringsNew[i] + '+' + strings[locations[0][j]]
+            stringsNew[i] = stringsNew[i] + '+' + strings[locations[0][j]] + x
         j = j + 1
     return stringsNew
 
@@ -462,7 +492,7 @@ def PlotGrid(omega, rescale = 1, save = False, saveName = '', dpi = 600):
     yMin, yMax, tickHeight = GetYBound(0, True)
     size, tickHeight = Resize(rescale, tickHeight)
     fig, ax = plt.subplots(figsize = size)
-    TickPlot(omega, ax, tickHeight, label = True)
+    TickPlot(omega, ax, tickHeight, False, label = True)
     plt.ylim([yMin, yMax])
     plt.show()
     if (save):
@@ -495,7 +525,7 @@ def DivergVis(save = False, saveName = '', dpi = 600):
     fig, ax = plt.subplots()
     numPoints, font, X, savePath = UsefulPlotVals()
     yMin, yMax, tickHeight = GetYBound(uNode[1:4], False)
-    TickPlot(omega, ax, tickHeight, u = uNode)
+    TickPlot(omega, ax, tickHeight, False, u = uNode)
     plt.scatter(x[1:4], uNode[1:4], s = 10, color = ColorDefault(2))
     PiecePlot(omega, numPoints, X, uCell, tickHeight = tickHeight)
     plt.quiver([length], [0], [length], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
@@ -505,7 +535,7 @@ def DivergVis(save = False, saveName = '', dpi = 600):
     plt.show()
     if (save):
         saveString = savePath + saveName
-        Save(fig, saveString + '.png', dpi)
+        Save(fig, saveString, dpi)
     return
 
 

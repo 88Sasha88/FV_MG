@@ -216,14 +216,14 @@ class Grid:
         for k in range(kRange):
             if (k % 2 == 0):
                 if (k == 0):
-                    name = '$' '\\' + 'frac{a_{0}}{2}$'
+                    name = '$a_{0}$'
                 else:
                     number = str(k)
-                    name = '$a_{' + number + '}$cos' + number + '$' + '\\' + 'pi x$'
+                    name = '$a_{' + number + '}$cos' + number + '$' + '\\' + 'pi$'
             else:
                 number1 = str(k)
                 number2 = str(k + 1)
-                name = '$a_{' + number1 + '}$sin' + number2 + '$' + '\\' + 'pi x$'
+                name = '$a_{' + number1 + '}$sin' + number2 + '$' + '\\' + 'pi$'
             strings = np.append(strings, name)
         n = len(self.xNode)
         self.degFreed = n - 1

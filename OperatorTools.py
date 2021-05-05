@@ -69,7 +69,7 @@ def RoundDiag(matrica, places = 14):
 # In[5]:
 
 
-def FindNullspace(omega, waves):
+def FindNullspace(omega, waves, shift = False):
     errorLoc = 'ERROR:\nOperatorTools:\nFindNullspace:\n'
     levels = omega.levels
     alias = omega.alias
@@ -78,6 +78,9 @@ def FindNullspace(omega, waves):
     fixWaves = np.zeros((nh, degFreed), float)
     nh = omega.nh_min
     leftover = []
+    oneMore = 0
+    if (shift):
+        oneMore = 0# 1
     if (levels == 0):
         np.fill_diagonal(fixWaves, 1)
         if (alias):
@@ -98,28 +101,32 @@ def FindNullspace(omega, waves):
                 sys.exit(errorLoc + errorMess)
 
         h = refRatio / nh
-        oscNum = int(nh / refRatio)
-        print('h is', h)
-
-        maxCos = int(np.floor(refRatio - ((2. * refRatio) / nh)))
-        cosKs = int(nh / (2. * refRatio)) * np.arange(1, maxCos + 1)
-        cosInd = 2 * cosKs
-        maxSin = int(np.floor(refRatio / 2))
-        sinKs = int(nh / refRatio) * np.arange(1, maxSin + 1)
-        sinInd = (2 * sinKs) - 1
-        indices = np.sort(np.append(cosInd, sinInd))
-
+        oscNum = int(nh / refRatio) - oneMore
+        oscWaves = waves[:, oscNum:nh]
         allIndices = np.arange(oscNum, nh)
         print(allIndices)
-        otherIndices = np.setdiff1d(allIndices, indices)
-        print(otherIndices)
-        oscWaves = waves[:, oscNum:nh]
-        print(oscNum, nh)
-        print(oscWaves)
-        oscWaves = np.delete(oscWaves, indices-oscNum, 1)
-        print('')
-        print(oscWaves)
+        print('h is', h)
+        if (shift):
+            indices = []
+        else:
+            maxCos = int(np.floor(refRatio - ((2. * refRatio) / nh)))
+            cosKs = int(nh / (2. * refRatio)) * np.arange(1, maxCos + 1)
+            cosInd = 2 * cosKs
+            maxSin = int(np.floor(refRatio / 2))
+            sinKs = int(nh / refRatio) * np.arange(1, maxSin + 1)
+            sinInd = (2 * sinKs) - 1
+            indices = np.sort(np.append(cosInd, sinInd))
 
+            
+            #
+            # print(otherIndices)
+            #
+            print(oscNum, nh)
+            print(oscWaves)
+            oscWaves = np.delete(oscWaves, indices-oscNum, 1)
+            print('')
+            print(oscWaves)
+        otherIndices = np.setdiff1d(allIndices, indices)
         fineSpots = np.where(omega.h < h)[0]
         oscWaves = np.delete(oscWaves, fineSpots, 0)
         # oscWaves = np.round(oscWaves, 15)
@@ -135,6 +142,8 @@ def FindNullspace(omega, waves):
         print(nullspace)
         if (q == 0):
             fixWaves[0:oscNum, 0:oscNum] = np.eye(oscNum, oscNum)
+            print('HERE IS FIX WAVES!!!')
+            print(fixWaves)
             j = oscNum
         print('LEFTOVER:', leftover)
         for i in leftover:

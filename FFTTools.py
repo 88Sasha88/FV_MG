@@ -197,26 +197,38 @@ def PropogateFCoefs(omega, FCoefs, c, t, nullspace = []):
 
 
 def PropWaves(omega, waves, c, t):
-    nh = omega.nh_max
+    nh2 = omega.nh_max
     nhs = omega.nh
     hs = omega.h
     levels = omega.levels
     refRatios = omega.refRatios
     rotMat = OT.MakeRotMat(omega, c * t)
     backRotMat = rotMat[::-1, ::-1] + 0
-    np.fill_diagonal(backRotMat[1:], np.diagonal(backRotMat, offset = 1))
-    np.fill_diagonal(backRotMat[:, 1:], -np.diagonal(backRotMat, offset = 1))
-    h = 1. / nh
-    aliasedWaves = int(nhs[0])
+#     np.fill_diagonal(backRotMat[1:], np.diagonal(backRotMat, offset = 1))
+#     np.fill_diagonal(backRotMat[:, 1:], -np.diagonal(backRotMat, offset = 1))
+    compRotMat = rotMat + 0
+    compRotMat[::-1, ::-1][0, 0] = 1
+    h = 1. / nh2
+    # aliasedWaves = int(nhs[0])
     fineSpots = np.where(hs == h)[0]
     wavesAlias = waves + 0
-    wavesAlias[:, :aliasedWaves] = 0
+    # wavesAlias[:, :aliasedWaves] = 0
     wavesAlias[fineSpots, :] = 0
     workingWaves = waves - wavesAlias
     propMat = workingWaves @ rotMat
+    refRatioTot = 1
     for q in range(levels):
-        nh = nhs[::-1][q + 1]
-        h = 1. / nh
+        nh0 = nhs[::-1][q + 1]
+        if (q == 0):
+            nh1 = nh0
+        refRatio = refRatios[::-1][q]
+        refRatioTot = refRatioTot * refRatio
+        h = 1. / nh0
+        for p in range(refRatioTot - 1):
+            s0 = 2 * (p % 2)
+            startPoint = nh0 * (p + 1) - s0
+            endPoint = startPoint + nh0 + s0
+            compRotMat[startPoint + 1:endPoint - 1, startPoint + 1:endPoint - 1] = backRotMat[nh2 - nh0 - s0 + 1:nh2 - 1, nh2 - nh0 - s0 + 1:nh2 - 1]
         workingWaves = wavesAlias + 0
         fineSpots = np.where(hs != h)[0]
         workingWaves[fineSpots, :] = 0
