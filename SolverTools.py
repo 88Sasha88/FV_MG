@@ -24,15 +24,27 @@ np.set_printoptions( linewidth = 1000)
 # In[2]:
 
 
-def ForwardEuler(omega, waves, u0, nt, const, CFL, func):
+def ForwardEuler(omega, waves, u0, nt, const, CFL, func, order = 0):
     dx = omega.h
     dx_min = np.min(dx)
     dt = CFL * dx_min / const
+    if (order != 0):
+        if (func != TimePoly):
+            print('Spatial derivative method has been overridden in favor of TimePoly()!')
+        func = TimePoly
     u = u0.copy()
     t = 0
     for n in range(nt):
-        u = u + (dt * func(omega, t, u, const))
+        u = u + (dt * func(omega, t, u, const, order))
         t = t + dt
+        if (func == TimePoly):
+            if (n == nt - 1):
+                val = func(omega, t, u, const, order + 1, deriv = False)
+                if (order < 2):
+                    midstring = ' should be equal to '
+                else:
+                    midstring = ' does not need to equal '
+                print(str(u[0]) + midstring + str(val) + '.')
     uCoefs = LA.inv(waves) @ u
     return uCoefs
 
@@ -56,48 +68,86 @@ def CalcTime(omega, CFL, const, nt = 0, t = 0):
         t = nt * dt
     return t, nt
 
-def Upwind(omega, t, u0, const):
+def Upwind(omega, t, u0, const, order):
     degFreed = omega.degFreed
     dx = omega.h
     f = -(const / dx) * (u0 - np.roll(u0, 1))
     return f
 
-def CenterDiff(omega, t, u0, const):
+def CenterDiff(omega, t, u0, const, order):
     degFreed = omega.degFreed
     dx = omega.h
     f = -(const / (2 * dx)) * (np.roll(u0, -1) - np.roll(u0, 1))
     return f
 
-def MidpointMeth(omega, waves, u0, nt, const, CFL, func):
+def MidpointMeth(omega, waves, u0, nt, const, CFL, func, order = 0):
     dx = omega.dx
     dx_min = np.min(dx)
     dt = CFL * dx_min / const
+    if (order > 0):
+        if (func != TimePoly):
+            print('Spatial derivative method has been overridden in favor of TimePoly()!')
+        func = TimePoly
+    if (order != 0):
+        func = TimePoly
     u = u0.copy()
     t = 0
     for n in range(nt):
-        k1 = func(omega, t, u, const)
-        k2 = func(omega, t + (dt / 2.), u + ((dt / 2.) * k1), const)
+        k1 = func(omega, t, u, const, order)
+        k2 = func(omega, t + (dt / 2.), u + ((dt / 2.) * k1), const, order)
         u = u + (dt * k2)
         t = t + dt
+        if (func == TimePoly):
+            if (n == nt - 1):
+                val = func(omega, t, u, const, order + 1, deriv = False)
+                if (order < 3):
+                    midstring = ' should be equal to '
+                else:
+                    midstring = ' does not need to equal '
+                print('k1 = ' + str(k1))
+                print('k2 = ' + str(k2))
+                print(str(u[0]) + midstring + str(val) + '.')
     uCoefs = LA.inv(waves) @ u
     return uCoefs
 
-def RK4(omega, waves, u0, nt, const, CFL, func):
+def RK4(omega, waves, u0, nt, const, CFL, func, order = 0):
     dx = omega.dx
     dx_min = np.min(dx)
     dt = CFL * dx_min / const
+    if (order > 0):
+        if (func != TimePoly):
+            print('Spatial derivative method has been overridden in favor of TimePoly()!')
+        func = TimePoly
     u = u0.copy()
     t = 0
     for n in range(nt):
-        k1 = func(omega, t, u, const)
-        k2 = func(omega, t + (dt / 2.), u + ((dt / 2.) * k1), const)
-        k3 = func(omega, t + (dt / 2.), u + ((dt / 2.) * k2), const)
-        k4 = func(omega, t + dt, u + (dt * k3), const)
+        k1 = func(omega, t, u, const, order)
+        k2 = func(omega, t + (dt / 2.), u + ((dt / 2.) * k1), const, order)
+        k3 = func(omega, t + (dt / 2.), u + ((dt / 2.) * k2), const, order)
+        k4 = func(omega, t + dt, u + (dt * k3), const, order)
         u = u + ((dt / 6.) * (k1 + (2. * k2) + (2. * k3) + k4))
         t = t + dt
+        if (func == TimePoly):
+            if (n == nt - 1):
+                val = func(omega, t, u, const, order + 1, deriv = False)
+                if (order < 5):
+                    midstring = ' should be equal to '
+                else:
+                    midstring = ' does not need to equal '
+                print('k1 = ' + str(k1))
+                print('k2 = ' + str(k2))
+                print('k3 = ' + str(k3))
+                print('k4 = ' + str(k4))
+                print(str(u[0]) + midstring + str(val) + '.')
     uCoefs = LA.inv(waves) @ u
     return uCoefs
 
-# def PolyTime(omega, t, u0, const):
-    
-#     return
+def TimePoly(omega, t, u, const, order, deriv = True):
+    # add error checker for negative order or zero
+    poly = 0
+    for n in range(0, order):
+        if (deriv):
+            poly = poly + ((n + 1) * (t**n))
+        else:
+            poly = poly + (t**n)
+    return poly

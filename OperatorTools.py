@@ -41,7 +41,7 @@ def NormalizeMatrix(n, matrica, axis = 0):
 # In[3]:
 
 
-def MakeLaplacian1D(n):
+def Laplacian1D(n):
     Laplacian = np.zeros((n, n), float)
     np.fill_diagonal(Laplacian[1:], 1)
     np.fill_diagonal(Laplacian[:, 1:], 1)
@@ -199,6 +199,26 @@ def MakeRotMat(omega, ct):
     shift[::-1, ::-1][0, 0] = Cosine(int(nh / 2))
     return shift
 
+
+def Upwind1D(omega):
+    n = omega.degFreed
+    Deriv = np.zeros((n, n), float)
+    np.fill_diagonal(Deriv[1:], -1)
+    # np.fill_diagonal(Deriv[:, 1:], -1)
+    np.fill_diagonal(Deriv, 1)
+    # Deriv[nh - 1, 0] = -1
+    Deriv[0, n - 1] = -1
+    hMat = StepMatrix(omega)
+    Deriv = hMat @ Deriv
+    return Deriv
+
+def StepMatrix(omega):
+    h = omega.h
+    n = omega.degFreed
+    hs = np.zeros((n, n), float)
+    np.fill_diagonal(hs, h)
+    hMat = LA.inv(hs)
+    return hMat
 
 
 # In[ ]:

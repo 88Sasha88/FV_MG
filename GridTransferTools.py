@@ -77,6 +77,10 @@ def MakeLinearInterp(nh):
 
 # In[ ]:
 
+def Restrict(omega, waves):
+    refRatios = omega
+    return
+
 
 
 

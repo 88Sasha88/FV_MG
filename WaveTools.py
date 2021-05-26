@@ -23,16 +23,17 @@ import OperatorTools as OT
 
 def MakeWaves(omega):
     nh_max = omega.nh_max
-    h = omega.h
+#     h = omega.h
     if (omega.alias):
         nh_max = int(2 * nh_max)
         np.append(h, h)
     x = omega.xNode
     n = omega.degFreed
     waves = CellWaves(nh_max, x)
-    hs = np.zeros((n, n), float)
-    np.fill_diagonal(hs, h)
-    hMat = LA.inv(hs)
+#     hs = np.zeros((n, n), float)
+#     np.fill_diagonal(hs, h)
+#     hMat = LA.inv(hs)
+    hMat = OT.StepMatrix(omega)
     wave1up = 1 * waves
     wave1up.T[::nh_max] = 0
     wave0 = waves - wave1up
@@ -118,7 +119,7 @@ def FindLaplaceEigVals(omega, waves):
         sys.exit(errorLoc + errorMess)
     wavesNorm = OT.NormalizeMatrix(nh, waves)
     wavesInv = wavesNorm.conj().T
-    Laplacian = OT.MakeLaplacian1D(nh)
+    Laplacian = OT.Laplacian1D(nh)
     eigMat = wavesInv @ Laplacian @ wavesNorm
     eigMat = OT.RoundDiag(eigMat)
     errorMess = BT.CheckDiag(eigMat, matricaName = 'eigMat')
