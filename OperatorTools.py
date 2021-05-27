@@ -220,6 +220,17 @@ def StepMatrix(omega):
     hMat = LA.inv(hs)
     return hMat
 
+def CenterDiff1D(omega):
+    n = omega.degFreed
+    Deriv = np.zeros((n, n), float)
+    np.fill_diagonal(Deriv[1:], -1)
+    np.fill_diagonal(Deriv[:, 1:], 1)
+    Deriv[n - 1, 0] = 1
+    Deriv[0, n - 1] = -1
+    hMat = StepMatrix(omega)
+    Deriv = 0.5 * hMat @ Deriv
+    return Deriv
+
 
 # In[ ]:
 

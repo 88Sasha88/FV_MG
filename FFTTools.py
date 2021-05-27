@@ -185,8 +185,8 @@ def PropogateFCoefs(omega, FCoefs, c, t, nullspace = []):
 #     print(np.round(shift, 14))
 #     print('shape shift before:', np.shape(shift))
     shift = OT.MakeRotMat(omega, c * t)
-    print(shift)
     if (nullspace != []):
+        print(shift)
         shift = nullspace.transpose() @ shift @ nullspace
         print(np.round(shift, 14))
         print('shape shift after:', np.shape(shift))
