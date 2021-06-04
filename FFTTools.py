@@ -15,6 +15,8 @@ import time
 import matplotlib.pyplot as plt
 import BasicTools as BT
 import OperatorTools as OT
+import WaveTools as WT
+import GridTransferTools as GTT
 
 
 # This function creates a matrix of the coefficients for our wave functions at the respective locations of the FFT values.
@@ -235,6 +237,26 @@ def PropWaves(omega, waves, c, t):
         propMat = propMat + (workingWaves @ backRotMat)
         wavesAlias = wavesAlias - workingWaves
     return propMat
+
+
+
+def PropRestrictWaves(omega, waveformIn, c, t):
+    nh_max = omega.nh_max
+    degFreed = omega.degFreed
+    waves = WT.MakeWaves(omega)
+    nullspace = OT.FindNullspace(omega, waves)
+    omegaF = BT.Grid(nh_max)
+    wavesF = WT.MakeWaves(omegaF)
+    if (len(waveformIn) == degFreed):
+        waveform = nullspace @ waveformIn.copy()
+    else:
+        waveform = waveformIn.copy()
+    restrictOp = GTT.CoarsenOp(omega)
+    FCoefs = FourierCoefs(omegaF, wavesF, waveform)
+    propWaves = PropWaves(omegaF, wavesF, c, t)
+    propWaveform = restrictOp @ propWaves @ FCoefs
+    propFCoefs = FourierCoefs(omega, waves @ nullspace, propWaveform)
+    return propFCoefs
 
 # In[ ]:
 

@@ -90,9 +90,7 @@ def FindNullspace(omega, waves, shift = False):
         degFreed = omega.degFreeds[q + 1]
         refRatio = omega.refRatios[::-1][q]
         nh = omega.nh[q + 1]
-        print(omega.nh)
         if (q == levels - 1):
-            print('look:', nh, len(waves[0, :]))
             errorMess = BT.CheckSize(nh, waves[0, :], nName = 'nh', matricaName = 'waves')
             if (errorMess != ''):
                 sys.exit(errorLoc + errorMess)
@@ -104,8 +102,6 @@ def FindNullspace(omega, waves, shift = False):
         oscNum = int(nh / refRatio) - oneMore
         oscWaves = waves[:, oscNum:nh]
         allIndices = np.arange(oscNum, nh)
-        print(allIndices)
-        print('h is', h)
         if (shift):
             indices = []
         else:
@@ -121,49 +117,32 @@ def FindNullspace(omega, waves, shift = False):
             #
             # print(otherIndices)
             #
-            print(oscNum, nh)
-            print(oscWaves)
             oscWaves = np.delete(oscWaves, indices-oscNum, 1)
-            print('')
-            print(oscWaves)
         otherIndices = np.setdiff1d(allIndices, indices)
         fineSpots = np.where(omega.h < h)[0]
         oscWaves = np.delete(oscWaves, fineSpots, 0)
         # oscWaves = np.round(oscWaves, 15)
-        print('oscWaves')
-        print(oscWaves)
-        print('')
         nullspace = LA2.null_space(oscWaves)
         nullspace = np.asarray(sympy.Matrix(nullspace.transpose()).rref()[0].transpose())
         nullspace = np.round(nullspace.astype(np.float64), 14)
-        print('nullspace\n', nullspace)
-        print('')
         GramSchmidt(nullspace)
-        print(nullspace)
         if (q == 0):
             fixWaves[0:oscNum, 0:oscNum] = np.eye(oscNum, oscNum)
-            print('HERE IS FIX WAVES!!!')
-            print(fixWaves)
             j = oscNum
-        print('LEFTOVER:', leftover)
         for i in leftover:
             if (j < degFreed):
                 fixWaves[i, j] = 1
                 leftover = leftover[1:]
-                print('i, j:', i, j)
                 j = j + 1
         for i in indices:
             if (j < degFreed):
                 fixWaves[i, j] = 1
-                print('i, j:', i, j)
                 j = j + 1
             else:
                 leftover.append(i)
         i = 0
-        print('new loop')
         while (j < degFreed):
             fixWaves[otherIndices, j] = nullspace[:, i]
-            print('i, j:', i, j)
             i = i + 1
             j = j + 1
     fixWaves = np.round(fixWaves, 14)    
@@ -202,12 +181,36 @@ def MakeRotMat(omega, ct):
 
 def Upwind1D(omega):
     n = omega.degFreed
+    hs = omega.h
+    B = hs - np.roll(hs, 1)
+#     B[B > 0] = 0.5
+#     B[B < 0] = 2. / 3.
+#     C = -np.roll(B, -1) - np.roll(B, -2)
+#     D = np.roll(B, -2)
+#     D[D != 2. / 3.] = 0
+#     C = C + D
+#     B[B < 2. / 3.] = 1.
+#     C[C == 0] = -1.
+    B[B > 0] = 0.5
+    B[B < 0] = 2. / 3.
+    C = -np.roll(B, -1)
+    # D = np.roll(B, -1)
+#     D[D != 2. / 3.] = 0
+#     C = C - D
+    B[B < 2. / 3.] = 1.
+    C[C == 0] = 1.
+    D = np.roll(C, -1)
+    D[D != -0.5] = 0
+    print(C)
+    print(D)
+    # D = 100 * np.ones(n)
     Deriv = np.zeros((n, n), float)
-    np.fill_diagonal(Deriv[1:], -1)
-    # np.fill_diagonal(Deriv[:, 1:], -1)
-    np.fill_diagonal(Deriv, 1)
-    # Deriv[nh - 1, 0] = -1
-    Deriv[0, n - 1] = -1
+    np.fill_diagonal(Deriv, B)
+    np.fill_diagonal(Deriv[1:], C)
+    np.fill_diagonal(Deriv[2:], D)
+    Deriv[0, n - 1] = C[::-1][0]
+    Deriv[0, n - 2] = D[::-1][1]
+    Deriv[1, n - 1] = D[::-1][0]
     hMat = StepMatrix(omega)
     Deriv = hMat @ Deriv
     return Deriv

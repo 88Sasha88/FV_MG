@@ -9,6 +9,7 @@ from scipy import *
 import numpy as np
 from numpy import *
 from numpy import linalg as LA
+from scipy import linalg as LA2
 import sys as sys
 import time
 import matplotlib.pyplot as plt
@@ -77,9 +78,15 @@ def MakeLinearInterp(nh):
 
 # In[ ]:
 
-def Restrict(omega, waves):
-    refRatios = omega
-    return
+def CoarsenOp(omega):
+    hs = omega.h
+    nh_max = omega.nh_max
+    h_min = 1. / nh_max
+    weights = h_min / hs
+    sizes = np.asarray(1 / weights, int)
+    matrices = [w * np.ones(s, float) for (w, s) in zip(weights, sizes)]
+    CoarseOp = LA2.block_diag(*matrices)
+    return CoarseOp
 
 
 

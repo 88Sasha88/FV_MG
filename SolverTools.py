@@ -71,7 +71,30 @@ def CalcTime(omega, CFL, const, nt = 0, t = 0):
 def Upwind(omega, t, u0, const, order):
     degFreed = omega.degFreed
     dx = omega.h
-    f = -(const / dx) * (u0 - np.roll(u0, 1))
+    B = dx - np.roll(dx, 1)
+    B[B > 0] = 0.5
+    # B[B > 0] = 0
+    B[B < 0] = 2. / 3.
+    C = B + 0 # np.roll(B, -1)
+    # D = np.roll(B, -1)
+#     D[D != 2. / 3.] = 0
+#     C = C - D
+    B[B < 2. / 3.] = 1.
+    C[C == 0] = 1.
+    D = C + 0
+    D[D != 0.5] = 0
+    print('')
+    print('Start:')
+    print(B)
+    print(dx)
+    print('')
+    print(C)
+    print(np.roll(dx, 1))
+    print('')
+    print(D)
+    print(np.roll(dx, 2))
+    print('')
+    f = -(const / dx) * ((B * u0) - (C * np.roll(u0, 1)) - (D * np.roll(u0, 2)))
     return f
 
 def CenterDiff(omega, t, u0, const, order):
