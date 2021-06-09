@@ -247,10 +247,7 @@ def PropRestrictWaves(omega, waveformIn, c, t):
     nullspace = OT.FindNullspace(omega, waves)
     omegaF = BT.Grid(nh_max)
     wavesF = WT.MakeWaves(omegaF)
-    if (len(waveformIn) == degFreed):
-        waveform = nullspace @ waveformIn.copy()
-    else:
-        waveform = waveformIn.copy()
+    waveform = waveformIn.copy()
     restrictOp = GTT.CoarsenOp(omega)
     FCoefs = FourierCoefs(omegaF, wavesF, waveform)
     propWaves = PropWaves(omegaF, wavesF, c, t)

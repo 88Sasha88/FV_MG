@@ -183,27 +183,15 @@ def Upwind1D(omega):
     n = omega.degFreed
     hs = omega.h
     B = hs - np.roll(hs, 1)
-#     B[B > 0] = 0.5
-#     B[B < 0] = 2. / 3.
-#     C = -np.roll(B, -1) - np.roll(B, -2)
-#     D = np.roll(B, -2)
-#     D[D != 2. / 3.] = 0
-#     C = C + D
-#     B[B < 2. / 3.] = 1.
-#     C[C == 0] = -1.
     B[B > 0] = 0.5
     B[B < 0] = 2. / 3.
     C = -np.roll(B, -1)
-    # D = np.roll(B, -1)
-#     D[D != 2. / 3.] = 0
-#     C = C - D
     B[B < 2. / 3.] = 1.
-    C[C == 0] = 1.
+    C[C == 0] = -1.
     D = np.roll(C, -1)
     D[D != -0.5] = 0
     print(C)
     print(D)
-    # D = 100 * np.ones(n)
     Deriv = np.zeros((n, n), float)
     np.fill_diagonal(Deriv, B)
     np.fill_diagonal(Deriv[1:], C)
@@ -212,6 +200,9 @@ def Upwind1D(omega):
     Deriv[0, n - 2] = D[::-1][1]
     Deriv[1, n - 1] = D[::-1][0]
     hMat = StepMatrix(omega)
+    print(hMat)
+    print('')
+    print(Deriv)
     Deriv = hMat @ Deriv
     return Deriv
 
@@ -224,12 +215,44 @@ def StepMatrix(omega):
     return hMat
 
 def CenterDiff1D(omega):
+    # A is the main diagonal; C is the subdiagonal; G is the sub-subdiagonal; E is the superdiagonal; H is the super-superdiagonal.
     n = omega.degFreed
+    hs = omega.h
+    A = hs - np.roll(hs, 1)
+    B = A + 0
+    F = np.roll(A, -1)
+    F[F > 0] = 1. / 3.
+    F[F != 1. / 3.] = 0
+    A[A < 0] = -1. / 3.
+    A[A != -1. / 3.] = 0
+    A = A - F
+    B[B > 0] = 0.5
+    B[B < 0] = 2. / 3.
+    C = -np.roll(B, -1)
+    B[B < 2. / 3.] = 1.
+    C[C == 0] = -1.
+    D = np.roll(C, -1)
+    D[D != -0.5] = 0
+    E = -C
+    E[E == 0.5] = 4. /3.
+    E[E == 2. / 3.] = 0.5
+    G = np.roll(C, -1)
+    G[G != -0.5] = 0
+    H = E + 0
+    H[H != 0.5] = 0
     Deriv = np.zeros((n, n), float)
-    np.fill_diagonal(Deriv[1:], -1)
-    np.fill_diagonal(Deriv[:, 1:], 1)
-    Deriv[n - 1, 0] = 1
-    Deriv[0, n - 1] = -1
+    np.fill_diagonal(Deriv, A)
+    np.fill_diagonal(Deriv[1:], C)
+    np.fill_diagonal(Deriv[:, 1:], E)
+    np.fill_diagonal(Deriv[2:], G)
+    np.fill_diagonal(Deriv[:, 2:], H)
+    Deriv[0, n - 1] = C[::-1][0]
+    Deriv[0, n - 2] = G[::-1][1]
+    Deriv[1, n - 1] = G[::-1][0]
+
+    Deriv[n - 1, 0] = E[::-1][0]
+    Deriv[n - 2, 0] = H[::-1][1]
+    Deriv[n - 1, 1] = H[::-1][0]
     hMat = StepMatrix(omega)
     Deriv = 0.5 * hMat @ Deriv
     return Deriv
