@@ -190,8 +190,6 @@ def Upwind1D(omega):
     C[C == 0] = -1.
     D = np.roll(C, -1)
     D[D != -0.5] = 0
-    print(C)
-    print(D)
     Deriv = np.zeros((n, n), float)
     np.fill_diagonal(Deriv, B)
     np.fill_diagonal(Deriv[1:], C)
@@ -200,9 +198,6 @@ def Upwind1D(omega):
     Deriv[0, n - 2] = D[::-1][1]
     Deriv[1, n - 1] = D[::-1][0]
     hMat = StepMatrix(omega)
-    print(hMat)
-    print('')
-    print(Deriv)
     Deriv = hMat @ Deriv
     return Deriv
 
@@ -253,8 +248,9 @@ def CenterDiff1D(omega):
     Deriv[n - 1, 0] = E[::-1][0]
     Deriv[n - 2, 0] = H[::-1][1]
     Deriv[n - 1, 1] = H[::-1][0]
-    hMat = StepMatrix(omega)
-    Deriv = 0.5 * hMat @ Deriv
+    hMat = 0.5 * StepMatrix(omega)
+    print(Deriv)
+    Deriv = hMat @ Deriv
     return Deriv
 
 
