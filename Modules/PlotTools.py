@@ -287,6 +287,8 @@ def PlotWave(omega, numPoints, X, rescale, waveCell = [], fX = [], title = '', l
     if (labels != []):
         if (len(labels) != numGraphs):
             errorMess = 'Dimensions of input graph(s) do(es) not match size of labels!'
+            print('labels:', len(labels))
+            print('graphs:', numGraphs)
             sys.exit(errorLoc + errorMess)
         else:
             labelsOut = labels

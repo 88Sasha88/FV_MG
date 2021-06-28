@@ -295,6 +295,7 @@ def SpaceDeriv(omega, order, diff):
         fc1v2 = rightCell + 0
         fc1v1 = leftCell + 0
         
+        hMat = StepMatrix(omega)
     else:
         rightCell[1] = 1
         
@@ -305,6 +306,8 @@ def SpaceDeriv(omega, order, diff):
         
         fc1v2 = ghostR
         fc1v1 = leftCell + 0
+        
+        hMat = 2 * StepMatrix(omega)
     
     # Define common row pieces between upwind and center difference.
     cf2v2 = rightCell + 0
@@ -327,21 +330,24 @@ def SpaceDeriv(omega, order, diff):
     
     # Fill matrix.
     for k in range(degFreed):
-        if (np.roll(spots, k + 1)[0] > 0):
+        if (np.roll(spots, 1 - k)[0] > 0):
             row = fc2
         else:
-            if (np.roll(spots, -k)[0] < 0):
+            if (np.roll(spots, -k)[0] < 0): # This one's okay.
                 row = cf1
+                
             else:
-                if (spots[k] > 0):
-                    row = fc1
+                if (np.roll(spots, 1 - k)[0] < 0): # This one's okay.
+                    row = cf2 #fc1
+                    
                 else:
-                    if (np.roll(spots, 1 - k)[0] < 0):
-                        row = cf2
+                    if (spots[k] > 0): # This one's okay.
+                        row = fc1 #cf2
                     else:
                         row = default
         blockMat[k, :] = np.roll(row, k)
-    
+    # print(blockMat)
+    blockMat = hMat @ blockMat
     return blockMat
 
 

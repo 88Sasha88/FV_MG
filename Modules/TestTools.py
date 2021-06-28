@@ -124,37 +124,22 @@ def AmpError(omega, theoretical, actual, tol = 1e-20):
     error = np.zeros(numKs, float)
     error[0] = 1 - abs(actual[0] / np.sqrt((theoretical[0]**2) + tol))
     error[::-1][0] = 1 - abs(actual[::-1][0] / np.sqrt((theoretical[::-1][0]**2) + tol))
-    print('actual:')
-    print(actual[1::2][:-1] ** 2)
-    print('+')
-    print(actual[::2][1:] ** 2)
-    print('=')
-    print((actual[1::2][:-1]**2) + (actual[::2][1:]**2))
-    print('sqrt')
-    print(np.sqrt((actual[1::2][:-1]**2) + (actual[::2][1:]**2)))
-    print('theoretical:')
-    print(theoretical[1::2][:-1] ** 2)
-    print('+')
-    print(theoretical[::2][1:] ** 2)
-    print('=')
-    print((theoretical[1::2][:-1]**2) + (theoretical[::2][1:]**2))
-    print('sqrt')
-    print(np.sqrt((theoretical[1::2][:-1]**2) + (theoretical[::2][1:]**2)))
-    print('')
     error[1:-1] = 1 - np.sqrt(((actual[1::2][:-1]**2) + (actual[::2][1:]**2)) / ((theoretical[1::2][:-1]**2) + (theoretical[::2][1:]**2) + tol))
     ks = np.arange(numKs)
     return ks, error
 
 def Upwind(omega, t, u0, c, order):
-    derivMat = OT.Upwind1D(omega)
+    derivMat = OT.SpaceDeriv(omega, order, 'U')
     spatOp = -c * derivMat
     u = spatOp @ u0
     return u
 
 def CenterDiff(omega, t, u0, c, order):
-    derivMat = OT.CenterDiff1D(omega)
+    derivMat = OT.SpaceDeriv(omega, order, 'CD')
     spatOp = -c * derivMat
     u = spatOp @ u0
     return u
+
+
 
 # In[ ]:
