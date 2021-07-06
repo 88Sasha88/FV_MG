@@ -77,7 +77,7 @@ def CalcError(omega, theoretical, actual, errorType = 'absolute', tol = 1e-14):
 # In[5]:
 
 
-def NormVersusCFL(func, omega, waves, u_0, const, CFL_0, nt_0, normType = 'max', errorType = 'absolute', plot = False):
+def NormVersusCFL(func, omega, waves, u_0, const, CFL_0, nt_0, normType = 'max', errorType = 'absolute', plot = False, CFL_f = 0.1):
     # Check size of waves and u_0, and check that nt_0 isn't negative?
     errorLoc = 'ERROR:\nTestTools:\nNormVersusCFL:\n'
     nt = nt_0
@@ -87,7 +87,7 @@ def NormVersusCFL(func, omega, waves, u_0, const, CFL_0, nt_0, normType = 'max',
     FCoefs = FFTT.FourierCoefs(omega, waves, u_0)
     norms = []
     CFLs = []
-    while (CFL > 0.1):
+    while (CFL > CFL_f):
         calcCoefs, t = func(omega, waves, u_0, nt, const, CFL = CFL)
         if (CFL == CFL_0):
             t_0 = t
@@ -117,15 +117,24 @@ def NormVersusCFL(func, omega, waves, u_0, const, CFL_0, nt_0, normType = 'max',
 # In[6]:
 
 
-def AmpError(omega, theoretical, actual, tol = 1e-20):
+def AmpError(omega, theoreticalIn, actualIn, tol = 1e-20):
     # Check size of theoretical and actual.
     nh = omega.nh_max
     numKs = int((nh / 2) + 1)
+    actual = np.round(actualIn, 15)
+    theoretical = np.round(theoreticalIn, 15)
     error = np.zeros(numKs, float)
-    error[0] = 1 - abs(actual[0] / np.sqrt((theoretical[0]**2) + tol))
-    error[::-1][0] = 1 - abs(actual[::-1][0] / np.sqrt((theoretical[::-1][0]**2) + tol))
-    error[1:-1] = 1 - np.sqrt(((actual[1::2][:-1]**2) + (actual[::2][1:]**2)) / ((theoretical[1::2][:-1]**2) + (theoretical[::2][1:]**2) + tol))
+    error[0] = 1 - np.sqrt(((actual[0] ** 2) + tol) / ((theoretical[0]**2) + tol))
+    error[::-1][0] = 1 - np.sqrt(((actual[::-1][0] ** 2) + tol) / ((theoretical[::-1][0]**2) + tol))
+    error[1:-1] = 1 - np.sqrt(((actual[1::2][:-1]**2) + (actual[::2][1:]**2) + tol) / ((theoretical[1::2][:-1]**2) + (theoretical[::2][1:]**2) + tol))
     ks = np.arange(numKs)
+    print('Actual:')
+    print(actual)
+    print('Theroretical:')
+    print(theoretical)
+    print('Error:')
+    print(error)
+    print('')
     return ks, error
 
 def Upwind(omega, t, u0, c, order):
@@ -139,6 +148,36 @@ def CenterDiff(omega, t, u0, c, order):
     spatOp = -c * derivMat
     u = spatOp @ u0
     return u
+
+# This function checks that your polynomial interpolations produce outputs up to the appropriate order of accuracy.
+
+def TestPoly(order, x_0, const = 2, tol = 1e-15):
+    
+    # Create vector of cell bounds.
+    bounds = GTT.BoundVals(order, x_0)
+    
+    # Find intervals of cell bounds.
+    h = bounds[:-1] - bounds[1:]
+    
+    # Create stencil.
+    polyInterp = GTT.GhostCellStencil(order, x_0)
+    
+    # Iterate through monomials up to appropriate order of accuracy to test stencil.
+    for k in range(order + 2):
+        coefs = np.zeros(k + 1, float)
+        coefs[0] = const
+        p = np.poly1d(coefs)
+        P = np.polyint(p)
+        v = (P(bounds[:-1]) - P(bounds[1:])) / h
+        print('Order ' + str(k) + ':')
+
+        theor = P(x_0) / x_0
+        act = v.transpose() @ polyInterp
+        print(theor, act)
+        print('')
+        if (k < order + 1):
+            assert(np.isclose(act, theor, rtol = 0, atol = tol))
+    return
 
 
 

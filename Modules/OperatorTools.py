@@ -176,7 +176,7 @@ def MakeRotMat(omega, ct):
     rotMats = [RotMat(k) for k in range(int(nh / 2) + 1)]
     shift = LA2.block_diag(*rotMats)[1:-1, 1:-1]
     shift[0, 0] = Cosine(0)
-    shift[::-1, ::-1][0, 0] = Cosine(int(nh / 2))
+    shift[-1, -1] = Cosine(int(nh / 2))
     return shift
 
 
@@ -307,7 +307,7 @@ def SpaceDeriv(omega, order, diff):
         fc1v2 = ghostR
         fc1v1 = leftCell + 0
         
-        hMat = 2 * StepMatrix(omega)
+        hMat = 0.5 * StepMatrix(omega)
     
     # Define common row pieces between upwind and center difference.
     cf2v2 = rightCell + 0
@@ -346,8 +346,16 @@ def SpaceDeriv(omega, order, diff):
                     else:
                         row = default
         blockMat[k, :] = np.roll(row, k)
-    # print(blockMat)
+    print('1/2dx =')
+    print(hMat)
+    print('')
+    print('difference matrix =')
+    print(blockMat)
+    print('')
     blockMat = hMat @ blockMat
+    print('derivative matrix =')
+    print(blockMat)
+    print('')
     return blockMat
 
 
