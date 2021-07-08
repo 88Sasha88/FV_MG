@@ -250,10 +250,19 @@ def PropRestrictWaves(omega, waveformIn, c, t):
     wavesF = WT.MakeWaves(omegaF)
     waveform = waveformIn.copy()
     restrictOp = GTT.CoarsenOp(omega)
+    
+    # Find the Fourier coefficients for the initial condition on the completely refined grid.
     FCoefs = FourierCoefs(omegaF, wavesF, waveform)
+    
+    # Propagate all of the Fourier modes on the completely refined grid.
     propWaves = PropWaves(omegaF, wavesF, c, t)
+    
+    # Find the propagated waveform coarsened down to AMR.
     propWaveform = restrictOp @ propWaves @ FCoefs
+    
+    # Find Fourier coefficients of priopagated solution on AMR grid.
     propFCoefs = FourierCoefs(omega, waves @ nullspace, propWaveform)
+    
     return propFCoefs
 
 # In[ ]:

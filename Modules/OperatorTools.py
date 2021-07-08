@@ -346,16 +346,16 @@ def SpaceDeriv(omega, order, diff):
                     else:
                         row = default
         blockMat[k, :] = np.roll(row, k)
-    print('1/2dx =')
-    print(hMat)
-    print('')
-    print('difference matrix =')
-    print(blockMat)
-    print('')
+#     print('1/2dx =')
+#     print(hMat)
+#     print('')
+#     print('difference matrix =')
+#     print(blockMat)
+#     print('')
     blockMat = hMat @ blockMat
-    print('derivative matrix =')
-    print(blockMat)
-    print('')
+#     print('derivative matrix =')
+#     print(blockMat)
+#     print('')
     return blockMat
 
 

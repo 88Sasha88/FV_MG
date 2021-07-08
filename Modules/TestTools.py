@@ -130,7 +130,7 @@ def AmpError(omega, theoreticalIn, actualIn, tol = 1e-20):
     ks = np.arange(numKs)
     print('Actual:')
     print(actual)
-    print('Theroretical:')
+    print('Theoretical:')
     print(theoretical)
     print('Error:')
     print(error)
@@ -141,6 +141,8 @@ def Upwind(omega, t, u0, c, order):
     derivMat = OT.SpaceDeriv(omega, order, 'U')
     spatOp = -c * derivMat
     u = spatOp @ u0
+    print('spatOp:')
+    print(spatOp)
     return u
 
 def CenterDiff(omega, t, u0, c, order):
@@ -177,6 +179,40 @@ def TestPoly(order, x_0, const = 2, tol = 1e-15):
         print('')
         if (k < order + 1):
             assert(np.isclose(act, theor, rtol = 0, atol = tol))
+    return
+
+# This function runs a polynomial test on a derivative operator.
+
+def DerivPolyTest(omega, DiffFunc, order, coefs = []):
+    errorLoc = 'ERROR:\nTestTools:\nSpacePoly:\n'
+    if (coefs == []):
+        coefs = np.ones(order + 1, float)
+    else:
+        errorMess = BT.CheckSize(order, coefs, nName = 'order', matricaName = 'coefs')
+        if (errorMess != ''):
+            sys.exit(errorLoc + errorMess)
+    nh_max = omega.nh_max
+    waves = WT.MakeWaves(omega)
+    x = omega.xCell
+    P = np.poly1d(coefs)
+    waveform = P(x)
+    p = np.polyder(P)
+    
+    wavederiv = DiffFunc(omega, 0, waveform, -1, order)
+    print('x:')
+    print(x)
+    print('')
+    print('Polynomial Function:')
+    print('p(x) = ', P)
+    print('p(x) =\n', waveform)
+    print('')
+    print('Polynomial Derivative:')
+    print('dp(x)/dx =', p)
+    print('Theoretical:')
+    print('dp(x)/dx =\n', p(x))
+    print('Actual:')
+    print('dp(x)/dx =\n', wavederiv)
+    print('')
     return
 
 

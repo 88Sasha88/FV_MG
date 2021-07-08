@@ -203,7 +203,7 @@ def UsefulPlotVals():
 # In[7]:
 
 
-def PlotWaves(omega, waves = [], waveNode = [], waveTrans = [], ct = 0, save = False, saveName = '', rescale = 1, nullspace = [], dpi = 600):
+def PlotWaves(omega, waves = [], waveNode = [], nullspace = [], waveTrans = [], ct = 0, save = False, saveName = '', rescale = 1, dpi = 600):
     nh = omega.nh_max
     x = omega.xNode
     n = omega.degFreed
