@@ -28,8 +28,6 @@ def ForwardEuler(omega, waves, u0, nt, const, CFL, func, order = 0):
     dx = omega.h
     dx_min = np.min(dx)
     dt = CFL * dx_min / const
-    print('dx =', dx_min)
-    print('dt =', dt)
     if (order != 0):
         if (func != TimePoly):
             print('Spatial derivative method has been overridden in favor of TimePoly()!')
