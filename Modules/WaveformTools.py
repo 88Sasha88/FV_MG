@@ -43,7 +43,7 @@ def Gauss(omega, sigma, mu, cellAve = True, deriv = 0):
         x = xCell
     gauss = np.exp(-((x - mu)**2) / (2. * (sigma**2)))
     for k in range(deriv):
-        gauss = ((mu - x) * gauss) / (2 * (sigma ** 2))
+        gauss = ((mu - x) * gauss) / (sigma ** 2)
     if (cellAve):
         gauss = BoolesAve(gauss)
     return gauss
@@ -75,10 +75,12 @@ def WavePacket(omega, sigma, mu, wavenumber, waves, deriv = 0):
         sys.exit(errorLoc + errorMess)
     packetAmp = Gauss(omega, sigma, mu)
     if (deriv == 0):
+        print(waves[:, wavenumber])
         packet = packetAmp * waves[:, wavenumber]
     else:
         q = int(2 * ((wavenumber % 2) - 0.5))
+        print('q is', q)
         newAmp = Gauss(omega, sigma, mu, deriv = deriv)
-        packet = (newAmp * waves[:, wavenumber]) + (q * (packetAmp * waves[:, wavenumber + q]))
+        packet = (newAmp * waves[:, wavenumber]) + (2 * np.pi * q * wavenumber * (packetAmp * waves[:, wavenumber + q]))
     return packet
 

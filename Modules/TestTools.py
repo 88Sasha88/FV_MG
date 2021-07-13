@@ -5,6 +5,7 @@
 
 
 import os.path
+import scipy as sp
 from scipy import *
 from scipy import integrate as integrate
 import numpy as np
@@ -86,7 +87,7 @@ def NormVersusCFL(func, omega, waves, u_0, const, CFL_0, nt_0, normType = 'max',
 # In[6]:
 
 
-def AmpError(omega, theoreticalIn, actualIn, tol = 1e-20):
+def AmpError(omega, theoreticalIn, actualIn, tol = 1e-20, printOut = False):
     # Check size of theoretical and actual.
     nh = omega.nh_max
     numKs = int((nh / 2) + 1)
@@ -97,13 +98,14 @@ def AmpError(omega, theoreticalIn, actualIn, tol = 1e-20):
     error[::-1][0] = 1 - np.sqrt(((actual[::-1][0] ** 2) + tol) / ((theoretical[::-1][0]**2) + tol))
     error[1:-1] = 1 - np.sqrt(((actual[1::2][:-1]**2) + (actual[::2][1:]**2) + tol) / ((theoretical[1::2][:-1]**2) + (theoretical[::2][1:]**2) + tol))
     ks = np.arange(numKs)
-    print('Actual:')
-    print(actual)
-    print('Theoretical:')
-    print(theoretical)
-    print('Error:')
-    print(error)
-    print('')
+    if (printOut):
+        print('Actual:')
+        print(actual)
+        print('Theoretical:')
+        print(theoretical)
+        print('Error:')
+        print(error)
+        print('')
     return ks, error
 
 def Upwind(omega, t, u0, c, order):
@@ -183,5 +185,50 @@ def DerivPolyTest(omega, DiffFunc, order, coefs = []):
     return wavederiv
 
 
+def VectorNorm(v, normType = 'L2'):
+    n = len(v)
+    if (normType == 'max'):
+            norm = max(v)
+    else:
+        if (normType == 'L1'):
+            norm = sum(v) / n
+        else:
+            norm = np.sqrt(sum(v ** 2))
+    return norm
+
+
+def SolverAmpTheoretical(omega, RK, deriv, CFL):
+    nh_max = omega.nh_max
+    ks = np.arange((nh_max / 2) + 1)
+    theta = (2 * np.pi * ks) / nh_max
+    if (deriv == 'U'):
+        print('Upwind', RK)
+        x = CFL * (1 - np.exp(-1j * theta))
+    else:
+        x = 0.5 * CFL * (np.exp(1j * theta) - np.exp(-1j * theta))
+    coefs = np.arange(RK + 1)[::-1]
+    coefs = sp.special.factorial(coefs)**-1
+    coefs[1::2] = -coefs[1::2]
+    p = np.poly1d(coefs)
+    amps = p(x)
+    return ks, amps
+
+
+def SolverSwitch(deriv, RK = 0):
+    if (RK == 1):
+        TimeIntegratorFunc = ST.ForwardEuler
+    else:
+        if (RK == 2):
+            TimeIntegratorFunc = ST.MidpointMeth
+        else:
+            TimeIntegratorFunc = ST.RK4
+
+    if (deriv == 'U'):
+        # DiffMatFunc = OT.Upwind1D
+        DiffFunc = Upwind#ST.Upwind
+    else:
+        # DiffMatFunc = OT.CenterDiff1D
+        DiffFunc = CenterDiff#ST.CenterDiff
+    return TimeIntegratorFunc, DiffFunc
 
 # In[ ]:
