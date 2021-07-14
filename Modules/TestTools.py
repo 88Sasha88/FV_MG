@@ -193,7 +193,7 @@ def VectorNorm(v, normType = 'L2'):
         if (normType == 'L1'):
             norm = sum(v) / n
         else:
-            norm = np.sqrt(sum(v ** 2))
+            norm = np.sqrt(sum(v ** 2, axis = 0))
     return norm
 
 
@@ -230,5 +230,20 @@ def SolverSwitch(deriv, RK = 0):
         # DiffMatFunc = OT.CenterDiff1D
         DiffFunc = CenterDiff#ST.CenterDiff
     return TimeIntegratorFunc, DiffFunc
+
+def ExactSpatOp(omega, t, u0, c, order):
+    nh_max = omega.nh_max
+    waves = WT.MakeWaves(omega)
+    nullspace = OT.FindNullspace(omega, waves)
+    subsuper = np.linspace(0.5, nh_max, num = 2 * nh_max)
+    subsuper[::2] = 0
+    Op = np.zeros((nh_max, nh_max), float)
+    np.fill_diagonal(Op[1:], subsuper[:])
+    np.fill_diagonal(Op[:, 1:], -subsuper)
+    Op = -2 * np.pi * c * Op
+    SpatOp = waves @ Op
+    FCoefs = FFTT.FourierCoefs(omega, waves @ nullspace, u0)
+    u = SpatOp @ FCoefs
+    return u
 
 # In[ ]:
