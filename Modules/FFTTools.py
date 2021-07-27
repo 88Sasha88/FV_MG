@@ -145,7 +145,7 @@ def GetXSpaceCoefs(omega, coefs, waves):
 # In[8]:
 
 
-def FourierCoefs(omega, waves, waveform):
+def FourierCoefs(omega, waves, waveform, printBool = False):
 #     errorLoc = 'ERROR:\nFFTTools:\nFourierCoefs:\n'
 #     nh = omega.nh[::-1][0]
 #     degFreed = omega.degFreed# [::-1][0]
@@ -159,19 +159,22 @@ def FourierCoefs(omega, waves, waveform):
 #     errorMess = BT.CheckSize(degFreed, waveform, nName = 'degFreed', matricaName = 'waveform')
 #     if (errorMess != ''):
 #         sys.exit(errorLoc + errorMess)
-    norm = LA.inv(waves.transpose() @ waves)
-#     sym = np.round(norm - norm.transpose(), 14)
-    # norm = norm - (0.5 * sym)
-#     print('norm:')
-#     print(np.round(norm, 14))
-#     print('symmetry:')
-#     #sym[sym != 0] = 1
-#     print(np.round(sym, 14))
-#     print('antisymmetry of symmetry:')
-#     sym2 = sym + sym.transpose()
-#     print(np.round(sym2, 14))
-#     print('wTw:')
-    print(waves.transpose() @ waves)
+    prenorm = waves.transpose() @ waves
+    det = LA.det(prenorm)
+    norm = LA.inv(prenorm)
+    if (printBool):
+        print('DETERMINANT =', det)
+        
+        sym = np.round(norm - norm.transpose(), 14)
+        # norm = norm - (0.5 * sym)
+        print('norm:')
+        print(np.round(norm, 14))
+        print('symmetry:')
+        #sym[sym != 0] = 1
+        print(np.round(sym, 14))
+        print('antisymmetry of symmetry:')
+        sym2 = sym + sym.transpose()
+        print(np.round(sym2, 14))
     FCoefs = waveform.transpose() @ waves @ norm
     return FCoefs
 
