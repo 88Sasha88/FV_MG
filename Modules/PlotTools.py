@@ -338,7 +338,7 @@ def PlotWave(omega, numPoints, X, rescale, waveCell = [], fX = [], title = '', l
 # In[9]:
 
 
-def PlotMixedWave(omega, waves, waveCoef, title = '', labels = [], rescale = 1, plotCont = True, sym = False, save = False, saveName = '', dpi = 600, ct = 0, yGrid = False):
+def PlotMixedWave(omega, waves, FCoefs, title = '', labels = [], rescale = 1, plotCont = True, sym = False, save = False, saveName = '', dpi = 600, ct = 0, yGrid = False):
     nh = omega.nh_max
     numPoints, font, X, savePath = UsefulPlotVals()
     
@@ -349,16 +349,16 @@ def PlotMixedWave(omega, waves, waveCoef, title = '', labels = [], rescale = 1, 
     saveString = savePath + saveName
     
     
-    numGraphs = np.ndim(waveCoef)
+    numGraphs = np.ndim(FCoefs)
     
-    fXCell = waves @ waveCoef
+    fXCell = waves @ FCoefs
     if (plotCont):
         waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
         if (ct != 0):
             omega2 = BT.Grid(nh)
             rotMat = OT.MakeRotMat(omega2, ct)
             waveCont = waveCont @ rotMat
-        fXCont = waveCont @ waveCoef
+        fXCont = waveCont @ FCoefs
     else:
         fXCont = []
     fig = PlotWave(omega, numPoints, X, rescale, fXCell, fXCont, title = title, sym = sym, labels = labels, yGrid = yGrid)

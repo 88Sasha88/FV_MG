@@ -231,19 +231,42 @@ def SolverSwitch(deriv, RK = 0):
         DiffFunc = CenterDiff#ST.CenterDiff
     return TimeIntegratorFunc, DiffFunc
 
-def ExactSpatOp(omega, t, u0, c, order):
+
+def ExactSpatOp(omega):
     nh_max = omega.nh_max
+    omegaF = BT.Grid(nh_max)
     waves = WT.MakeWaves(omega)
+    wavesF = WT.MakeWaves(omegaF)
     nullspace = OT.FindNullspace(omega, waves)
     subsuper = np.linspace(0.5, nh_max, num = 2 * nh_max)
     subsuper[::2] = 0
     Op = np.zeros((nh_max, nh_max), float)
     np.fill_diagonal(Op[1:], subsuper[:])
     np.fill_diagonal(Op[:, 1:], -subsuper)
-    Op = -2 * np.pi * c * Op
-    SpatOp = waves @ Op
+    print(Op)
+    Op = 2 * np.pi * Op
+    SpatOp = Op # wavesF @ Op # @ nullspace
+    return SpatOp
+
+
+def ExactSpatDeriv(omega, t, u0, c, order):
+#     nh_max = omega.nh_max
+    waves = WT.MakeWaves(omega)
+    nullspace = OT.FindNullspace(omega, waves)
+#     subsuper = np.linspace(0.5, nh_max, num = 2 * nh_max)
+#     subsuper[::2] = 0
+#     Op = np.zeros((nh_max, nh_max), float)
+#     np.fill_diagonal(Op[1:], subsuper[:])
+#     np.fill_diagonal(Op[:, 1:], -subsuper)
+#     print(Op)
+#     Op = -2 * np.pi * c * Op
+#     SpatOp = waves @ Op
+#     FCoefs = FFTT.FourierCoefs(omega, waves @ nullspace, u0)
+#     u = SpatOp @ FCoefs
+    
+    SpatOp = ExactSpatOp(omega)
     FCoefs = FFTT.FourierCoefs(omega, waves @ nullspace, u0)
-    u = SpatOp @ FCoefs
+    u = -c * waves @ SpatOp @ FCoefs
     return u
 
 # In[ ]:
