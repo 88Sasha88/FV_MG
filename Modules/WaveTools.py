@@ -23,9 +23,10 @@ from Modules import OperatorTools as OT
 
 def MakeWaves(omega):
     nh_max = omega.nh_max
-#     h = omega.h
-    if (omega.alias):
-        nh_max = int(2 * nh_max)
+    h = omega.h
+    alias = omega.alias
+    nh_max = int(alias * nh_max)
+    for i in range(alias - 1):
         np.append(h, h)
     x = omega.xNode
     n = omega.degFreed
@@ -65,8 +66,8 @@ def CellWaves(N, x):
 
 def MakeNodeWaves(omega, nRes = 0):
     nh_max = omega.nh_max
-    if (omega.alias):
-        nh_max = int(2 * nh_max)
+    alias = omega.alias
+    nh_max = int(alias * nh_max)
     if (nRes == 0):
         x = omega.xNode
         nRes = len(x)# - 1

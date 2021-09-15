@@ -96,7 +96,7 @@ class Grid:
     degFreeds = []
     strings = []
     nh = []
-    def __init__(self, nh, alias = False):
+    def __init__(self, nh, alias = 1):
         errorLoc = 'ERROR:\nBasicTools:\nGrid:\n__init__:\n'
         self.patches = []
         self.xNode = []
@@ -114,6 +114,7 @@ class Grid:
         self.nh_min = nh
         self.nh_max = nh
         self.alias = alias
+        # Add error check for alias! It must be base-2!
         self.AddPatch()
         errorMess = CheckNumber(self.nh_min, nName = 'nh_min')
         if (errorMess != ''):
@@ -211,8 +212,7 @@ class Grid:
                 cellsFiller[i] = self.cells[i]
         strings = []
         kRange = self.nh_max
-        if (self.alias):
-            kRange = int(2 * kRange)
+        kRange = int(self.alias * kRange)
         for k in range(kRange):
             if (k % 2 == 0):
                 if (k == 0):

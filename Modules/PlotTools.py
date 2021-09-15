@@ -207,8 +207,8 @@ def PlotWaves(omega, waves = [], waveNode = [], nullspace = [], waveTrans = [], 
     nh = omega.nh_max
     x = omega.xNode
     n = omega.degFreed
-    if (omega.alias):
-        nh = int(2 * nh)
+    alias = omega.alias
+    nh = int(alias * nh)
     N = nh
     numPoints, font, X, savePath = UsefulPlotVals()
     if (saveName != ''):
@@ -328,7 +328,7 @@ def PlotWave(omega, numPoints, X, rescale, waveCell = [], fX = [], title = '', l
             plt.legend()
             print('Are you *sure* your labels are ordered correctly?')
     if (title != ''):
-        plt.title(title)
+        plt.title(title, fontsize = 25)
     plt.ylim([yMin, yMax])
     return fig
 
@@ -409,9 +409,10 @@ def FixStrings(omega, nullspace, shift):
     strings = omega.strings
     degFreed = omega.degFreed# [::-1][0]
     nh = omega.nh_max
+    alias = omega.alias
     if (nullspace == []):
-        N = nh
-        location = np.arange(nh)
+        N = int(alias * nh)
+        location = np.arange(N)
         locations = [np.asarray(location), np.asarray(location)]
     else:
         errorMess = BT.CheckSize(degFreed, nullspace[0, :], nName = 'degFreed', matricaName = 'nullspace')

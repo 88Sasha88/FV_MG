@@ -166,13 +166,18 @@ def FourierCoefs(omega, waves, waveform, printBool = False):
 #         waves = waves0[:, :-1]
     
     nh_max = omega.nh_max
+    
+    # You only need wavesAMR for the nullspace for to be applied to wavesF!
     wavesAMR = WT.MakeWaves(omega)
     nullspace = OT.FindNullspace(omega, wavesAMR)
+    print(1)
     omegaF = BT.Grid(nh_max)
     wavesF = WT.MakeWaves(omegaF)
     
     wavesFNull = wavesF @ nullspace
-    prenorm = wavesFNull.transpose() @ wavesFNull
+    print(2)
+    prenorm = waves.transpose() @ waves
+    print(3)
     det = LA.det(prenorm)
     norm = LA.inv(prenorm)
     if (printBool):
@@ -190,7 +195,10 @@ def FourierCoefs(omega, waves, waveform, printBool = False):
 #         print('antisymmetry of symmetry:')
 #         sym2 = sym + sym.transpose()
 #         print(np.round(sym2, 14))
-    FCoefs = waveform.transpose() @ waves @ norm
+    print(np.shape(waveform))
+    print(np.shape(waves))
+    print(np.shape(norm))
+    FCoefs = (waveform.transpose() @ waves @ norm).transpose()
     return FCoefs
 
 
@@ -272,11 +280,11 @@ def PropWaves(omega, waves, c, t):
 
 # input: waveform of fully refined grid
 # output: propagated coef
-def PropRestrictWaves(omega, waveformIn, c, t):
+def PropRestrictWaves(omega, waveformIn, c, t, Hans = False):
     nh_max = omega.nh_max
     degFreed = omega.degFreed
     waves = WT.MakeWaves(omega)
-    nullspace = OT.FindNullspace(omega, waves)
+    nullspace = OT.FindNullspace(omega, waves, Hans = Hans)
     omegaF = BT.Grid(nh_max)
     wavesF = WT.MakeWaves(omegaF)
     waveform = waveformIn.copy()

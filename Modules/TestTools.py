@@ -188,7 +188,15 @@ def DerivPolyTest(omega, DiffFunc, order, coefs = []):
 def VectorNorm(v, normType = 'L2'):
     n = len(v)
     if (normType == 'max'):
+        shape = np.shape(v)
+        dim = len(shape)
+        if (dim == 1):
             norm = max(v)
+        else:
+            size = shape[1]
+            norm = np.zeros(size)
+            for i in range(size):
+                norm[i] = max(v[:, i])
     else:
         if (normType == 'L1'):
             norm = sum(v) / n
@@ -264,8 +272,12 @@ def ExactSpatDeriv(omega, t, u0, c, order):
 #     FCoefs = FFTT.FourierCoefs(omega, waves @ nullspace, u0)
 #     u = SpatOp @ FCoefs
     
-    SpatOp = ExactSpatOp(omega)
+    SpatOp = ExactSpatOp(omega)  
     FCoefs = FFTT.FourierCoefs(omega, waves @ nullspace, u0)
+    print('Look Here:')
+    print(np.shape(waves))
+    print(np.shape(SpatOp))
+    print(np.shape(FCoefs))
     u = -c * waves @ SpatOp @ FCoefs
     return u
 
