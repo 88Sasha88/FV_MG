@@ -12,12 +12,27 @@ from numpy import linalg as LA
 import sys as sys
 import time
 import matplotlib.pyplot as plt
-
-
-# This function checks to make sure that sizes match up appropriately.
-
-# In[2]:
-
+    
+# ----------------------------------------------------------------------------------------------------------------
+# Function: CheckSize
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function checks that the matrix input into it matches the number given. It assumes that the matrix size
+# will match along each dimension. If all is well, the output string is ''. If not, the output is a message
+# describing the problem.
+# ----------------------------------------------------------------------------------------------------------------
+# Input:
+#
+# n                       real                    Ostenisble size of matrica
+# matrica                 real                    Matrix of arbitrary rank, each dimension with ostensible size n
+# (nName)                 string                  Name of variable n for use in output message
+# (matricaName)           string                  Name of variable matrica for use in output message
+# ----------------------------------------------------------------------------------------------------------------
+# Output:
+#
+# message                 string                  Feedback message
+# ----------------------------------------------------------------------------------------------------------------
 
 def CheckSize(n, matrica, nName = 'n', matricaName = 'matrica'):
     dim = size(shape(matrica))
@@ -27,11 +42,23 @@ def CheckSize(n, matrica, nName = 'n', matricaName = 'matrica'):
             message = '%s does not match size of %s!' %(nName, matricaName)
     return message
 
-
-# This function ensures that `n` is an appropriate base-two value.
-
-# In[3]:
-
+# ----------------------------------------------------------------------------------------------------------------
+# Function: CheckNumber
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function ensures that n is a base-two value greater than 1. If all is well, the output string is ''. If
+# not, the output is a message describing the problem.
+# ----------------------------------------------------------------------------------------------------------------
+# Input:
+#
+# n                       real                    Ostenisble base-2 value
+# (nName)                 string                  Name of variable n for use in output message
+# ----------------------------------------------------------------------------------------------------------------
+# Output:
+#
+# message                 string                  Feedback message
+# ----------------------------------------------------------------------------------------------------------------
 
 def CheckNumber(n, nName = 'n'):
     message = ''
@@ -40,11 +67,22 @@ def CheckNumber(n, nName = 'n'):
         message = '%s must be a base-two integer greater than one!' %nName
     return message
 
-
-# This function checks if a given matrix is diagonal.
-
-# In[4]:
-
+# ----------------------------------------------------------------------------------------------------------------
+# Function: CheckDiag
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# THIS FUNCTION APPEARS NOT TO BE IN USE?
+# ----------------------------------------------------------------------------------------------------------------
+# Input:
+#
+# matrica                 real                    Ostensible square matrix to be evaluated for diagonality
+# (matricaName)           string                  Name of variable matrica for use in output message
+# ----------------------------------------------------------------------------------------------------------------
+# Output:
+#
+# message                 string                  Feedback message
+# ----------------------------------------------------------------------------------------------------------------
 
 def CheckDiag(matrica, matricaName = 'matrica'):
     message = ''
@@ -59,11 +97,23 @@ def CheckDiag(matrica, matricaName = 'matrica'):
         message = '%s is not diagonal!' %matricaName
     return message
 
-
-# This function checks if a given matrix is diagonal.
-
-# In[5]:
-
+# ----------------------------------------------------------------------------------------------------------------
+# Function: CheckBounds
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function checks if a given matrix is rank-2 and diagonal. If all is well, the output string is ''. If not,
+# the output is a message describing the problem.
+# ----------------------------------------------------------------------------------------------------------------
+# Input:
+#
+# matrica                 real                    Ostensible square matrix to be evaluated for diagonality
+# (matricaName)           string                  Name of variable matrica for use in output message
+# ----------------------------------------------------------------------------------------------------------------
+# Output:
+#
+# message                 string                  Feedback message
+# ----------------------------------------------------------------------------------------------------------------
 
 def CheckBounds(nh_min, loops, bounds):
     problem = CheckNumber(nh_min, showMess = False)
@@ -78,11 +128,56 @@ def CheckBounds(nh_min, loops, bounds):
             problem = 5
     return problem
 
-
-# This class creates an object which encompasses all the information one needs from an AMR grid. This includes `xNode`, an array containing all tick locations along the $x$ axis; `xCell`, an array of all cell center locations along the $x$ axis; `xPatches`, a list of all the smaller grids at their respective levels; `levels`, the total number of refinement levels; `cells`, a list of all the grid locations at their respective locations using the indexing of the previous level; 'nh_min', the step number at the coarsest level; 'nh_max', the step number at the finest level; `h`; an array of step-sizes at their respective locations; and `y`, an array of zeros corresponding to the locations of all of the tick marks.
-
-# In[6]:
-
+# ----------------------------------------------------------------------------------------------------------------
+# Class: Grid
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This class stores all the attributes of an AMR grid. The base grid is created upon instantiation of an object
+# from inputs nh, the degrees of freedom on the base grid, and alias, a numerical value set to 1 as the default in
+# case the user wishes to plot examples of aliasing. Additional patches are added using the AddPatch function,
+# which takes in arguments refRatio and cell, which are both overloaded with 1 and [], respectively, for the
+# automatic call at the instantiation of the base level. Data stored in the elements of all list-type attributes,
+# except strings, correspond to each level from lowest to highest refinement, respectively. All other attributes
+# are assumed to apply to the current Grid object (at its highest refinement,) unless otherwise stated.
+# ----------------------------------------------------------------------------------------------------------------
+# Subclasses: Patch
+# ----------------------------------------------------------------------------------------------------------------
+# Functions: AddPatch
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# nh                      int                     Base grid degrees of freedom (base-2 value)
+# (alias)                 int                     Scaling factor by which to multiply number of string outputs if
+#                                                     user chooses to plot aliasing waves (base-2 value)
+# ----------------------------------------------------------------------------------------------------------------
+# Attributes:
+#
+# alias                   int                     Scaling factor by which to multiply number of string outputs if
+#                                                     user chooses to plot aliasing waves (base-2 value)
+# bounds                  int                     x values of edges of most recent patch
+# cells                   list                    Lists of locations of cells to be refined using indexing for
+#                                                     uniform grid of previous levels, recursively (integer
+#                                                     values)
+# degFreed                int                     Number of degrees of freedom on current AMR grid
+# degFreeds               list                    List of AMR degrees of freedom corresponding to each level
+# h                       array                   Array of length intervals corresponding to each cell on current
+#                                                     AMR grid
+# levels                  int                     Total number of of refinements
+# nh                      list                    List of uniform degrees of freedom corresponding to each level
+# nh_max                  int                     Number of degrees of freedom on current uniform grid
+# nh_min                  int                     Number of degrees of freedom on base-level grid
+# patches                 list                    List of Patch objects created for each level, including base
+#                                                     level
+# refRatios               list                    Refinement ratios at each level, including the base level
+# strings                 string                  List of TeX-ready string headers for each mode to be created
+#                                                     with the Grid object
+# xCell                   array                   Values of x locations averaged over each cell
+# xNode                   array                   Values of x locations at each node, including right edge
+# xPatch                  list                    List of of lists of patch x values at the nodes corresponding to
+#                                                     each level
+# y (RECODE Y OUT OF THIS!)
+# ----------------------------------------------------------------------------------------------------------------
 
 class Grid:
     patches = []
@@ -98,6 +193,8 @@ class Grid:
     nh = []
     def __init__(self, nh, alias = 1):
         errorLoc = 'ERROR:\nBasicTools:\nGrid:\n__init__:\n'
+        self.alias = alias
+        # Add error check for alias! It must be base-2!
         self.patches = []
         self.xNode = []
         self.xCell = []
@@ -113,12 +210,41 @@ class Grid:
         self.nh = []
         self.nh_min = nh
         self.nh_max = nh
-        self.alias = alias
-        # Add error check for alias! It must be base-2!
+        
         self.AddPatch()
         errorMess = CheckNumber(self.nh_min, nName = 'nh_min')
         if (errorMess != ''):
             sys.exit(errorLoc + errorMess)
+    
+# ----------------------------------------------------------------------------------------------------------------
+# Class: Patch (< Class: Grid)
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This class generates and assimilates a number of attributes needed for the creation of a patch on an AMR grid
+# using the cell locations (by index, with respect to the level on top of which the new patch(es) is/are being
+# created) of the cells to be refined. Namely, these attributes are the x locations of the nodes at the edges of
+# each patch; the original input of the cell locations; and the x node values within the new patch(es), boundaries
+# included.
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# nh                      int                     Degrees of freedom for uniform grid of previous level (base-2
+#                                                     value)
+# refRatio                int                     Refinement ratio between previous and current level (base-2
+#                                                     value)
+# cell                    list                    Locations of cells to be refined using indexing for uniform grid
+#                                                     of previous level (integer values)
+# ----------------------------------------------------------------------------------------------------------------
+# Attributes:
+#
+# bounds                  list                    x values at patch edges
+# cell                    list                    Locations of cells to be refined using indexing for uniform grid
+#                                                     of previous level (integer values)
+# xPatch                  list                    Lists of arrays of x values at nodes of new patches being
+#                                                     created, bounds included
+# ----------------------------------------------------------------------------------------------------------------
+
     class Patch:
         def __init__(self, nh, refRatio, cell):
             h = 1. / nh
@@ -152,9 +278,30 @@ class Grid:
                 xMax = h * refRatio * (cellPieces[j][1] + 1)
                 xPatch[j] = np.linspace(xMin, xMax, num = n + 1)
                 bounds[j] = np.asarray([xMin, xMax])
-            self.xPatch = xPatch
-            self.cell = cell
             self.bounds = bounds
+            self.cell = cell
+            self.xPatch = xPatch
+    
+# ----------------------------------------------------------------------------------------------------------------
+# Function: AddPatch (< Class: Grid)
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function modifies the attributes of the current Grid object. Its inputs are the refinement ratio and the
+# locations of the cells to be refined, with respect to the level preceeding. The inputs are overloaded with
+# values of 1 and the nullset, respectively, so that the attributes can be instantiated for the special case of
+# the zeroth level. It first redefines the current uniform degrees of freedom attribute on the Grid object and
+# then creates a new Patch instance. Using the attributes from the current Grid object and the new Patch object,
+# respectively, it checks that conflicts do not exist between any of the input arguments and the attributes of the
+# current Grid object and then proceeds to update all the attributes in the Grid to accomodate the new level.
+# ----------------------------------------------------------------------------------------------------------------
+# Input:
+#
+# self                    Grid                    Current Grid object
+# (refRatio)              int                     Refinement ratio for new patch to be made (base-2 value)
+# (cell)                  list                    Name of variable matrica for use in output message
+# ----------------------------------------------------------------------------------------------------------------
+    
     def AddPatch(self, refRatio = 1, cell = []):
 #         print('what the hell', self.nh)
         self.nh_max = self.nh_max * refRatio
