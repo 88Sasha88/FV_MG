@@ -273,11 +273,7 @@ def ExactSpatDeriv(omega, t, u0, c, order):
 #     u = SpatOp @ FCoefs
     
     SpatOp = ExactSpatOp(omega)  
-    FCoefs = FFTT.FourierCoefs(omega, waves @ nullspace, u0)
-    print('Look Here:')
-    print(np.shape(waves))
-    print(np.shape(SpatOp))
-    print(np.shape(FCoefs))
+    FCoefs = nullspace @ FFTT.FourierCoefs(omega, waves @ nullspace, u0)
     u = -c * waves @ SpatOp @ FCoefs
     return u
 

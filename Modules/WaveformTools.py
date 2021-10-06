@@ -34,7 +34,7 @@ np.set_printoptions( linewidth = 10000, threshold = 100000)
 # ----------------------------------------------------------------------------------------------------------------
 # Input:
 #
-# omega                   BT.Grid                 Grid object
+# omega                   BT.Grid                 AMR grid
 # sigma                   real                    Standard deviation of Gaussian
 # mu                      real                    Average of Gaussian
 # (cellAve)               bool                    Switch set to find the cell average Gaussian values using
@@ -100,11 +100,11 @@ def BoolesAve(f):
 # ----------------------------------------------------------------------------------------------------------------
 # Input:
 #
-# omega                   BT.Grid                 Grid object
+# omega                   BT.Grid                 AMR grid
 # sigma                   real                    Standard deviation of Gaussian
 # mu                      real                    Average of Gaussian
 # waves                   np.ndarray              Matrix containing cell-averaged values of waves (can be full set
-#                                                     or restricted set)
+#                                                     or selected subset)
 # (deriv)                 int                     Number of derivatives to take of waveform (DOESN'T WORK BEYOND FIRST!)
 # ----------------------------------------------------------------------------------------------------------------
 # Output:
