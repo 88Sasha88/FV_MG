@@ -170,14 +170,18 @@ def FourierCoefs(omega, waves, waveform, printBool = False):
     # You only need wavesAMR for the nullspace for to be applied to wavesF!
     wavesAMR = WT.MakeWaves(omega)
     nullspace = OT.FindNullspace(omega, wavesAMR)
-    print(1)
+#     print('nullspace found')
+#     print(nullspace)
     omegaF = BT.Grid(nh_max)
+    
     wavesF = WT.MakeWaves(omegaF)
+#     print(nh_max)
+#     print(np.shape(wavesF), np.shape(nullspace))
     
     wavesFNull = wavesF @ nullspace
-    print(2)
+#     print(2)
     prenorm = waves.transpose() @ waves
-    print(3)
+#     print(3)
     det = LA.det(prenorm)
     norm = LA.inv(prenorm)
     if (printBool):
@@ -195,9 +199,9 @@ def FourierCoefs(omega, waves, waveform, printBool = False):
 #         print('antisymmetry of symmetry:')
 #         sym2 = sym + sym.transpose()
 #         print(np.round(sym2, 14))
-    print(np.shape(waveform))
-    print(np.shape(waves))
-    print(np.shape(norm))
+#     print(np.shape(waveform))
+#     print(np.shape(waves))
+#     print(np.shape(norm))
     FCoefs = (waveform.transpose() @ waves @ norm).transpose()
     return FCoefs
 

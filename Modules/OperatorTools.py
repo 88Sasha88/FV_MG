@@ -74,10 +74,13 @@ def FindNullspace(omega, waves, shift = False, Hans = False):
     errorLoc = 'ERROR:\nOperatorTools:\nFindNullspace:\n'
     levels = omega.levels
     alias = omega.alias
-    nh = omega.nh_max
+    nh_min = omega.nh_min
+    nh_max = omega.nh_max
+    nh = nh_max
     degFreed = omega.degFreed# [::-1][0]
     fixWaves = np.zeros((nh, degFreed), float)
-    nh = omega.nh_min
+
+    nh = nh_min
     hs = omega.h
     
     leftover = []
@@ -85,15 +88,18 @@ def FindNullspace(omega, waves, shift = False, Hans = False):
     if (shift):
         oneMore = 0# 1
     if (np.all(hs[0] == hs)):# or (hs:
-        print('Nullspace!')
+#         print('location 1: fixWaves is', np.shape(fixWaves))
         np.fill_diagonal(fixWaves, 1)
-        if (alias):
-            N = int(2 * nh)
-            fixWaves = np.eye(N, N)
+#         print('location 1.5: fixWaves is', np.shape(fixWaves))
+        N = int(alias * nh_max)
+        fixWaves = np.eye(N, N)
+#         print('location 2: fixWaves is', np.shape(fixWaves))
     else:
         if (Hans):
-            np.fill_diagonal(fixWaves[:, :-1], 1)
-            fixWaves[-1, -1] = 1
+#             print('location 3: fixWaves is', np.shape(fixWaves))
+            np.fill_diagonal(fixWaves, 1)#[:, :-1], 1)
+#             print('location 4: fixWaves is', np.shape(fixWaves))
+            #fixWaves[-1, -1] = 1
         else:
             for q in range(levels):
                 degFreed = omega.degFreeds[q + 1]
@@ -135,9 +141,9 @@ def FindNullspace(omega, waves, shift = False, Hans = False):
                 nullspace = np.asarray(sympy.Matrix(nullspace.transpose()).rref()[0].transpose())
                 nullspace = np.round(nullspace.astype(np.float64), 14)
                 nullspace = GramSchmidt(nullspace)
-                print('Gram-Schmidt:')
-                print(nullspace)
-                print('')
+#                 print('Gram-Schmidt:')
+#                 print(nullspace)
+#                 print('')
                 if (q == 0):
                     fixWaves[0:oscNum, 0:oscNum] = np.eye(oscNum, oscNum)
                     j = oscNum
@@ -157,7 +163,8 @@ def FindNullspace(omega, waves, shift = False, Hans = False):
                     fixWaves[otherIndices, j] = nullspace[:, i]
                     i = i + 1
                     j = j + 1
-    fixWaves = np.round(fixWaves, 14)    
+    fixWaves = np.round(fixWaves, 14)
+#     print('location 5: fixWaves is', np.shape(fixWaves))
     return fixWaves
 
 
