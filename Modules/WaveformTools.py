@@ -6,6 +6,7 @@
 
 import os.path
 from scipy import *
+import scipy as sp
 import numpy as np
 from numpy import *
 from numpy import linalg as LA
@@ -20,6 +21,7 @@ from IPython.core.display import HTML
 
 sys.path.append('/Users/sashacurcic/SashasDirectory/ANAG/FV_MG/')
 from Modules import BasicTools as BT
+from Modules import OperatorTools as OT
 
 display(HTML("<style>pre { white-space: pre !important; }</style>"))
 np.set_printoptions( linewidth = 10000, threshold = 100000)
@@ -46,23 +48,40 @@ np.set_printoptions( linewidth = 10000, threshold = 100000)
 # gauss                   np.ndarray              Gaussian waveform values on Grid omega
 # ----------------------------------------------------------------------------------------------------------------
 
-def Gauss(omega, sigma, mu, cellAve = True, deriv = 0):
+def Gauss(omega, sigma, mu, BooleAve = False, deriv = False):
     xCell = omega.xCell
     xNode = omega.xNode
+    x = xNode
     h = omega.h
     nh = omega.nh[-1]
-    if (cellAve):
-        x = xNode
-        for k in range(1, 4):
-            x = np.asarray(sorted(set(np.append(x, xNode[:-1] + (k * h) / 4.))))
+    if (deriv):
+        BooleAve = True
+    if (not BooleAve):
+#         x = xCell
+#     gauss = np.exp(-((x - mu)**2) / (2. * (sigma**2)))
+        const = sigma * np.sqrt(np.pi / 2.)
+        hMat = OT.StepMatrix(omega)
+        erf = sp.special.erf((x - mu) / (sigma * np.sqrt(2)))
+        gauss = const * (hMat @ (erf[1:] - erf[:-1]))
     else:
-        x = xCell
-    gauss = np.exp(-((x - mu)**2) / (2. * (sigma**2)))
-    for k in range(deriv):
+        x = BoolesX(omega)
+        gauss = np.exp(-((x - mu)**2) / (2. * (sigma**2)))
+        print('check!')
+        
+    if (deriv):
         gauss = ((mu - x) * gauss) / (sigma ** 2)
-    if (cellAve):
+    if (BooleAve):
         gauss = BoolesAve(gauss)
     return gauss
+
+
+def BoolesX(omega):
+    xNode = omega.xNode
+    x = xNode
+    h = omega.h
+    for k in range(1, 4):
+        x = np.asarray(sorted(set(np.append(x, xNode[:-1] + (k * h) / 4.))))
+    return x
 
 # ----------------------------------------------------------------------------------------------------------------
 # Function: BoolesAve
