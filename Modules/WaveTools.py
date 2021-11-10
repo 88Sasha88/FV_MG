@@ -21,7 +21,7 @@ from Modules import OperatorTools as OT
 # In[2]:
 
 
-def MakeWaves(omega):
+def MakeWaves(omega, ct = 0):
     nh_max = omega.nh_max
     h = omega.h
     alias = omega.alias
@@ -30,7 +30,7 @@ def MakeWaves(omega):
         np.append(h, h)
     x = omega.xNode
     n = omega.degFreed
-    waves = CellWaves(nh_max, x)
+    waves = CellWaves(nh_max, x, ct = ct)
 #     hs = np.zeros((n, n), float)
 #     np.fill_diagonal(hs, h)
 #     hMat = LA.inv(hs)
@@ -47,15 +47,17 @@ def MakeWaves(omega):
 # In[3]:
 
 
-def CellWaves(N, x):
+def CellWaves(N, x, ct):
     n = len(x) - 1
     waves = np.zeros((n, N), float)
     for k in range(int(N / 2)):
-        waves[:, (2 * k) + 1] = (1.0 / (2.0 * np.pi * (k + 1))) * (cos(2 * np.pi * (k + 1) * x[:-1]) - cos(2 * np.pi * (k + 1) * x[1:]))
+        fact = 2.0 * np.pi * (k + 1)
+        waves[:, (2 * k) + 1] = (1.0 / fact) * (cos(fact * (x[:-1] - ct)) - cos(fact * (x[1:] - ct)))
         if (k == 0):
             waves[:, 2 * k] = np.ones(n, float)
         else:
-            waves[:, 2 * k] = (1.0 / (2.0 * np.pi * k)) * (sin(2 * np.pi * k * x[1:]) - sin(2 * np.pi * k * x[:-1]))
+            fact = 2.0 * np.pi * k
+            waves[:, 2 * k] = (1.0 / fact) * (sin(fact * (x[1:] - ct)) - sin(fact * (x[:-1] - ct)))
     return waves
 
 
@@ -64,7 +66,7 @@ def CellWaves(N, x):
 # In[4]:
 
 
-def MakeNodeWaves(omega, nRes = 0):
+def MakeNodeWaves(omega, nRes = 0, ct = 0):
     nh_max = omega.nh_max
     alias = omega.alias
     nh_max = int(alias * nh_max)
@@ -74,7 +76,7 @@ def MakeNodeWaves(omega, nRes = 0):
         # x = x[:nRes]
     else:
         x = np.linspace(0, 1, num = nRes)
-    waves = NodeWaves(nh_max, x, nRes)
+    waves = NodeWaves(nh_max, x, nRes, ct = ct)
     return waves
 
 
@@ -83,14 +85,14 @@ def MakeNodeWaves(omega, nRes = 0):
 # In[5]:
 
 
-def NodeWaves(nh_max, x, nRes):
+def NodeWaves(nh_max, x, nRes, ct):
     waves = np.zeros((nRes, nh_max), float)
     for k in range(int(nh_max / 2)):
-        waves[:, (2 * k) + 1] = np.sin(2 * np.pi * (k + 1) * x)
+        waves[:, (2 * k) + 1] = np.sin(2 * np.pi * (k + 1) * (x - ct))
         if (k == 0):
             waves[:, 2 * k] = np.ones(nRes, float)
         else:
-            waves[:, 2 * k] = np.cos(2 * np.pi * k * x)
+            waves[:, 2 * k] = np.cos(2 * np.pi * k * (x - ct))
     return waves
 
 
