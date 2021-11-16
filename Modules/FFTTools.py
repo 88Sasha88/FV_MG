@@ -175,6 +175,7 @@ def FourierCoefs(omega, waves, waveform, printBool = False):
     omegaF = BT.Grid(nh_max)
     
     wavesF = WT.MakeWaves(omegaF)
+    
 #     print(nh_max)
 #     print(np.shape(wavesF), np.shape(nullspace))
     
@@ -184,6 +185,7 @@ def FourierCoefs(omega, waves, waveform, printBool = False):
 #     print(3)
     det = LA.det(prenorm)
     norm = LA.inv(prenorm)
+    
     if (printBool):
         print('DETERMINANT =', det)
         
@@ -203,6 +205,7 @@ def FourierCoefs(omega, waves, waveform, printBool = False):
 #     print(np.shape(waves))
 #     print(np.shape(norm))
     FCoefs = (waveform.transpose() @ waves @ norm).transpose()
+    
     return FCoefs
 
 
@@ -241,13 +244,13 @@ def PropogateFCoefs(omega, FCoefs, c, t, nullspace = []):
     return propFCoefs
 
 
-def PropWaves(omega, waves, c, t):
+def PropWaves(omega, waves, ct): # Change was made here!
     nh2 = omega.nh_max
     nhs = omega.nh
     hs = omega.h
     levels = omega.levels
     refRatios = omega.refRatios
-    rotMat = OT.MakeRotMat(omega, c * t)
+    rotMat = OT.MakeRotMat(omega, ct) # Change was made here!
     backRotMat = rotMat[::-1, ::-1] + 0
 #     np.fill_diagonal(backRotMat[1:], np.diagonal(backRotMat, offset = 1))
 #     np.fill_diagonal(backRotMat[:, 1:], -np.diagonal(backRotMat, offset = 1))
@@ -284,7 +287,7 @@ def PropWaves(omega, waves, c, t):
 
 # input: waveform of fully refined grid
 # output: propagated coef
-def PropRestrictWaves(omega, waveformIn, c, t, Hans = False):
+def PropRestrictWaves(omega, waveformIn, ct, Hans = False): # Change was made here!
     nh_max = omega.nh_max
     degFreed = omega.degFreed
     waves = WT.MakeWaves(omega)
@@ -298,7 +301,7 @@ def PropRestrictWaves(omega, waveformIn, c, t, Hans = False):
     FCoefs = FourierCoefs(omegaF, wavesF, waveform)
     
     # Propagate all of the Fourier modes on the completely refined grid.
-    propWaves = PropWaves(omegaF, wavesF, c, t)
+    propWaves = PropWaves(omegaF, wavesF, ct) # Change was made here!
     
     # Find the propagated waveform coarsened down to AMR.
     propWaveform = restrictOp @ propWaves @ FCoefs

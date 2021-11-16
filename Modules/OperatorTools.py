@@ -184,10 +184,10 @@ def GramSchmidt(matrica):
         q[:, j] = v[:, j] / LA.norm(v[:, j])
         for  k in range(j + 1, n):
             v[:, k] = v[:, k] - ((q[:, j].transpose() @ v[:, k]) * q[:, j])
-        print(q[:, j])
+#         print(q[:, j])
         q[:, j] = q[:, j] / LA.norm(q[:, j])
-        print(q[:, j])
-        print('')
+#         print(q[:, j])
+#         print('')
 #     print(matrica)
 #     matrica = q
 #     print(matrica)

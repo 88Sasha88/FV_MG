@@ -23,11 +23,23 @@ np.set_printoptions( linewidth = 1000)
 
 # In[2]:
 
+def FindDxDt(omega, CFL, c):
+    dx = omega.dx
+    dx_min = min(dx)
+    if (np.shape(c) == ()):
+        c_max = c
+    else:
+        c_max = max(c)
+    dt = CFL * dx_min / c_max
+    return dx_min, dt
 
 def ForwardEuler(omega, waves, u0, nt, const, CFL, func, order = 0):
-    dx = omega.h
-    dx_min = np.min(dx)
-    dt = CFL * dx_min / const
+#     dx = omega.h
+    
+#     dx_min = min(dx)
+#     dt = CFL * dx_min / const
+    dx, dt = FindDxDt(omega, CFL, const)
+    
     if (order != 0):
         if (func != TimePoly):
             print('Spatial derivative method has been overridden in favor of TimePoly()!')
@@ -49,12 +61,12 @@ def ForwardEuler(omega, waves, u0, nt, const, CFL, func, order = 0):
     return uCoefs
 
 
-def CalcTime(omega, CFL, const, nt = 0, t = 0):
+def CalcTime(omega, CFL, c, nt = 0, t = 0):
     errorLoc = 'ERROR:\nSolverTools:\nCalcTime:\n'
     errorMess = ''
-    dx = omega.dx
-    dx_min = np.min(dx)
-    dt = CFL * dx_min / const
+    
+    dx, dt = FindDxDt(omega, CFL, c)
+    
     if (nt <= 0):
         nt = int(t / nt)
         t = nt * dt
@@ -147,9 +159,11 @@ def CenterDiff(omega, t, u0, const, order):
     return f
 
 def MidpointMeth(omega, waves, u0, nt, const, CFL, func, order = 0):
-    dx = omega.dx
-    dx_min = np.min(dx)
-    dt = CFL * dx_min / const
+#     dx = omega.dx
+#     dx_min = np.min(dx)
+#     dt = CFL * dx_min / const
+    
+    dx, dt = FindDxDt(omega, CFL, const)
     if (order > 0):
         if (func != TimePoly):
             print('Spatial derivative method has been overridden in favor of TimePoly()!')
@@ -177,9 +191,11 @@ def MidpointMeth(omega, waves, u0, nt, const, CFL, func, order = 0):
     return uCoefs
 
 def RK4(omega, waves, u0, nt, const, CFL, func, order = 0):
-    dx = omega.dx
-    dx_min = np.min(dx)
-    dt = CFL * dx_min / const
+#     dx = omega.dx
+#     dx_min = np.min(dx)
+#     dt = CFL * dx_min / const
+
+    dx, dt = FindDxDt(omega, CFL, const)
     if (order > 0):
         if (func != TimePoly):
             print('Spatial derivative method has been overridden in favor of TimePoly()!')
