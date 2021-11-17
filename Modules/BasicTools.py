@@ -180,17 +180,17 @@ def CheckBounds(nh_min, loops, bounds):
 # ----------------------------------------------------------------------------------------------------------------
 
 class Grid:
-    patches = []
-    xNode = []
-    xCell = []
-    xPatches = []
-    cells = []
-    levels = 0
-    nh_max = 1
-    refRatios = []
-    degFreeds = []
-    strings = []
-    nh = []
+#     patches = []
+#     xNode = []
+#     xCell = []
+#     xPatches = []
+#     cells = []
+#     levels = 0
+#     nh_max = 1
+#     refRatios = []
+#     degFreeds = []
+#     strings = []
+#     nh = []
     def __init__(self, nh, alias = 1):
         errorLoc = 'ERROR:\nBasicTools:\nGrid:\n__init__:\n'
         self.alias = alias

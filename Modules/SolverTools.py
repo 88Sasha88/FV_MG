@@ -29,7 +29,7 @@ def FindDxDt(omega, CFL, c):
     if (np.shape(c) == ()):
         c_max = c
     else:
-        c_max = max(c)
+        c_max = max(np.diag(c))
     dt = CFL * dx_min / c_max
     return dx_min, dt
 
@@ -106,7 +106,7 @@ def Upwind(omega, t, u0, const, order):
     print(D)
     print(np.roll(dx, 2))
     print('')
-    f = -(const / dx) * ((B * u0) - (C * np.roll(u0, 1)) - (D * np.roll(u0, 2)))
+    f = -(const / dx) @ ((B * u0) - (C * np.roll(u0, 1)) - (D * np.roll(u0, 2)))
     return f
 
 def CenterDiff(omega, t, u0, const, order):
@@ -155,7 +155,7 @@ def CenterDiff(omega, t, u0, const, order):
     print(np.roll(dx, 2))
     print('')
     
-    f = -(const / (2 * dx)) * ((H * np.roll(dx, -2)) + (E * np.roll(dx, -1)) + (A * dx) + (C * np.roll(dx, 1)) + (G * np.roll(dx, 2)))
+    f = -(const / (2 * dx)) @ ((H * np.roll(dx, -2)) + (E * np.roll(dx, -1)) + (A * dx) + (C * np.roll(dx, 1)) + (G * np.roll(dx, 2)))
     return f
 
 def MidpointMeth(omega, waves, u0, nt, const, CFL, func, order = 0):

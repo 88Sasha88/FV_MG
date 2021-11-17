@@ -110,13 +110,13 @@ def AmpError(omega, theoreticalIn, actualIn, tol = 1e-20, printOut = False):
 
 def Upwind(omega, t, u0, c, order):
     derivMat = OT.SpaceDeriv(omega, order, 'U')
-    spatOp = -c * derivMat
+    spatOp = -c @ derivMat
     u = spatOp @ u0
     return u
 
 def CenterDiff(omega, t, u0, c, order):
     derivMat = OT.SpaceDeriv(omega, order, 'CD')
-    spatOp = -c * derivMat
+    spatOp = -c @ derivMat
     u = spatOp @ u0
     return u
 
@@ -243,9 +243,9 @@ def SolverSwitch(deriv, RK = 0):
 def ExactSpatOp(omega):
     nh_max = omega.nh_max
     omegaF = BT.Grid(nh_max)
-    waves = WT.MakeWaves(omega)
-    wavesF = WT.MakeWaves(omegaF)
-    nullspace = OT.FindNullspace(omega, waves)
+#     waves = WT.MakeWaves(omega)
+#     wavesF = WT.MakeWaves(omegaF)
+#     nullspace = OT.FindNullspace(omega, waves)
     subsuper = np.linspace(0.5, nh_max, num = 2 * nh_max)
     subsuper[::2] = 0
     Op = np.zeros((nh_max, nh_max), float)
