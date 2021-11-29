@@ -196,10 +196,10 @@ def RK4(omega, waves, u0, nt, const, CFL, func, order = 0):
 #     dt = CFL * dx_min / const
 
     dx, dt = FindDxDt(omega, CFL, const)
-    if (order > 0):
-        if (func != TimePoly):
-            print('Spatial derivative method has been overridden in favor of TimePoly()!')
-        func = TimePoly
+#     if (order > 0):
+#         if (func != TimePoly):
+#             print('Spatial derivative method has been overridden in favor of TimePoly()!')
+#         func = TimePoly
     u = u0.copy()
     t = 0
     for n in range(nt):
