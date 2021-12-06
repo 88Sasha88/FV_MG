@@ -388,9 +388,71 @@ class Grid:
 #         print('after', self.nh)
         self.strings = strings
 
+# ----------------------------------------------------------------------------------------------------------------
+# Class: PhysProperties
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This class stores all the attributes of an AMR grid. The base grid is created upon instantiation of an object
+# from inputs nh, the degrees of freedom on the base grid, and alias, a numerical value set to 1 as the default in
+# case the user wishes to plot examples of aliasing. Additional patches are added using the AddPatch function,
+# which takes in arguments refRatio and cell, which are both overloaded with 1 and [], respectively, for the
+# automatic call at the instantiation of the base level. Data stored in the elements of all list-type attributes,
+# except strings, correspond to each level from lowest to highest refinement, respectively. All other attributes
+# are assumed to apply to the current Grid object (at its highest refinement,) unless otherwise stated.
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# omega                   Grid                    Grid object for AMR
+# epsilons                list                    Relative electric permittivity of materials in order from left
+# mus                     list                    Relative magnetic permeability of materials in order from left
+# (locs)                  list                    Locations of material jumps
+# (L)                     float                   Physical length in meters of entire area simulated
+# ----------------------------------------------------------------------------------------------------------------
+# Attributes:
+#
+# epsilons_r              list                    Unitless relative electric permittivity of materials in order
+#                                                     from left
+# mus_r                   list                    Unitless relative magnetic permeability of materials in order
+#                                                     from left
+# locs                    list                    Locations of material jumps
+# L                       float                   Physical length of entire area simulated
+# epsilons                list                    Electric permittivity in SI of materials in order from left
+# mus                     list                    Magnetic permeability in SI of materials in order from left
+# ----------------------------------------------------------------------------------------------------------------
 
-# In[ ]:
+class PhysProperties:
+    def __init__(self, omega, epsilons, mus, locs = [], L = 1):
+        # Add error check for locs outside of range of L!
+        # Add error check for right number of mus, epsilons, and locs!
+        self.omega = omega
+        self.mus_r = mus
+        self.epsilons_r = epsilons
+        self.locs = locs
+        self.L = L
+        
+        epsilon_0 = 8.85418782e-12
+        mu_0 = 1.25663706e-6
+        self.epsilons = list(epsilon_0 * np.asarray(epsilons))
+        self.mus = list(mu_0 * np.asarray(mus))
+        
+        locs = np.asarray(sorted(set(np.append(locs, [1.]))))
+        iters = len(locs)
+        
+        x = omega.xNode
+        degFreed = omega.degFreed
+        
+        c = np.ones(degFreed, float)
+        
+        indexOld = 0
+        for i in range(iters):
+            distance = locs[i] - x
+            minDist = min(abs(distance))
+            indexNew = np.where(distance == minDist)[0][0]
+            c[indexOld:indexNew] = 1. / (L * np.sqrt(epsilons[i] * mus[i]))
+            indexOld = indexNew
 
-
+        self.cVec = c.transpose()
+        self.cMat = np.diag(c)
 
 

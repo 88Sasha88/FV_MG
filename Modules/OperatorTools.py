@@ -292,6 +292,14 @@ def CenterDiff1D(omega):
 
 # In[ ]:
 
+def Curl(omega, order, diff):
+    derivOp = SpaceDeriv(omega, order, diff)
+    
+    return
+
+def Grad(omega, order, diff):
+    
+    return
 
 def SpaceDeriv(omega, order, diff):
     
@@ -393,7 +401,43 @@ def SpaceDeriv(omega, order, diff):
 #     print('')
     return blockMat
 
+# ----------------------------------------------------------------------------------------------------------------
+# Function: Block
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function creates either a block diagonal or block anti-diagonal matrix from some operator or list of
+# operators. If the input matrica is a single operator, then a matrix of var many blocks of that operator is
+# constructed. If matrica is input directly as a list of operators, then a block diagonal of all the operators
+# within that list is constructed. If the parameter diag is set to False, then the output is changed to a block
+# antidiagonal matrix.
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# matrica                 array/list              Operator or list of operators to be reconstructed in blocks
+# (var)                   int                     Number of blocks if matrica entered as array
+# (diag)                  boolean                 Switch paramater for diagonal or antidiagonal blocks
+# ----------------------------------------------------------------------------------------------------------------
+# Outputs:
+#
+# matrice                 array                   Block diagonal or antidiagonal matrix
+# ----------------------------------------------------------------------------------------------------------------
 
+def Block(matrica, var = 1, diag = True):
+    errorLoc = 'ERROR:\nOperatorTools:\nBlock:\n'
+    if ((var < 1) or (type(var) != int)):
+        errorMess = 'var must be integer value greater than 0!'
+    if (type(matrica) == list):
+        var = np.shape(matrica)[0]
+        matricaList = matrica
+    else:
+        matricaList = [matrica for k in range(var)]
+    if (not diag):
+        matricaList = [M[:, ::-1] for M in matricaList]
+    matrice = LA2.block_diag(*matricaList)
+    if (not diag):
+        matrice = matrice[:, ::-1]
+    return matrice
 
 
 

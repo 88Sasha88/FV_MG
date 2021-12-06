@@ -55,7 +55,7 @@ def ForwardEuler(omega, waves, u0, nt, const, CFL, func, order = 0):
                 if (order < 2):
                     midstring = ' should be equal to '
                 else:
-                    midstring = ' does not need to equal '
+                    midstring = ' does not necessarily need to equal '
                 print(str(u[0]) + midstring + str(val) + '.')
     uCoefs = LA.inv(waves) @ u
     return uCoefs

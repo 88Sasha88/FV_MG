@@ -339,8 +339,20 @@ def PlotWave(omega, numPoints, X, rescale, waveCell = [], fX = [], title = '', l
 
 
 def PlotMixedWave(omega, waves, FCoefs, title = '', labels = [], rescale = 1, plotCont = True, sym = False, save = False, saveName = '', dpi = 600, ct = 0, yGrid = False):
+    errorLoc = 'ERROR:\nPlotTools:\nPlotMixedWave:\n'
     nh = omega.nh_max
+    degFreed = omega.degFreed
     numPoints, font, X, savePath = UsefulPlotVals()
+    lenFCoefs = np.shape(FCoefs)[0]
+    if (lenFCoefs % nh != 0):
+        errorMess = 'FCoefs must have length which is integer multiple of degFreed!'
+    else:
+        errorMess = ''
+        numPlots = int(lenFCoefs / nh)
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    
+    
     
     if (saveName != ''):
         save = True
@@ -348,23 +360,31 @@ def PlotMixedWave(omega, waves, FCoefs, title = '', labels = [], rescale = 1, pl
         saveName = 'MixedWave'
     saveString = savePath + saveName
     
-    
     numGraphs = np.ndim(FCoefs)
     
-    fXCell = waves @ FCoefs
     if (plotCont):
         waveCont = WT.MakeNodeWaves(omega, nRes = numPoints)
         if (ct != 0):
             omega2 = BT.Grid(nh)
             rotMat = OT.MakeRotMat(omega2, ct)
             waveCont = waveCont @ rotMat
-        fXCont = waveCont @ FCoefs
-    else:
-        fXCont = []
-    fig = PlotWave(omega, numPoints, X, rescale, fXCell, fXCont, title = title, sym = sym, labels = labels, yGrid = yGrid)
-    plt.xlim([-0.1, 1.1])
-    if (save):
-        Save(fig, saveString, dpi)
+    
+    for k in range(numPlots):
+        if (numGraphs == 1):
+            FCoef = FCoefs[k * nh:(k + 1) * nh]
+        else:
+            FCoef = FCoefs[k * nh:(k + 1) * nh, :]
+        fXCell = waves[:nh, :nh] @ FCoef
+        if (plotCont):
+            fXCont = waveCont @ FCoef
+        else:
+            fXCont = []
+        fig = PlotWave(omega, numPoints, X, rescale, fXCell, fXCont, title = title, sym = sym, labels = labels, yGrid = yGrid)
+        plt.xlim([-0.1, 1.1])
+        if (save):
+            if (numPlots > 1):
+                saveString = saveString + 'k'
+            Save(fig, saveString, dpi)
 #         fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
 #         print('This image has been saved under ' + saveName + '.')
     return

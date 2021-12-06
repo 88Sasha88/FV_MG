@@ -239,6 +239,22 @@ def SolverSwitch(deriv, RK = 0):
         DiffFunc = CenterDiff#ST.CenterDiff
     return TimeIntegratorFunc, DiffFunc
 
+# ----------------------------------------------------------------------------------------------------------------
+# Function: ExactSpatOp
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function generates an exact Fourier derivative operator D, which can be multiplied with the Fourier matrix
+# F and the Fourier coefficients A like F D A to find the exact derivative of the operation F A.
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# omega                   Grid                    Object containing all grid attributes
+# ----------------------------------------------------------------------------------------------------------------
+# Outputs:
+#
+# SpatOp                  array                   nh_max x nh_max Fourier derivative operator
+# ----------------------------------------------------------------------------------------------------------------
 
 def ExactSpatOp(omega):
     nh_max = omega.nh_max
@@ -256,6 +272,25 @@ def ExactSpatOp(omega):
     SpatOp = Op # wavesF @ Op # @ nullspace
     return SpatOp
 
+# ----------------------------------------------------------------------------------------------------------------
+# Function: ExactSpatDeriv
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function performs an exact Fourier derivative on some input function u0, given in space-space.
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# omega                   Grid                    Object containing all grid attributes
+# t                       float                   Inert parameter included for flexibility of use
+# u0                      array                   Initial waveform in space-space of length degFreed
+# c                       float                   Constant value
+# order                   float                   Inert parameter included for flexibility of use
+# ----------------------------------------------------------------------------------------------------------------
+# Outputs:
+#
+# u                       array                   Derivative of initial waveform in space-space of length degFreed
+# ----------------------------------------------------------------------------------------------------------------
 
 def ExactSpatDeriv(omega, t, u0, c, order):
 #     nh_max = omega.nh_max
