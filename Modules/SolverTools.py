@@ -33,30 +33,31 @@ def FindDxDt(omega, CFL, c):
     dt = CFL * dx_min / c_max
     return dx_min, dt
 
-def ForwardEuler(omega, waves, u0, nt, const, CFL, func, order = 0):
+def ForwardEuler(omega, physics, waves, u0, nt, CFL, op, timeTest = False): #(omega, waves, u0, nt, const, CFL, func, order = 0):
 #     dx = omega.h
     
 #     dx_min = min(dx)
 #     dt = CFL * dx_min / const
-    dx, dt = FindDxDt(omega, CFL, const)
+    cMat = physics.cMat
+    dx, dt = FindDxDt(omega, CFL, cMat)
     
-    if (order != 0):
-        if (func != TimePoly):
-            print('Spatial derivative method has been overridden in favor of TimePoly()!')
-        func = TimePoly
+#     if (order != 0):
+#         if (func != TimePoly):
+#             print('Spatial derivative method has been overridden in favor of TimePoly()!')
+#         func = TimePoly # CHANGE THIS PROBABLY! AND FOR ALL THE OTHER RKS!
     u = u0.copy()
     t = 0
     for n in range(nt):
-        u = u + (dt * func(omega, t, u, const, order))
+        u = u + (dt * Operate(t, u, op, timeTest))
         t = t + dt
-        if (func == TimePoly):
-            if (n == nt - 1):
-                val = func(omega, t, u, const, order + 1, deriv = False)
-                if (order < 2):
-                    midstring = ' should be equal to '
-                else:
-                    midstring = ' does not necessarily need to equal '
-                print(str(u[0]) + midstring + str(val) + '.')
+#         if (func == TimePoly):
+#             if (n == nt - 1):
+#                 val = Operate(t, u, op) # func(omega, t, u, const, order + 1, deriv = False)
+#                 if (order < 2):
+#                     midstring = ' should be equal to '
+#                 else:
+#                     midstring = ' does not necessarily need to equal '
+#                 print(str(u[0]) + midstring + str(val) + '.')
     uCoefs = LA.inv(waves) @ u
     return uCoefs
 
@@ -79,6 +80,8 @@ def CalcTime(omega, CFL, c, nt = 0, t = 0):
             sys.exit(errorLoc + errorMess)
         t = nt * dt
     return t, nt
+
+# NOT IN USE!
 
 def Upwind(omega, t, u0, const, order):
     degFreed = omega.degFreed
@@ -108,6 +111,8 @@ def Upwind(omega, t, u0, const, order):
     print('')
     f = -(const / dx) @ ((B * u0) - (C * np.roll(u0, 1)) - (D * np.roll(u0, 2)))
     return f
+
+# NOT IN USE!
 
 def CenterDiff(omega, t, u0, const, order):
     degFreed = omega.degFreed
@@ -158,12 +163,13 @@ def CenterDiff(omega, t, u0, const, order):
     f = -(const / (2 * dx)) @ ((H * np.roll(dx, -2)) + (E * np.roll(dx, -1)) + (A * dx) + (C * np.roll(dx, 1)) + (G * np.roll(dx, 2)))
     return f
 
-def MidpointMeth(omega, waves, u0, nt, const, CFL, func, order = 0):
+def MidpointMeth(omega, physics, waves, u0, nt, CFL, op, timeTest = False): #(omega, waves, u0, nt, const, CFL, func, order = 0):
 #     dx = omega.dx
 #     dx_min = np.min(dx)
 #     dt = CFL * dx_min / const
     
-    dx, dt = FindDxDt(omega, CFL, const)
+    cMat = physics.cMat
+    dx, dt = FindDxDt(omega, CFL, cMat)
     if (order > 0):
         if (func != TimePoly):
             print('Spatial derivative method has been overridden in favor of TimePoly()!')
@@ -173,29 +179,30 @@ def MidpointMeth(omega, waves, u0, nt, const, CFL, func, order = 0):
     u = u0.copy()
     t = 0
     for n in range(nt):
-        k1 = func(omega, t, u, const, order)
-        k2 = func(omega, t + (dt / 2.), u + ((dt / 2.) * k1), const, order)
+        k1 = Operate(t, u, op, timeTest)
+        k2 = Operate(t + (dt / 2.), u + ((dt / 2.) * k1), op, timeTest)
         u = u + (dt * k2)
         t = t + dt
-        if (func == TimePoly):
-            if (n == nt - 1):
-                val = func(omega, t, u, const, order + 1, deriv = False)
-                if (order < 3):
-                    midstring = ' should be equal to '
-                else:
-                    midstring = ' does not need to equal '
-                print('k1 = ' + str(k1))
-                print('k2 = ' + str(k2))
-                print(str(u[0]) + midstring + str(val) + '.')
+#         if (func == TimePoly):
+#             if (n == nt - 1):
+#                 val = Operate(t, u, op) # func(omega, t, u, const, order + 1, deriv = False)
+#                 if (order < 3):
+#                     midstring = ' should be equal to '
+#                 else:
+#                     midstring = ' does not need to equal '
+#                 print('k1 = ' + str(k1))
+#                 print('k2 = ' + str(k2))
+#                 print(str(u[0]) + midstring + str(val) + '.')
     uCoefs = LA.inv(waves) @ u
     return uCoefs
 
-def RK4(omega, waves, u0, nt, const, CFL, func, order = 0):
+def RK4(omega, physics, waves, u0, nt, CFL, op, timeTest = False): # (omega, waves, u0, nt, const, CFL, func, order = 0):
 #     dx = omega.dx
 #     dx_min = np.min(dx)
 #     dt = CFL * dx_min / const
 
-    dx, dt = FindDxDt(omega, CFL, const)
+    cMat = physics.cMat
+    dx, dt = FindDxDt(omega, CFL, cMat)
 #     if (order > 0):
 #         if (func != TimePoly):
 #             print('Spatial derivative method has been overridden in favor of TimePoly()!')
@@ -203,26 +210,45 @@ def RK4(omega, waves, u0, nt, const, CFL, func, order = 0):
     u = u0.copy()
     t = 0
     for n in range(nt):
-        k1 = func(omega, t, u, const, order)
-        k2 = func(omega, t + (dt / 2.), u + ((dt / 2.) * k1), const, order)
-        k3 = func(omega, t + (dt / 2.), u + ((dt / 2.) * k2), const, order)
-        k4 = func(omega, t + dt, u + (dt * k3), const, order)
+        k1 = Operate(t, u, op, timeTest)
+        k2 = Operate(t + (dt / 2.), u + ((dt / 2.) * k1), op, timeTest)
+        k3 = Operate(t + (dt / 2.), u + ((dt / 2.) * k2), op, timeTest)
+        k4 = Operate(t + dt, u + (dt * k3), op, timeTest)
         u = u + ((dt / 6.) * (k1 + (2. * k2) + (2. * k3) + k4))
         t = t + dt
-        if (func == TimePoly):
-            if (n == nt - 1):
-                val = func(omega, t, u, const, order + 1, deriv = False)
-                if (order < 5):
-                    midstring = ' should be equal to '
-                else:
-                    midstring = ' does not need to equal '
-                print('k1 = ' + str(k1))
-                print('k2 = ' + str(k2))
-                print('k3 = ' + str(k3))
-                print('k4 = ' + str(k4))
-                print(str(u[0]) + midstring + str(val) + '.')
+#         if (func == TimePoly):
+#             if (n == nt - 1):
+#                 val = func(omega, t, u, const, order + 1, deriv = False)
+#                 if (order < 5):
+#                     midstring = ' should be equal to '
+#                 else:
+#                     midstring = ' does not need to equal '
+#                 print('k1 = ' + str(k1))
+#                 print('k2 = ' + str(k2))
+#                 print('k3 = ' + str(k3))
+#                 print('k4 = ' + str(k4))
+#                 print(str(u[0]) + midstring + str(val) + '.')
     uCoefs = LA.inv(waves) @ u
     return uCoefs
+
+# ----------------------------------------------------------------------------------------------------------------
+# Function: TimePoly
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function creates calculates a polynomial at the given time input. As a default, it calculates the
+# derivative of a polynomial of arbitrary order using the power rule.
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs: # INPUTS NEED TO BE CHANGED!!!
+#
+# matrica                 array/list              Operator or list of operators to be reconstructed in blocks
+# (var)                   int                     Number of blocks if matrica entered as array
+# (diag)                  boolean                 Switch paramater for diagonal or antidiagonal blocks
+# ----------------------------------------------------------------------------------------------------------------
+# Outputs:
+#
+# poly                    real                    Value of polynomial at time t
+# ----------------------------------------------------------------------------------------------------------------
 
 def TimePoly(omega, t, u, const, order, deriv = True):
     # add error checker for negative order or zero
@@ -233,3 +259,9 @@ def TimePoly(omega, t, u, const, order, deriv = True):
         else:
             poly = poly + (t**n)
     return poly
+
+
+
+def Operate(t, u0, op, timeTest):
+    u = op @ u0
+    return u

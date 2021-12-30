@@ -202,6 +202,22 @@ def GramSchmidt(matrica):
 #         matrica[:, i] = norm * matrica[:, i]
     return q
 
+# ----------------------------------------------------------------------------------------------------------------
+# Function: MakeRotMat
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function creates the Fourier rotation matrix.
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# omega                   Grid                    Object containing all grid attributes
+# ct                      float                   Distance by which all modes must shift
+# ----------------------------------------------------------------------------------------------------------------
+# Outputs:
+#
+# shift                   array                   Fourier rotation matrix
+# ----------------------------------------------------------------------------------------------------------------
 
 def MakeRotMat(omega, ct):
     nh = omega.nh_max
@@ -214,6 +230,7 @@ def MakeRotMat(omega, ct):
     shift[-1, -1] = Cosine(int(nh / 2))
     return shift
 
+# NOT IN USE!
 
 def Upwind1D(omega):
     n = omega.degFreed
@@ -237,6 +254,22 @@ def Upwind1D(omega):
     Deriv = hMat @ Deriv
     return Deriv
 
+# ----------------------------------------------------------------------------------------------------------------
+# Function: StepMatrix
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function creates a diagonal matrix of step sizes for the given grid.
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# omega                   Grid                    Object containing all grid attributes
+# ----------------------------------------------------------------------------------------------------------------
+# Outputs:
+#
+# hMat                    array                   Diagonal matrix of step sizes
+# ----------------------------------------------------------------------------------------------------------------
+
 def StepMatrix(omega):
     h = omega.h
     n = omega.degFreed
@@ -244,6 +277,8 @@ def StepMatrix(omega):
     np.fill_diagonal(hs, h)
     hMat = LA.inv(hs)
     return hMat
+
+# NOT IN USE!
 
 def CenterDiff1D(omega):
     # A is the main diagonal; C is the subdiagonal; G is the sub-subdiagonal; E is the superdiagonal; H is the super-superdiagonal.
@@ -285,7 +320,7 @@ def CenterDiff1D(omega):
     Deriv[n - 2, 0] = H[::-1][1]
     Deriv[n - 1, 1] = H[::-1][0]
     hMat = 0.5 * StepMatrix(omega)
-    print(Deriv)
+#     print(Deriv)
     Deriv = hMat @ Deriv
     return Deriv
 

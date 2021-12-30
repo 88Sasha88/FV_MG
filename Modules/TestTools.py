@@ -58,7 +58,7 @@ def NormVersusCFL(func, omega, waves, u_0, const, CFL_0, nt_0, normType = 'max',
     norms = []
     CFLs = []
     while (CFL > CFL_f):
-        calcCoefs, t = func(omega, waves, u_0, nt, const, CFL = CFL)
+        calcCoefs, t = func(omega, waves, u_0, nt, const, CFL = CFL) # THIS IS GONNA NEED TO CHANGE!!!
         if (CFL == CFL_0):
             t_0 = t
         propCoefs = FFTT.PropogateFCoefs(omega, FCoefs, const, t)
@@ -149,11 +149,30 @@ def TestPoly(order, x_0, const = 2, tol = 1e-15):
         if (k < order + 1):
             assert(np.isclose(act, theor, rtol = 0, atol = tol))
     return
-
-# This function runs a polynomial test on a derivative operator.
+    
+# ----------------------------------------------------------------------------------------------------------------
+# Function: DerivPolyTest
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function runs a dest on a differential operator which uses some order of polynomial interpolation to
+# determine ghost-cell values at the coarse-fine and/or fine-coarse interfaces. The screen outputs for the actual
+# and theoretical values should match if the derivative operator is good to the given order. The accuracy of the
+# operation is limited to the order of both the polynomial interpolation used as well as the finite derivative
+# operator itself.
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# omega                   Grid                    Object containing AMR grid attributes
+# deriv                   str                     Switch which modulates finite difference function to be used
+# order                   int                     Order of polynomial function to be tested
+# (coefs)                 list                    Coefficients of polynomial function to be tested (defaulted to
+#                                                     all ones
+# ----------------------------------------------------------------------------------------------------------------
 
 def DerivPolyTest(omega, DiffFunc, order, coefs = []):
     errorLoc = 'ERROR:\nTestTools:\nSpacePoly:\n'
+    degFreed = omega.degFreed
     if (coefs == []):
         coefs = np.ones(order + 1, float)
     else:
@@ -167,7 +186,8 @@ def DerivPolyTest(omega, DiffFunc, order, coefs = []):
     waveform = P(x)
     p = np.polyder(P)
     
-    wavederiv = DiffFunc(omega, 0, waveform, -1, order)
+    const = -np.eye(degFreed)
+    wavederiv = DiffFunc(omega, 0, waveform, const, order)
     print('x:')
     print(x)
     print('')
@@ -182,7 +202,7 @@ def DerivPolyTest(omega, DiffFunc, order, coefs = []):
     print('Actual:')
     print('dp(x)/dx =\n', wavederiv)
     print('')
-    return wavederiv
+    return
 
 
 def VectorNorm(v, normType = 'L2'):
@@ -221,23 +241,50 @@ def SolverAmpTheoretical(omega, RK, deriv, CFL):
     amps = p(x)
     return ks, amps
 
+# ----------------------------------------------------------------------------------------------------------------
+# Function: SolverSwitch
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function streamlines switching between different combinations of RK and finite-difference operators.
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# deriv                   str                     Switch which modulates finite difference function to be used
+# RK                      int                     Switch which modulates RK scheme to be used
+# ----------------------------------------------------------------------------------------------------------------
+# Outputs:
+#
+# TimeIntFunc             function                Time integration RK scheme to be used
+# DiffFunc                function                Finite difference spatial derivative function to be used (Perhaps change this to a direct calculation of the operator.
+# ----------------------------------------------------------------------------------------------------------------
 
-def SolverSwitch(deriv, RK = 0):
+def SolverSwitch(deriv, RK): # Changed RK to non-overloaded variable.
+    errorLoc = 'ERROR:\nTestTools:\nSolverSwitch:\n'
+    errorMess = ''
     if (RK == 1):
-        TimeIntegratorFunc = ST.ForwardEuler
+        TimeIntFunc = ST.ForwardEuler
     else:
         if (RK == 2):
-            TimeIntegratorFunc = ST.MidpointMeth
+            TimeIntFunc = ST.MidpointMeth
         else:
-            TimeIntegratorFunc = ST.RK4
+            if (RK == 4):
+                TimeIntFunc = ST.RK4
+            else:
+                errorMess = 'RK solvers are only available to order 1, 2, or 4!'
 
     if (deriv == 'U'):
         # DiffMatFunc = OT.Upwind1D
         DiffFunc = Upwind#ST.Upwind
     else:
-        # DiffMatFunc = OT.CenterDiff1D
-        DiffFunc = CenterDiff#ST.CenterDiff
-    return TimeIntegratorFunc, DiffFunc
+        if (deriv == 'CD'):
+            # DiffMatFunc = OT.CenterDiff1D
+            DiffFunc = CenterDiff#ST.CenterDiff
+        else:
+            errorMess = 'Finite difference derivative entry only valid as \'U\' (Upwind) or \'CD\' (Center-Difference)!'
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    return TimeIntFunc, DiffFunc
 
 # ----------------------------------------------------------------------------------------------------------------
 # Function: ExactSpatOp
@@ -245,7 +292,7 @@ def SolverSwitch(deriv, RK = 0):
 # By: Sasha Curcic
 #
 # This function generates an exact Fourier derivative operator D, which can be multiplied with the Fourier matrix
-# F and the Fourier coefficients A like F D A to find the exact derivative of the operation F A.
+# F and the Fourier coefficients A like FDA to find the exact derivative of the operation FA.
 # ----------------------------------------------------------------------------------------------------------------
 # Inputs:
 #

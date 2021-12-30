@@ -22,6 +22,7 @@ from IPython.core.display import HTML
 sys.path.append('/Users/sashacurcic/SashasDirectory/ANAG/FV_MG/')
 from Modules import BasicTools as BT
 from Modules import OperatorTools as OT
+from Modules import WaveTools as WT
 
 display(HTML("<style>pre { white-space: pre !important; }</style>"))
 np.set_printoptions( linewidth = 10000, threshold = 100000)
@@ -31,7 +32,7 @@ np.set_printoptions( linewidth = 10000, threshold = 100000)
 # ----------------------------------------------------------------------------------------------------------------
 # By: Sasha Curcic
 #
-# This function returns a Gaussian waveform with standard deviation sigma centered about `mu`. As the default, it
+# This function returns a Gaussian waveform with standard deviation sigma centered about mu. As the default, it
 # returns the cell-averaged values of the Gaussian using Boole's Rule.
 # ----------------------------------------------------------------------------------------------------------------
 # Input:
@@ -39,41 +40,62 @@ np.set_printoptions( linewidth = 10000, threshold = 100000)
 # omega                   BT.Grid                 AMR grid
 # sigma                   real                    Standard deviation of Gaussian
 # mu                      real                    Average of Gaussian
-# (cellAve)               bool                    Switch set to find the cell average Gaussian values using
-#                                                     Boole's rule
-# (deriv)                 int                     Number of derivatives to take of waveform (DOESN'T WORK BEYOND FIRST!)
+# (BooleAve)              bool                    Switch for whether of not to use Boole's rule to find cell-
+#                                                     averaged values of Gaussian
+# (deriv)                 bool                    Switch for whether or not to use Boole's rule to find the cell-
 # ----------------------------------------------------------------------------------------------------------------
 # Output:
 #
-# gauss                   np.ndarray              Gaussian waveform values on Grid omega
+# gauss                   np.ndarray              Gaussian waveform values on Grid omega in space-space
 # ----------------------------------------------------------------------------------------------------------------
 
-def Gauss(omega, sigma, mu, BooleAve = False, deriv = False):
-    xCell = omega.xCell
+def Gauss(omega, sigma, mu, BooleAve = False, deriv = False, cellAve = True):
     xNode = omega.xNode
-    x = xNode
-    h = omega.h
-    nh = omega.nh[-1]
-    if (deriv):
-        BooleAve = True
-    if (not BooleAve):
-#         x = xCell
-#     gauss = np.exp(-((x - mu)**2) / (2. * (sigma**2)))
-        const = sigma * np.sqrt(np.pi / 2.)
-        hMat = OT.StepMatrix(omega)
-        erf = sp.special.erf((x - mu) / (sigma * np.sqrt(2)))
-        gauss = const * (hMat @ (erf[1:] - erf[:-1]))
+    
+    # There is no exact calculation for the calculation of the cell-averaged derivative of a Gaussian; therefore,
+    # Boole's Rule approximate average must be taken.
+#     if (deriv):
+#         BooleAve = True
+    
+    if (BooleAve):
+        if (cellAve):
+            if (not deriv):
+                print('This is not the most accurate option for a cell-averaged Gaussian, and you shouldn\'t use it!')
+            x = BoolesX(omega)
+            gauss = np.exp(-((x - mu)**2) / (2. * (sigma**2)))
     else:
-        x = BoolesX(omega)
-        gauss = np.exp(-((x - mu)**2) / (2. * (sigma**2)))
-        print('check!')
-        
+        if (cellAve):
+            x = xNode
+            const = sigma * np.sqrt(np.pi / 2.)
+            hMat = OT.StepMatrix(omega)
+            erf = sp.special.erf((x - mu) / (sigma * np.sqrt(2)))
+            gauss = const * (hMat @ (erf[1:] - erf[:-1]))
+        else:
+            x = BoolesX(omega)
+            gauss = np.exp(-((x - mu)**2) / (2. * (sigma**2)))
+
     if (deriv):
         gauss = ((mu - x) * gauss) / (sigma ** 2)
     if (BooleAve):
         gauss = BoolesAve(gauss)
     return gauss
 
+# ----------------------------------------------------------------------------------------------------------------
+# Function: BoolesX
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function creates a linear space of x values which will accommodate Boole's Rule evalutation of cell
+# averages for calculation of an arbitrary waveform.
+# ----------------------------------------------------------------------------------------------------------------
+# Input:
+#
+# omega                   BT.Grid                 AMR grid
+# ----------------------------------------------------------------------------------------------------------------
+# Output:
+#
+# x                       np.ndarray              x values needed to calculate Boole's cell averages on AMR grid
+# ----------------------------------------------------------------------------------------------------------------
 
 def BoolesX(omega):
     xNode = omega.xNode
@@ -131,20 +153,65 @@ def BoolesAve(f):
 # packet                  np.ndarray              Gaussian wavepacket cell-average values on Grid omega
 # ----------------------------------------------------------------------------------------------------------------
 
-def WavePacket(omega, sigma, mu, modenumber, waves, deriv = 0):
+def WavePacket(omega, sigma, mu, modenumber, deriv = False):
+    # YOU GOTTA CREATE A WAVES INSTANCE!
     errorLoc = 'ERROR:\nWaveformTools:\nWavePacket:\n'
     nh_max = omega.nh_max
+    
+    k = int((modenumber + 1) / 2)
+    Cosine = lambda x: np.cos(2. * np.pi * k * x)
+    Sine = lambda x: np.sin(2. * np.pi * k * x)
+    x = BoolesX(omega)
     if (modenumber > nh_max):
         errorMess = 'Modenumber out of range for grid resolution!'
         sys.exit(errorLoc + errorMess)
-    packetAmp = Gauss(omega, sigma, mu)
-    if (deriv == 0):
-        print(waves[:, modenumber])
-        packet = packetAmp * waves[:, modenumber]
+#     else:
+#         if (modenumber % 2 == 0):
+#             wave = Cosine(x)
+#         else:
+#             wave = Sine(x)
+    
+    packetAmp = Gauss(omega, sigma, mu, cellAve = False)
+    if (deriv):
+        if (modenumber % 2 == 0):
+            part1 = -2 * np.pi * k * packetAmp * Sine(x)
+            part2 = Gauss(omega, sigma, mu, deriv = True, cellAve = False) * Cosine(x)
+        else:
+            part1 = 2 * np.pi * k * packetAmp * Cosine(x)
+            part2 = Gauss(omega, sigma, mu, deriv = True, cellAve = False) * Sine(x)
+        packet = part1 + part2
     else:
-        q = int(2 * ((modenumber % 2) - 0.5))
-        print('q is', q)
-        newAmp = Gauss(omega, sigma, mu, deriv = deriv)
-        packet = (newAmp * waves[:, modenumber]) + (2 * np.pi * q * modenumber * (packetAmp * waves[:, modenumber + q]))
-    return packet
+        if (modenumber % 2 == 0):
+            packet = packetAmp * Cosine(x)
+        else:
+            packet = packetAmp * Sine(x)
+    wavepacket = BoolesAve(packet)
+    return wavepacket
+
+# ----------------------------------------------------------------------------------------------------------------
+# Function: GaussParams
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function returns parameters mu and sigma for a Gaussian waveform with sufficient dropoff at the specified
+# boundaries. As a default, it is centered at a center with a sufficient dropoff definied to be 10-14. It does not
+# account for the Shannon-Nyquist sampling rate (so it is possible for the distribution to be too sharp for an
+# excessively coarse grid.)
+# ----------------------------------------------------------------------------------------------------------------
+# Input:
+#
+# (x_0)                   real                    Left boundary
+# (x_1)                   real                    Right boundary
+# (errOrd)                real                    Order of dropoff at defined boundaries
+# ----------------------------------------------------------------------------------------------------------------
+# Output:
+#
+# sigma                   real                    Standard deviation of Gaussian
+# mu                      real                    Average of Gaussian
+# ----------------------------------------------------------------------------------------------------------------
+
+def GaussParams(x_0 = 0., x_1 = 1., errOrd = 14):
+    mu = (x_0 + x_1) / 2.
+    sigma = abs((x_1 - x_0) / np.sqrt(8 * errOrd * log(10)))
+    return sigma, mu
 
