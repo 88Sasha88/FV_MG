@@ -264,24 +264,35 @@ def PlotWaves(omega, waves = [], waveNode = [], nullspace = [], waveTrans = [], 
 def PlotWave(omega, numPoints, X, rescale, waveCell = [], fX = [], title = '', labels = [], waveTrans = [], sym = True, yGrid = False):
     errorLoc = 'ERROR:\nPlotTools:\nPlotWave:\n'
     errorMess = ''
-    if (fX != []):
+    if (fX is not []):
         yMin, yMax, tickHeight = GetYBound(fX, sym)
         numGraphs = np.ndim(fX)
-        if (waveCell != []):
+        if (waveCell is not []):
             if (numGraphs == 1):
                 if (numGraphs != np.ndim(waveCell)):
                     errorMess = 'Dimensions of waveCell and fX do not match!'
             else:
-                numGraphs = np.shape(waveCell[0, :])[0]
-                if (np.ndim(fX) == 1):
-                    errorMess = 'Dimensions of waveCell and fX do not match!'
+                if ((numGraphs == 2) and (np.shape(fX)[1] == 1)):
+                    numGraphs = 1
+                    fX = fX[:, 0]
+                    waveCell = waveCell[:, 0]
+                    print('')
+                    print(fX)
+                    print('')
+                    print(waveCell)
+                    print('')
+                        
                 else:
-                    if (numGraphs != np.shape(fX[0, :])[0]):
+                    numGraphs = np.shape(waveCell[0, :])[0]
+                    if (np.ndim(fX) == 1):
                         errorMess = 'Dimensions of waveCell and fX do not match!'
+                    else:
+                        if (numGraphs != np.shape(fX[0, :])[0]):
+                            errorMess = 'Dimensions of waveCell and fX do not match!'
     else:
+        numGraphs = np.shape(waveCell[0, :])[0]
         if (waveCell != []):
             yMin, yMax, tickHeight = GetYBound(waveCell, sym)
-            numGraphs = np.shape(waveCell[0, :])[0]
         else:
             errorMess = 'Must have argument for either fX or waveCell!'
     if (labels != []):

@@ -314,7 +314,6 @@ def ExactSpatOp(omega):
     Op = np.zeros((nh_max, nh_max), float)
     np.fill_diagonal(Op[1:], subsuper[:])
     np.fill_diagonal(Op[:, 1:], -subsuper)
-    print(Op)
     Op = 2 * np.pi * Op
     SpatOp = Op # wavesF @ Op # @ nullspace
     return SpatOp
