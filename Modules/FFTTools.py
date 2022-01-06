@@ -146,64 +146,29 @@ def GetXSpaceCoefs(omega, coefs, waves):
 
 
 def FourierCoefs(omega, waves, waveform, printBool = False):
-#     errorLoc = 'ERROR:\nFFTTools:\nFourierCoefs:\n'
-#     nh = omega.nh[::-1][0]
-#     degFreed = omega.degFreed# [::-1][0]
+    
+#     nh_max = omega.nh_max
+#     wavesAMR = WT.MakeWaves(omega)
+#     nullspace = OT.FindNullspace(omega, wavesAMR)
 
-#     errorMess = BT.CheckSize(nh, waves[0, :], nName = 'nh', matricaName = 'waves')
-#     if (errorMess != ''):
-#         sys.exit(errorLoc + errorMess)
-#     errorMess = BT.CheckSize(degFreed, waves[:, 0], nName = 'degFreed', matricaName = 'waves')
-#     if (errorMess != ''):
-#         sys.exit(errorLoc + errorMess)
-#     errorMess = BT.CheckSize(degFreed, waveform, nName = 'degFreed', matricaName = 'waveform')
-#     if (errorMess != ''):
-#         sys.exit(errorLoc + errorMess)
-#     degFreed = omega.degFreed
-#     if (degFreed % 2 == 0):
-#         waves = waves0
-#     else:
-#         waves = waves0[:, :-1]
+#     omegaF = BT.Grid(nh_max)
     
-    nh_max = omega.nh_max
+#     wavesF = WT.MakeWaves(omegaF)
     
-    # You only need wavesAMR for the nullspace for to be applied to wavesF!
-    wavesAMR = WT.MakeWaves(omega)
-    nullspace = OT.FindNullspace(omega, wavesAMR)
-#     print('nullspace found')
-#     print(nullspace)
-    omegaF = BT.Grid(nh_max)
-    
-    wavesF = WT.MakeWaves(omegaF)
-    
-#     print(nh_max)
-#     print(np.shape(wavesF), np.shape(nullspace))
-    
-    wavesFNull = wavesF @ nullspace
-#     print(2)
+#     wavesFNull = wavesF @ nullspace
     prenorm = waves.transpose() @ waves
-#     print(3)
-    det = LA.det(prenorm)
+#     det = LA.det(prenorm)
     norm = LA.inv(prenorm)
     
-    if (printBool):
-        print('DETERMINANT =', det)
-        
-        sym = np.round(norm - norm.transpose(), 14)
-        # norm = norm - (0.5 * sym)
-        print('before taking inverse:')
-        print(prenorm)
-        print('norm:')
-        print(np.round(norm, 14))
-        print('symmetry:')
-        #sym[sym != 0] = 1
-        print(np.round(sym, 14))
-#         print('antisymmetry of symmetry:')
-#         sym2 = sym + sym.transpose()
-#         print(np.round(sym2, 14))
-#     print(np.shape(waveform))
-#     print(np.shape(waves))
-#     print(np.shape(norm))
+#     if (printBool):
+#         print('DETERMINANT =', det)
+#         sym = np.round(norm - norm.transpose(), 14)
+#         print('before taking inverse:')
+#         print(prenorm)
+#         print('norm:')
+#         print(np.round(norm, 14))
+#         print('symmetry:')
+#         print(np.round(sym, 14))
     FCoefs = (waveform.transpose() @ waves @ norm).transpose()
     
     return FCoefs
