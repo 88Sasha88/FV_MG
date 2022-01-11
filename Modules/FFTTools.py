@@ -140,37 +140,21 @@ def GetXSpaceCoefs(omega, coefs, waves):
     return xCoefs
 
 
+
+
+
+
+
+
+
 # This returns the Fourier coefficients of some waveform.
 
 # In[8]:
 
 
-def FourierCoefs(omega, waves, waveform, printBool = False):
-    
-#     nh_max = omega.nh_max
-#     wavesAMR = WT.MakeWaves(omega)
-#     nullspace = OT.FindNullspace(omega, wavesAMR)
-
-#     omegaF = BT.Grid(nh_max)
-    
-#     wavesF = WT.MakeWaves(omegaF)
-    
-#     wavesFNull = wavesF @ nullspace
-    prenorm = waves.transpose() @ waves
-#     det = LA.det(prenorm)
-    norm = LA.inv(prenorm)
-    
-#     if (printBool):
-#         print('DETERMINANT =', det)
-#         sym = np.round(norm - norm.transpose(), 14)
-#         print('before taking inverse:')
-#         print(prenorm)
-#         print('norm:')
-#         print(np.round(norm, 14))
-#         print('symmetry:')
-#         print(np.round(sym, 14))
-    FCoefs = (waveform.transpose() @ waves @ norm).transpose()
-    
+def FourierCoefs(waves, waveform, printBool = False): # YOU GOT RID OF OMEGA HERE!!!
+    FTOp = OT.FourierTransOp(waves)
+    FCoefs = FTOp @ waveform
     return FCoefs
 
 
@@ -263,7 +247,7 @@ def PropRestrictWaves(omega, waveformIn, ct, Hans = False): # Change was made he
     restrictOp = GTT.CoarsenOp(omega)
     
     # Find the Fourier coefficients for the initial condition on the completely refined grid.
-    FCoefs = FourierCoefs(omegaF, wavesF, waveform)
+    FCoefs = FourierCoefs(wavesF, waveform)
     
     # Propagate all of the Fourier modes on the completely refined grid.
     propWaves = PropWaves(omegaF, wavesF, ct) # Change was made here!
@@ -272,7 +256,7 @@ def PropRestrictWaves(omega, waveformIn, ct, Hans = False): # Change was made he
     propWaveform = restrictOp @ propWaves @ FCoefs
     
     # Find Fourier coefficients of priopagated solution on AMR grid.
-    propFCoefs = FourierCoefs(omega, waves @ nullspace, propWaveform)
+    propFCoefs = FourierCoefs(waves @ nullspace, propWaveform)
     
     return propFCoefs
 

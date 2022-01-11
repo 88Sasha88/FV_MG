@@ -17,6 +17,11 @@ import matplotlib.pyplot as plt
 import itertools as it
 from IPython.core.display import HTML
 
+from Modules import BasicTools as BT
+from Modules import WaveTools as WT
+from Modules import FFTTools as FFTT
+from Modules import OperatorTools as OT
+
 display(HTML("<style>pre { white-space: pre !important; }</style>"))
 np.set_printoptions( linewidth = 1000)
 
@@ -33,11 +38,20 @@ def FindDxDt(omega, CFL, c):
     dt = CFL * dx_min / c_max
     return dx_min, dt
 
-def ForwardEuler(omega, physics, waves, u0, nt, CFL, op, timeTest = False): #(omega, waves, u0, nt, const, CFL, func, order = 0):
-#     dx = omega.h
-    
-#     dx_min = min(dx)
-#     dt = CFL * dx_min / const
+# You MUST pass op as an argument or creating a switch for the curl operator will be a pain in the ass!!!
+
+def RungeKutta(omega, physics, waves, u0, nt, CFL, RK, op = []):
+    errorMess = ''
+    if (RK == 1):
+        Scheme = ForwardEuler
+    else:
+        if (RK == 2):
+            Scheme = MidpointMeth
+        else:
+            if (RK == 4):
+                Scheme = RK4
+            else:
+                errorMess = str(RK) + ' is not a valid RK entry!'
     cMat = physics.cMat
     dx, dt = FindDxDt(omega, CFL, cMat)
     
@@ -45,11 +59,19 @@ def ForwardEuler(omega, physics, waves, u0, nt, CFL, op, timeTest = False): #(om
 #         if (func != TimePoly):
 #             print('Spatial derivative method has been overridden in favor of TimePoly()!')
 #         func = TimePoly # CHANGE THIS PROBABLY! AND FOR ALL THE OTHER RKS!
+    
     u = u0.copy()
     t = 0
     for n in range(nt):
-        u = u + (dt * Operate(t, u, op, timeTest))
-        t = t + dt
+        u, t = Scheme(u, t, dt, op)
+    uCoefs = LA.inv(waves) @ u
+    return uCoefs
+    
+
+def ForwardEuler(u, t, dt, op): #(omega, waves, u0, nt, const, CFL, func, order = 0):
+
+    u = u0 + (dt * LeftMult(t, u0, op))
+    t = t + dt
 #         if (func == TimePoly):
 #             if (n == nt - 1):
 #                 val = Operate(t, u, op) # func(omega, t, u, const, order + 1, deriv = False)
@@ -58,8 +80,7 @@ def ForwardEuler(omega, physics, waves, u0, nt, CFL, op, timeTest = False): #(om
 #                 else:
 #                     midstring = ' does not necessarily need to equal '
 #                 print(str(u[0]) + midstring + str(val) + '.')
-    uCoefs = LA.inv(waves) @ u
-    return uCoefs
+    return u, t
 
 
 def CalcTime(omega, CFL, c, nt = 0, t = 0):
@@ -114,122 +135,70 @@ def Upwind(omega, t, u0, const, order):
 
 # NOT IN USE!
 
-def CenterDiff(omega, t, u0, const, order):
-    degFreed = omega.degFreed
-    dx = omega.h
+# def CenterDiff(omega, t, u0, const, order):
+#     degFreed = omega.degFreed
+#     dx = omega.h
     
-    # A is the main diagonal; C is the subdiagonal; G is the sub-subdiagonal; E is the superdiagonal; H is the super-superdiagonal.
-    A = dx - np.roll(dx, 1)
-    B = A + 0
-    F = np.roll(A, -1)
-    F[F > 0] = 1. / 3.
-    F[F != 1. / 3.] = 0
-    A[A < 0] = -1. / 3.
-    A[A != -1. / 3.] = 0
-    A = A - F
-    B[B > 0] = 0.5
-    B[B < 0] = 2. / 3.
-    C = -B
-    B[B < 2. / 3.] = 1.
-    C[C == 0] = -1.
-    D = C + 0
-    D[D != -0.5] = 0
-    E = -C
-    E[E == 0.5] = 4. /3.
-    E[E == 2. / 3.] = 0.5
-    G = C + 0
-    G[G != -0.5] = 0
-    H = E + 0
-    H[H != 0.5] = 0
+#     # A is the main diagonal; C is the subdiagonal; G is the sub-subdiagonal; E is the superdiagonal; H is the super-superdiagonal.
+#     A = dx - np.roll(dx, 1)
+#     B = A + 0
+#     F = np.roll(A, -1)
+#     F[F > 0] = 1. / 3.
+#     F[F != 1. / 3.] = 0
+#     A[A < 0] = -1. / 3.
+#     A[A != -1. / 3.] = 0
+#     A = A - F
+#     B[B > 0] = 0.5
+#     B[B < 0] = 2. / 3.
+#     C = -B
+#     B[B < 2. / 3.] = 1.
+#     C[C == 0] = -1.
+#     D = C + 0
+#     D[D != -0.5] = 0
+#     E = -C
+#     E[E == 0.5] = 4. /3.
+#     E[E == 2. / 3.] = 0.5
+#     G = C + 0
+#     G[G != -0.5] = 0
+#     H = E + 0
+#     H[H != 0.5] = 0
     
-    print('')
-    print('Start:')
-    print(H)
-    print(np.roll(dx, -2))
-    print('')
-    print(E)
-    print(np.roll(dx, -1))
-    print('')
-    print(A)
-    print(dx)
-    print('')
-    print(C)
-    print(np.roll(dx, 1))
-    print('')
-    print(G)
-    print(np.roll(dx, 2))
-    print('')
+#     print('')
+#     print('Start:')
+#     print(H)
+#     print(np.roll(dx, -2))
+#     print('')
+#     print(E)
+#     print(np.roll(dx, -1))
+#     print('')
+#     print(A)
+#     print(dx)
+#     print('')
+#     print(C)
+#     print(np.roll(dx, 1))
+#     print('')
+#     print(G)
+#     print(np.roll(dx, 2))
+#     print('')
     
-    f = -(const / (2 * dx)) @ ((H * np.roll(dx, -2)) + (E * np.roll(dx, -1)) + (A * dx) + (C * np.roll(dx, 1)) + (G * np.roll(dx, 2)))
-    return f
+#     f = -(const / (2 * dx)) @ ((H * np.roll(dx, -2)) + (E * np.roll(dx, -1)) + (A * dx) + (C * np.roll(dx, 1)) + (G * np.roll(dx, 2)))
+#     return f
 
-def MidpointMeth(omega, physics, waves, u0, nt, CFL, op, timeTest = False): #(omega, waves, u0, nt, const, CFL, func, order = 0):
-#     dx = omega.dx
-#     dx_min = np.min(dx)
-#     dt = CFL * dx_min / const
-    
-    cMat = physics.cMat
-    dx, dt = FindDxDt(omega, CFL, cMat)
-    if (order > 0):
-        if (func != TimePoly):
-            print('Spatial derivative method has been overridden in favor of TimePoly()!')
-        func = TimePoly
-    if (order != 0):
-        func = TimePoly
-    u = u0.copy()
-    t = 0
-    for n in range(nt):
-        k1 = Operate(t, u, op, timeTest)
-        k2 = Operate(t + (dt / 2.), u + ((dt / 2.) * k1), op, timeTest)
-        u = u + (dt * k2)
-        t = t + dt
-#         if (func == TimePoly):
-#             if (n == nt - 1):
-#                 val = Operate(t, u, op) # func(omega, t, u, const, order + 1, deriv = False)
-#                 if (order < 3):
-#                     midstring = ' should be equal to '
-#                 else:
-#                     midstring = ' does not need to equal '
-#                 print('k1 = ' + str(k1))
-#                 print('k2 = ' + str(k2))
-#                 print(str(u[0]) + midstring + str(val) + '.')
-    uCoefs = LA.inv(waves) @ u
-    return uCoefs
+def MidpointMeth(u, t, dt, op): #(omega, waves, u0, nt, const, CFL, func, order = 0):
+    k1 = LeftMult(t, u, op)
+    k2 = LeftMult(t + (dt / 2.), u + ((dt / 2.) * k1), op)
+    u = u + (dt * k2)
+    t = t + dt
+    return u, t
 
-def RK4(omega, physics, waves, u0, nt, CFL, op, timeTest = False): # (omega, waves, u0, nt, const, CFL, func, order = 0):
-#     dx = omega.dx
-#     dx_min = np.min(dx)
-#     dt = CFL * dx_min / const
-
-    cMat = physics.cMat
-    dx, dt = FindDxDt(omega, CFL, cMat)
-#     if (order > 0):
-#         if (func != TimePoly):
-#             print('Spatial derivative method has been overridden in favor of TimePoly()!')
-#         func = TimePoly
-    u = u0.copy()
-    t = 0
-    for n in range(nt):
-        k1 = Operate(t, u, op, timeTest)
-        k2 = Operate(t + (dt / 2.), u + ((dt / 2.) * k1), op, timeTest)
-        k3 = Operate(t + (dt / 2.), u + ((dt / 2.) * k2), op, timeTest)
-        k4 = Operate(t + dt, u + (dt * k3), op, timeTest)
-        u = u + ((dt / 6.) * (k1 + (2. * k2) + (2. * k3) + k4))
-        t = t + dt
-#         if (func == TimePoly):
-#             if (n == nt - 1):
-#                 val = func(omega, t, u, const, order + 1, deriv = False)
-#                 if (order < 5):
-#                     midstring = ' should be equal to '
-#                 else:
-#                     midstring = ' does not need to equal '
-#                 print('k1 = ' + str(k1))
-#                 print('k2 = ' + str(k2))
-#                 print('k3 = ' + str(k3))
-#                 print('k4 = ' + str(k4))
-#                 print(str(u[0]) + midstring + str(val) + '.')
-    uCoefs = LA.inv(waves) @ u
-    return uCoefs
+def RK4(u, t, dt, op): # (omega, waves, u0, nt, const, CFL, func, order = 0):
+    k1 = LeftMult(t, u, op)
+    k2 = LeftMult(t + (dt / 2.), u + ((dt / 2.) * k1), op)
+    k3 = LeftMult(t + (dt / 2.), u + ((dt / 2.) * k2), op)
+    k4 = LeftMult(t + dt, u + (dt * k3), op)
+    u = u + ((dt / 6.) * (k1 + (2. * k2) + (2. * k3) + k4))
+    t = t + dt
+    return u, t
 
 # ----------------------------------------------------------------------------------------------------------------
 # Function: TimePoly
@@ -262,6 +231,70 @@ def TimePoly(omega, t, u, const, order, deriv = True):
 
 
 
-def Operate(t, u0, op, timeTest):
+def LeftMult(t, u0, op):
     u = op @ u0
     return u
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ----------------------------------------------------------------------------------------------------------------
+# Function: ExactTimeDerivOp
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function performs an exact Fourier derivative on some input function u0, given in space-space.
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# omega                   Grid                    Object containing all grid attributes
+# t                       float                   Inert parameter included for flexibility of use
+# u0                      array                   Initial waveform in space-space of length degFreed
+# c                       float                   Constant value
+# order                   float                   Inert parameter included for flexibility of use
+# ----------------------------------------------------------------------------------------------------------------
+# Outputs:
+#
+# u                       array                   Derivative of initial waveform in space-space of length degFreed
+# ----------------------------------------------------------------------------------------------------------------
+
+def ExactTimeDerivOp(omega, waves, cMat):
+    print('You are using ExactSpatDeriv in SolverTools module!')
+    nullspace = OT.FindNullspace(omega, waves)
+
+    
+    SpatOp = OT.ExactSpatDerivOp(omega)
+    FTOp = nullspace @ OT.FourierTransOp(waves @ nullspace)
+#     FCoefs = nullspace @ FFTT.FourierCoefs(waves @ nullspace, u0)
+#     u = -cMat @ waves @ SpatOp @ FCoefs
+    ETDerivOp = -cMat @ waves @ SpatOp @ FTop
+    return ETDerivOp
+
+# In[ ]:
+
+
+
+
+
+
+
+
+def CenterDiff(omega, t, u0, c, order):
+    print('You are using CenterDiff in SolverTools module!')
+    derivMat = OT.SpaceDeriv(omega, order, 'CD')
+    spatOp = -c @ derivMat

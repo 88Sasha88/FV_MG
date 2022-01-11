@@ -474,7 +474,97 @@ def Block(matrica, var = 1, diag = True):
         matrice = matrice[:, ::-1]
     return matrice
 
+# ----------------------------------------------------------------------------------------------------------------
+# Function: FourierTransOp
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function creates a Fourier Transform (or pseudo-Fourier Transform) operator for a uniform (or AMR) grid.
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# waves                   array/list              Matrix of waves in domain for Fourier Transform operator
+# ----------------------------------------------------------------------------------------------------------------
+# Outputs:
+#
+# FTOp                    array                   Block diagonal or antidiagonal matrix
+# ----------------------------------------------------------------------------------------------------------------
 
+def FourierTransOp(waves):
+
+    prenorm = waves.transpose() @ waves
+    norm = LA.inv(prenorm)
+    FTOp = norm.transpose() @ waves.transpose()
+    
+    return FTOp
+
+
+# ----------------------------------------------------------------------------------------------------------------
+# Function: ExactSpatDerivOp
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function generates an exact Fourier derivative operator D, which can be multiplied with the Fourier matrix
+# F and the Fourier coefficients A like FDA to find the exact derivative of the operation FA.
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# omega                   Grid                    Object containing all grid attributes
+# ----------------------------------------------------------------------------------------------------------------
+# Outputs:
+#
+# SpatOp                  array                   nh_max x nh_max Fourier derivative operator
+# ----------------------------------------------------------------------------------------------------------------
+
+def ExactSpatDerivOp(omega):
+    print('You are using ExactSpatOp in OperatorTools module!')
+
+    nh_max = omega.nh_max
+    omegaF = BT.Grid(nh_max)
+
+    subsuper = np.linspace(0.5, nh_max, num = 2 * nh_max)
+    subsuper[::2] = 0
+    Op = np.zeros((nh_max, nh_max), float)
+    np.fill_diagonal(Op[1:], subsuper[:])
+    np.fill_diagonal(Op[:, 1:], -subsuper)
+    Op = 2 * np.pi * Op
+    SpatOp = Op
+    return SpatOp
+
+
+# ----------------------------------------------------------------------------------------------------------------
+# Function: ExactTimeDerivOp
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function performs an exact Fourier derivative on some input function u0, given in space-space.
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# omega                   Grid                    Object containing all grid attributes
+# t                       float                   Inert parameter included for flexibility of use
+# u0                      array                   Initial waveform in space-space of length degFreed
+# c                       float                   Constant value
+# order                   float                   Inert parameter included for flexibility of use
+# ----------------------------------------------------------------------------------------------------------------
+# Outputs:
+#
+# u                       array                   Derivative of initial waveform in space-space of length degFreed
+# ----------------------------------------------------------------------------------------------------------------
+
+def ExactTimeDerivOp(omega, physics, waves):
+    print('You are using ExactSpatDeriv in OperatorTools module!')
+    
+    cMat = physics.cMat
+    
+    nullspace = FindNullspace(omega, waves)
+    
+    SpatOp = ExactSpatDerivOp(omega)
+    FTOp = nullspace @ FourierTransOp(waves @ nullspace)
+#     FCoefs = nullspace @ FFTT.FourierCoefs(waves @ nullspace, u0)
+#     u = -cMat @ waves @ SpatOp @ FCoefs
+    ETDerivOp = -cMat @ waves @ SpatOp @ FTop
+    return ETDerivOp
 
 
 

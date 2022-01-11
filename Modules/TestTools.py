@@ -304,6 +304,7 @@ def SolverSwitch(deriv, RK): # Changed RK to non-overloaded variable.
 # ----------------------------------------------------------------------------------------------------------------
 
 def ExactSpatOp(omega):
+    print('You are using ExactSpatOp in TestTools module!')
     nh_max = omega.nh_max
     omegaF = BT.Grid(nh_max)
 #     waves = WT.MakeWaves(omega)
@@ -339,6 +340,7 @@ def ExactSpatOp(omega):
 # ----------------------------------------------------------------------------------------------------------------
 
 def ExactSpatDeriv(omega, t, u0, c, order):
+    print('You are using ExactSpatDeriv in TestTools module!')
 #     nh_max = omega.nh_max
     waves = WT.MakeWaves(omega)
     nullspace = OT.FindNullspace(omega, waves)
@@ -354,7 +356,7 @@ def ExactSpatDeriv(omega, t, u0, c, order):
 #     u = SpatOp @ FCoefs
     
     SpatOp = ExactSpatOp(omega)  
-    FCoefs = nullspace @ FFTT.FourierCoefs(omega, waves @ nullspace, u0)
+    FCoefs = nullspace @ FFTT.FourierCoefs(waves @ nullspace, u0)
     u = -c * waves @ SpatOp @ FCoefs
     return u
 
