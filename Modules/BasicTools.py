@@ -389,7 +389,7 @@ class Grid:
         self.strings = strings
 
 # ----------------------------------------------------------------------------------------------------------------
-# Class: PhysProperties
+# Class: PhysProps
 # ----------------------------------------------------------------------------------------------------------------
 # By: Sasha Curcic
 #
@@ -421,7 +421,7 @@ class Grid:
 # mus                     list                    Magnetic permeability in SI of materials in order from left
 # ----------------------------------------------------------------------------------------------------------------
 
-class PhysProperties:
+class PhysProps:
     def __init__(self, omega, epsilons, mus, locs = [], L = 1):
         # Add error check for locs outside of range of L!
         # Add error check for right number of mus, epsilons, and locs!
