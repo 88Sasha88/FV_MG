@@ -68,7 +68,7 @@ def RungeKutta(omega, physics, waves, u0, nt, CFL, RK, op = []):
     return uCoefs
     
 
-def ForwardEuler(u, t, dt, op): #(omega, waves, u0, nt, const, CFL, func, order = 0):
+def ForwardEuler(u0, t, dt, op): #(omega, waves, u0, nt, const, CFL, func, order = 0):
 
     u = u0 + (dt * LeftMult(t, u0, op))
     t = t + dt

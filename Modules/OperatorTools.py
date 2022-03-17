@@ -517,7 +517,7 @@ def FourierTransOp(waves):
 # ----------------------------------------------------------------------------------------------------------------
 
 def ExactSpatDerivOp(omega):
-    print('You are using ExactSpatOp in OperatorTools module!')
+    print('You are using ExactSpatDerivOp in OperatorTools module (which I believe is what you want)!')
 
     nh_max = omega.nh_max
     omegaF = BT.Grid(nh_max)
