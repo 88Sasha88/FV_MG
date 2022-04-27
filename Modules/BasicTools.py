@@ -442,17 +442,20 @@ class PhysProps:
         x = omega.xNode
         degFreed = omega.degFreed
         
-        c = np.ones(degFreed, float)
+        cVec = np.ones(degFreed, float)
+        cs = np.ones(iters, float)# 1. / (L * np.sqrt(epsilons * mus))
         
         indexOld = 0
         for i in range(iters):
             distance = locs[i] - x
             minDist = min(abs(distance))
             indexNew = np.where(distance == minDist)[0][0]
-            c[indexOld:indexNew] = 1. / (L * np.sqrt(epsilons[i] * mus[i]))
+            c = 1. / (L * np.sqrt(epsilons[i] * mus[i]))
+            cVec[indexOld:indexNew] = c
+            cs[i] = c
             indexOld = indexNew
 
-        self.cVec = c.transpose()
-        self.cMat = np.diag(c)
-
+        self.cVec = cVec.transpose()
+        self.cMat = np.diag(cVec)
+        self.cs = cs
 

@@ -49,7 +49,7 @@ np.set_printoptions( linewidth = 10000, threshold = 100000)
 # gauss                   np.ndarray              Gaussian waveform values on Grid omega in space-space
 # ----------------------------------------------------------------------------------------------------------------
 
-def Gauss(omega, sigma, mu, BooleAve = False, deriv = False, cellAve = True):
+def Gauss(omega, sigma, mu, BooleAve = False, deriv = False, cellAve = True, t = 0):
     xNode = omega.xNode
     
     # There is no exact calculation for the calculation of the cell-averaged derivative of a Gaussian; therefore,
