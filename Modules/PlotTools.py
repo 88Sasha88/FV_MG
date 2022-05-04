@@ -535,7 +535,7 @@ def PlotGrid(omega, rescale = 1, save = False, saveName = '', dpi = 600):
 
 
 def Save(fig, saveString, dpi):
-    fig.savefig(saveString + '.png', bbox_inches = 'tight', dpi = dpi, transparent = True)
+    fig.savefig(saveString + '.png', bbox_inches = 'tight', dpi = dpi, transparent = False)#True)
     print('This image has been saved under ' + saveString + '.')
     return
 
