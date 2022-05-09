@@ -269,10 +269,22 @@ def ShiftX(omega, physics, t):
     for i in range(shiftNum):
         xShifts[i] = x_0 - (cs[i] * t)
 
-    ixc1 = np.where(x_0 > locs[0])[0]
-    ixc2 = np.where(xShifts[1] <= locs[0])[0]
+    ixc0 = np.where(x_0 < cs[0] * t)[0]
+    ix1 = np.where(x_0 > locs[0])[0]
+    ix2 = np.where(xShifts[1] < locs[0])[0]
     
-    ixc = list(set(ixc1).intersection(ixc2))
+#     print(ix0)
+    print(ix1)
+    print(ix2)
+    
+    #ixc0 = list(set(ix0).intersection(ix1))
+    ixc1 = list(set(ix1).intersection(ix2))
+    
+    print('')
+    print(ixc0)
+    print(ixc1)
+    print(max(ixc1))
+    print(max(ixc0))
 #     ixcR = [i + 1 for i in ixc]
 #     ixcL = [i - 1 for i in ixc]
     
@@ -282,8 +294,8 @@ def ShiftX(omega, physics, t):
 #     print(ixcL)
 #     print('')
     
-    xShift[:min(ixc)] = xShifts[0][:min(ixc)]
-    xShift[max(ixc):] = xShifts[1][max(ixc):]
+    xShift[:min(ixc1)] = xShifts[0][:min(ixc1)]
+    xShift[max(ixc1):] = xShifts[1][max(ixc1):]
     
 #     xShiftR[:min(ixcR)] = xShifts[0][:min(ixcR)]
 #     xShiftR[max(ixcR):] = xShifts[1][max(ixcR):]
@@ -291,12 +303,15 @@ def ShiftX(omega, physics, t):
 #     xShiftL[:min(ixcL)] = xShifts[0][:min(ixcL)]
 #     xShiftL[max(ixcL):] = xShifts[1][max(ixcL):]
 
-    tCross = (xShifts[1][ixc] - locs[0]) / cs[1]
+    tCross = (xShifts[1][ixc1] - locs[0]) / cs[1]
 #     tCrossR = (xShifts[1][ixcR] - locs[0]) / cs[1]
 #     tCrossL = (xShifts[1][ixcL] - locs[0]) / cs[1]
     
     
-    xShift[ixc] = x_0[ixc] + (cs[0] * tCross) - (cs[1] * (t + tCross))
+    xShift[ixc1] = x_0[ixc1] + (cs[0] * tCross) - (cs[1] * (t + tCross))
+#     xShift[ixc0] = ((((cs[1] * t) - 1) / (cs[0] * t)) * x_0[ixc0]) + 1 - (cs[1] * t)
+#     xShift[ixc0] = ((cs[1] * x_0[ixc0]) / cs[0]) - (cs[1] * t)
+
 #     xShiftR[ixcR] = x_0[ixcR] + (cs[0] * tCrossR) - (cs[1] * (t + tCrossR))
 #     xShiftL[ixcL] = x_0[ixcL] + (cs[0] * tCrossL) - (cs[1] * (t + tCrossL))
     
@@ -307,5 +322,10 @@ def ShiftX(omega, physics, t):
     
 #     xShiftR = xShiftR[1:]
 #     xShiftL = xShiftL[:-1]
+    print(ixc1)
+    if (xShift[0] < 0):
+        print('You shifted by ' + str(xShift[-1] - xShift[0]) +'.')
+        xShift[ixc0] = xShift[ixc0] - xShift[0] + xShift[-1]
+        
     
     return xShift#, xShiftL, xShiftR
