@@ -53,6 +53,8 @@ np.set_printoptions( linewidth = 10000, threshold = 100000)
 
 def Gauss(omega, physics, sigma, mu, BooleAve = False, deriv = False, cellAve = True, t = 0):
     xNode = omega.xNode
+    xCell = omega.xCell
+    locs = physics.locs
     
     # There is no exact calculation for the calculation of the cell-averaged derivative of a Gaussian; therefore,
     # Boole's Rule approximate average must be taken.
@@ -72,14 +74,33 @@ def Gauss(omega, physics, sigma, mu, BooleAve = False, deriv = False, cellAve = 
                 hMat = OT.StepMatrix(omega)
             else:
                 x = ShiftX(omega, physics, t)
-            xL = x[:-1]
-            xR = x[1:]
+                print('')
+                print('COPY THIS ONE!!!')
+            xL = x[:-1] + 0
+            xR = x[1:] + 0
             hDiag = xR - xL
+            
+            print(xR)
+            print(xL)
+            zeroIndex = np.where(xR == 0)[0]
+            for i in range(len(zeroIndex)):
+                if (xCell[i] > locs[i]):
+                    hDiag[zeroIndex] = hDiag[zeroIndex + 1]
+                else:
+                    hDiag[zeroIndex] = hDiag[zeroIndex - 1]
+            xR[zeroIndex] = xL[zeroIndex] + hDiag[zeroIndex] # THIS MAY BE KINDA JANK
+            print(xR)
+            print(xL)
+            print('hDiag:')
+            print(hDiag)
+            
             hMat = LA.inv(np.diag(hDiag))
+            
             const = sigma * np.sqrt(np.pi / 2.)
             Erf = lambda x: sp.special.erf((x - mu) / (sigma * np.sqrt(2)))
             # (Divide by xR - xL)
-            
+            print(np.round(const * (Erf(xR) - Erf(xL)), 12))
+            print('')
             gauss = const * (hMat @ (Erf(xR) - Erf(xL)))
         else:
             x = BoolesX(omega, physics, t)
@@ -267,6 +288,7 @@ def ShiftX(omega, physics, t):
     
 
     for i in range(shiftNum):
+        print(i, ': shift by ', (cs[i] * t))
         xShifts[i] = x_0 - (cs[i] * t)
 
     ixc0 = np.where(x_0 < cs[0] * t)[0]
@@ -323,9 +345,17 @@ def ShiftX(omega, physics, t):
 #     xShiftR = xShiftR[1:]
 #     xShiftL = xShiftL[:-1]
     print(ixc1)
+    
+#     while (xShift[-1] < 0):
+
+#         xShift = xShift + 1
     if (xShift[0] < 0):
-        print('You shifted by ' + str(xShift[-1] - xShift[0]) +'.')
-        xShift[ixc0] = xShift[ixc0] - xShift[0] + xShift[-1]
-        
+
+        addOn = xShift[-1] - xShift[0]
+        print('You shifted by ' + str(addOn) +'.')
+        xShift[ixc0] = xShift[ixc0] + addOn
+        xShift[xShift < 0] = xShift[xShift < 0] + addOn
+    print('HERE:', xShift[-1])
+    print(xShift)
     
     return xShift#, xShiftL, xShiftR
