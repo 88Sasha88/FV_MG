@@ -272,7 +272,7 @@ def GaussParams(x_0 = 0., x_1 = 1., errOrd = 14):
 # xShift                  array                   Vector of appropritately shifted x values
 # ----------------------------------------------------------------------------------------------------------------
 
-def ShiftX(omega, physics, t):
+def ShiftX(omega, physics, t_in):
     # SWITCH XSHIFT TO CELL-CENTERED!!!
     degFreed = omega.degFreed
     x_0 = omega.xNode
@@ -287,6 +287,8 @@ def ShiftX(omega, physics, t):
     xShifts = [[] for i in cs]
     
 
+    t_per = (((1. / cs[0]) - (1. / cs[1])) * locs[0]) + (1. / cs[1])
+    t = t_in % t_per
     for i in range(shiftNum):
         print(i, ': shift by ', (cs[i] * t))
         xShifts[i] = x_0 - (cs[i] * t)
@@ -346,16 +348,15 @@ def ShiftX(omega, physics, t):
 #     xShiftL = xShiftL[:-1]
     print(ixc1)
     
-#     while (xShift[-1] < 0):
-
-#         xShift = xShift + 1
-    if (xShift[0] < 0):
+    while (xShift[0] < 0):
 
         addOn = xShift[-1] - xShift[0]
+        print(xShift[xShift < 0])
         print('You shifted by ' + str(addOn) +'.')
+        
         xShift[ixc0] = xShift[ixc0] + addOn
         xShift[xShift < 0] = xShift[xShift < 0] + addOn
-    print('HERE:', xShift[-1])
+    print('HERE:')
     print(xShift)
     
     return xShift#, xShiftL, xShiftR
