@@ -74,14 +74,10 @@ def Gauss(omega, physics, sigma, mu, BooleAve = False, deriv = False, cellAve = 
                 hMat = OT.StepMatrix(omega)
             else:
                 x = ShiftX(omega, physics, t)
-                print('')
-                print('COPY THIS ONE!!!')
             xL = x[:-1] + 0
             xR = x[1:] + 0
             hDiag = xR - xL
             
-            print(xR)
-            print(xL)
             zeroIndex = np.where(xR == 0)[0]
             for i in range(len(zeroIndex)):
                 if (xCell[i] > locs[i]):
@@ -89,18 +85,12 @@ def Gauss(omega, physics, sigma, mu, BooleAve = False, deriv = False, cellAve = 
                 else:
                     hDiag[zeroIndex] = hDiag[zeroIndex - 1]
             xR[zeroIndex] = xL[zeroIndex] + hDiag[zeroIndex] # THIS MAY BE KINDA JANK
-            print(xR)
-            print(xL)
-            print('hDiag:')
-            print(hDiag)
             
             hMat = LA.inv(np.diag(hDiag))
             
             const = sigma * np.sqrt(np.pi / 2.)
             Erf = lambda x: sp.special.erf((x - mu) / (sigma * np.sqrt(2)))
             # (Divide by xR - xL)
-            print(np.round(const * (Erf(xR) - Erf(xL)), 12))
-            print('')
             gauss = const * (hMat @ (Erf(xR) - Erf(xL)))
         else:
             x = BoolesX(omega, physics, t)
@@ -272,7 +262,7 @@ def GaussParams(x_0 = 0., x_1 = 1., errOrd = 14):
 # xShift                  array                   Vector of appropritately shifted x values
 # ----------------------------------------------------------------------------------------------------------------
 
-def ShiftX(omega, physics, t_in):
+def ShiftX1(omega, physics, t_in):
     # SWITCH XSHIFT TO CELL-CENTERED!!!
     degFreed = omega.degFreed
     x_0 = omega.xNode
@@ -293,22 +283,28 @@ def ShiftX(omega, physics, t_in):
         print(i, ': shift by ', (cs[i] * t))
         xShifts[i] = x_0 - (cs[i] * t)
 
-    ixc0 = np.where(x_0 < cs[0] * t)[0]
-    ix1 = np.where(x_0 > locs[0])[0]
-    ix2 = np.where(xShifts[1] < locs[0])[0]
+    ix0 = np.where(xShifts[0] >= 0.)[0]
+    ix1 = np.where(x_0 <= locs[0])[0]
+    ix2 = np.where(xShifts[1] >= locs[0])[0]
+    ix3 = np.where(x_0 <= 1.)[0]
+    
     
 #     print(ix0)
     print(ix1)
     print(ix2)
+    print(xShifts[1])
+    print(x_0)
     
-    #ixc0 = list(set(ix0).intersection(ix1))
-    ixc1 = list(set(ix1).intersection(ix2))
+    ixc0 = list(sorted(set(ix0).intersection(ix1)))
+    ixc1 = list(sorted(set(ix2).intersection(ix3)))
     
     print('')
+    print('ixc0:')
     print(ixc0)
+    print('ixc1:')
     print(ixc1)
-    print(max(ixc1))
-    print(max(ixc0))
+#     print(max(ixc1))
+#     print(min(ixc0))
 #     ixcR = [i + 1 for i in ixc]
 #     ixcL = [i - 1 for i in ixc]
     
@@ -317,9 +313,9 @@ def ShiftX(omega, physics, t_in):
 #     print(ixcR)
 #     print(ixcL)
 #     print('')
-    
-    xShift[:min(ixc1)] = xShifts[0][:min(ixc1)]
-    xShift[max(ixc1):] = xShifts[1][max(ixc1):]
+
+    xShift[ixc0] = xShifts[0][ixc0]
+    xShift[ixc1] = xShifts[1][ixc1]
     
 #     xShiftR[:min(ixcR)] = xShifts[0][:min(ixcR)]
 #     xShiftR[max(ixcR):] = xShifts[1][max(ixcR):]
@@ -332,7 +328,14 @@ def ShiftX(omega, physics, t_in):
 #     tCrossL = (xShifts[1][ixcL] - locs[0]) / cs[1]
     
     
-    xShift[ixc1] = x_0[ixc1] + (cs[0] * tCross) - (cs[1] * (t + tCross))
+#     xShift[ixc1] = x_0[ixc1] + (cs[0] * tCross) - (cs[1] * (t + tCross))
+    xShift[:min(ixc0)] = ((cs[1] / cs[0]) * xShifts[0][:min(ixc0)]) + 1.
+    if (ixc1 == []):
+        val = degFreed + 1
+    else:
+        val = max(ixc1)
+    xShift[max(ixc0):val] = ((cs[0] / cs[1]) * (xShifts[1][max(ixc0):val] - locs[0])) + locs[0]
+    
 #     xShift[ixc0] = ((((cs[1] * t) - 1) / (cs[0] * t)) * x_0[ixc0]) + 1 - (cs[1] * t)
 #     xShift[ixc0] = ((cs[1] * x_0[ixc0]) / cs[0]) - (cs[1] * t)
 
@@ -348,15 +351,74 @@ def ShiftX(omega, physics, t_in):
 #     xShiftL = xShiftL[:-1]
     print(ixc1)
     
-    while (xShift[0] < 0):
+#     while (xShift[0] < 0):
 
-        addOn = xShift[-1] - xShift[0]
-        print(xShift[xShift < 0])
-        print('You shifted by ' + str(addOn) +'.')
+#         addOn = xShift[-1] - xShift[0]
+# #         print(xShift[xShift < 0])
+#         print('You shifted by ' + str(addOn) +'.')
         
-        xShift[ixc0] = xShift[ixc0] + addOn
-        xShift[xShift < 0] = xShift[xShift < 0] + addOn
+# #         xShift[ixc0] = xShift[ixc0] + addOn
+#         xShift[xShift < 0] = xShift[xShift < 0] + addOn
     print('HERE:')
     print(xShift)
+    
+    return xShift#, xShiftL, xShiftR
+
+def ShiftX(omega, physics, t):
+    # SWITCH XSHIFT TO CELL-CENTERED!!!
+    degFreed = omega.degFreed
+    x_0 = omega.xNode
+    cs = physics.cs
+    locs = physics.locs
+    
+    shiftNum = len(cs)
+    xShift = np.zeros(degFreed + 1, float)
+#     xShiftR = np.zeros(degFreed + 1, float)
+#     xShiftL = np.zeros(degFreed + 1, float)
+    
+    xShifts = [[] for i in cs]
+    
+
+    for i in range(shiftNum):
+        xShifts[i] = x_0 - (cs[i] * t)
+
+    ixc1 = np.where(x_0 > locs[0])[0]
+    ixc2 = np.where(xShifts[1] <= locs[0])[0]
+    
+    ixc = list(set(ixc1).intersection(ixc2))
+#     ixcR = [i + 1 for i in ixc]
+#     ixcL = [i - 1 for i in ixc]
+    
+#     print('')
+#     print(ixc)
+#     print(ixcR)
+#     print(ixcL)
+#     print('')
+    
+    xShift[:min(ixc)] = xShifts[0][:min(ixc)]
+    xShift[max(ixc):] = xShifts[1][max(ixc):]
+    
+#     xShiftR[:min(ixcR)] = xShifts[0][:min(ixcR)]
+#     xShiftR[max(ixcR):] = xShifts[1][max(ixcR):]
+    
+#     xShiftL[:min(ixcL)] = xShifts[0][:min(ixcL)]
+#     xShiftL[max(ixcL):] = xShifts[1][max(ixcL):]
+
+    tCross = (xShifts[1][ixc] - locs[0]) / cs[1]
+#     tCrossR = (xShifts[1][ixcR] - locs[0]) / cs[1]
+#     tCrossL = (xShifts[1][ixcL] - locs[0]) / cs[1]
+    
+    
+    xShift[ixc] = x_0[ixc] + (cs[0] * tCross) - (cs[1] * (t + tCross))
+#     xShiftR[ixcR] = x_0[ixcR] + (cs[0] * tCrossR) - (cs[1] * (t + tCrossR))
+#     xShiftL[ixcL] = x_0[ixcL] + (cs[0] * tCrossL) - (cs[1] * (t + tCrossL))
+    
+#     print(xShift)
+#     print(xShiftR)
+#     print(xShiftL)
+#     print('')
+    
+#     xShiftR = xShiftR[1:]
+#     xShiftL = xShiftL[:-1]
     
     return xShift#, xShiftL, xShiftR

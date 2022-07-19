@@ -264,7 +264,8 @@ def PlotWaves(omega, waves = [], waveNode = [], nullspace = [], waveTrans = [], 
 def PlotWave(omega, numPoints, X, rescale, waveCell = [], fX = [], title = '', labels = [], waveTrans = [], sym = True, yGrid = False):
     errorLoc = 'ERROR:\nPlotTools:\nPlotWave:\n'
     errorMess = ''
-    if (fX is not []):
+    if (fX != []):
+        print('fX is not []')
         yMin, yMax, tickHeight = GetYBound(fX, sym)
         numGraphs = np.ndim(fX)
         if (waveCell is not []):
@@ -273,14 +274,15 @@ def PlotWave(omega, numPoints, X, rescale, waveCell = [], fX = [], title = '', l
                     errorMess = 'Dimensions of waveCell and fX do not match!'
             else:
                 if ((numGraphs == 2) and (np.shape(fX)[1] == 1)):
+                    print((numGraphs == 2) and (np.shape(fX)[1] == 1))
                     numGraphs = 1
                     fX = fX[:, 0]
                     waveCell = waveCell[:, 0]
-                    print('')
-                    print(fX)
-                    print('')
-                    print(waveCell)
-                    print('')
+#                     print('')
+#                     print(fX)
+#                     print('')
+#                     print(waveCell)
+#                     print('')
                         
                 else:
                     numGraphs = np.shape(waveCell[0, :])[0]
