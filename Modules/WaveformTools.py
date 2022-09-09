@@ -285,8 +285,9 @@ def ShiftX1(omega, physics, t_in):
 
     ix0 = np.where(xShifts[0] >= 0.)[0]
     ix1 = np.where(x_0 <= locs[0])[0]
-    ix2 = np.where(xShifts[1] >= locs[0])[0]
-    ix3 = np.where(x_0 <= 1.)[0]
+    ix2 = np.where(x_0 >= locs[0])[0]
+    ix3 = np.where(xShifts[1] <= locs[0])[0]
+    #ix3 = np.where(x_0 <= 1.)[0]
     
     
 #     print(ix0)
@@ -297,6 +298,8 @@ def ShiftX1(omega, physics, t_in):
     
     ixc0 = list(sorted(set(ix0).intersection(ix1)))
     ixc1 = list(sorted(set(ix2).intersection(ix3)))
+    
+#     ixc1 = list(sorted(set(ix2).intersection(ix3)))
     
     print('')
     print('ixc0:')
@@ -313,9 +316,14 @@ def ShiftX1(omega, physics, t_in):
 #     print(ixcR)
 #     print(ixcL)
 #     print('')
-
+    
+    xShift[:min(ixc0)] = ((cs[1] * xShifts[0][:min(ixc0)]) + cs[0]) / cs[0]
     xShift[ixc0] = xShifts[0][ixc0]
-    xShift[ixc1] = xShifts[1][ixc1]
+    if (cs[1] * t <= 1. - locs[0]): # MAKE SURE YOU CHANGE THIS TO ACCOUNT FOR FASTER SPEED IN MEDIUM 1!!!
+        xShift[ixc1] = ((cs[0] * xShifts[1][ixc1]) + ((cs[1] - cs[0]) * locs[0])) / cs[1]
+        xShift[max(ixc1):] = xShifts[1][max(ixc1):]
+    else:
+        xShift[min(ixc1):] = xShifts[0][min(ixc1):] + ((cs[0]/ cs[1]) * (1. - locs[0])) + locs[0]
     
 #     xShiftR[:min(ixcR)] = xShifts[0][:min(ixcR)]
 #     xShiftR[max(ixcR):] = xShifts[1][max(ixcR):]
@@ -323,18 +331,18 @@ def ShiftX1(omega, physics, t_in):
 #     xShiftL[:min(ixcL)] = xShifts[0][:min(ixcL)]
 #     xShiftL[max(ixcL):] = xShifts[1][max(ixcL):]
 
-    tCross = (xShifts[1][ixc1] - locs[0]) / cs[1]
+#     tCross = (xShifts[1][ixc1] - locs[0]) / cs[1]
 #     tCrossR = (xShifts[1][ixcR] - locs[0]) / cs[1]
 #     tCrossL = (xShifts[1][ixcL] - locs[0]) / cs[1]
     
     
 #     xShift[ixc1] = x_0[ixc1] + (cs[0] * tCross) - (cs[1] * (t + tCross))
-    xShift[:min(ixc0)] = ((cs[1] / cs[0]) * xShifts[0][:min(ixc0)]) + 1.
-    if (ixc1 == []):
-        val = degFreed + 1
-    else:
-        val = max(ixc1)
-    xShift[max(ixc0):val] = ((cs[0] / cs[1]) * (xShifts[1][max(ixc0):val] - locs[0])) + locs[0]
+#     xShift[:min(ixc0)] = ((cs[1] / cs[0]) * xShifts[0][:min(ixc0)]) + 1.
+#     if (ixc1 == []):
+#         val = degFreed + 1
+#     else:
+#         val = max(ixc1)
+#     xShift[max(ixc0):val] = ((cs[0] / cs[1]) * (xShifts[1][max(ixc0):val] - locs[0])) + locs[0]
     
 #     xShift[ixc0] = ((((cs[1] * t) - 1) / (cs[0] * t)) * x_0[ixc0]) + 1 - (cs[1] * t)
 #     xShift[ixc0] = ((cs[1] * x_0[ixc0]) / cs[0]) - (cs[1] * t)
