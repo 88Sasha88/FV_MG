@@ -52,6 +52,8 @@ np.set_printoptions( linewidth = 10000, threshold = 100000)
 # ----------------------------------------------------------------------------------------------------------------
 
 def Gauss(omega, physics, sigma, mu, BooleAve = False, deriv = False, cellAve = True, t = 0):
+    
+    # Unpack requisite attributes from omega and physics.
     xNode = omega.xNode
     xCell = omega.xCell
     locs = physics.locs
@@ -60,15 +62,19 @@ def Gauss(omega, physics, sigma, mu, BooleAve = False, deriv = False, cellAve = 
     # Boole's Rule approximate average must be taken.
 #     if (deriv):
 #         BooleAve = True
-    
+    # If I use Boole's rule to calculate cell-averaged values of my gaussian or gaussian derivative.
     if (BooleAve):
+        # If we are doing a node-centered calculation, then the Boole's rule argument won't matter.
         if (cellAve):
             if (not deriv):
                 print('This is not the most accurate option for a cell-averaged Gaussian, and you shouldn\'t use it!')
             x = BoolesX(omega, physics, t)
-            gauss = np.exp(-((x - mu)**2) / (2. * (sigma**2)))
+        else:
+            x = xNode # Node-centered BoolesAve calculations aren't set up to handle a shifted x.
+        gauss = np.exp(-((x - mu)**2) / (2. * (sigma**2)))
     else:
         if (cellAve):
+            # I think you might be able to get rid of the next four lines.
             if (t == 0):
                 x = xNode
                 hMat = OT.StepMatrix(omega)
