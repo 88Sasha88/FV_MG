@@ -50,119 +50,62 @@ np.set_printoptions( linewidth = 10000, threshold = 100000)
 #
 # gauss                   np.ndarray              Gaussian waveform values on Grid omega in space-space
 # ----------------------------------------------------------------------------------------------------------------
-def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve = False, deriv = False):
-    xCell = omega.xCell
-    cs = physics.cs
-    x_s = physics.locs[0]
-    
-    IRT = IRT.upper()
-    I = IRT.find('I') + 1
-    R = IRT.find('R') + 1
-    T = IRT.find('T') + 1
-    
-    index = np.where(xCell >= x_s)[0][0]
-    
-    waveFuncIT = 0
-    waveFuncR = 0
-    if (I or T):
-        waveFuncIT = Advect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv)
-        # Scale the T part.
-        scale = (2 * cs[0]) / (cs[0] + cs[1])
-        waveFuncIT[index:] = scale * waveFuncIT[index:]
-        if (not I):
-            # Zero out the I part.
-            waveFuncIT[:index] = 0
-        else: # Is I, might be T.
-            if (not T):
-                # Zero out the T part.
-                waveFuncIT[index:] = 0
-                
-    if (R):
-        waveFuncR = Reflect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv)
-        # Scale R part.
-        scale = (cs[0] - cs[1]) / (cs[0] + cs[1])
-        waveFuncR = scale * waveFuncR
-    waveFunc = waveFuncIT + waveFuncR
-    return waveFunc
 
-def Reflect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deriv = False):
-    xCell = omega.xCell
-    x_s = physics.locs[0]
+def Gauss(omega, physics, sigma, mu, BooleAve = False, deriv = False, cellAve = True, t = 0):
     
-    index = np.where(xCell >= x_s)[0][0]
-    
-    if (BooleAve and cellAve):
-        x = BoolesX(omega, physics, t, adv = False) # REFLECTION HERE!!!
-        # I set cellAve to False because that changes the function for the Gaussian, and I want the
-        # Gaussian to be calculated directly if I'm using Boole's Rule.
-        waveFuncPre = func(omega, x, *args, deriv = deriv, cellAve = False)
-        waveFunc = BoolesAve(waveFuncPre)
-    else:
-        x = ShiftX(omega, physics, t, adv = False) # REFLECTION HERE!!!
-        waveFunc = func(omega, x, *args, deriv = deriv, cellAve = cellAve)
-    waveFunc[index:] = 0
-    return waveFunc
-
-def Advect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deriv = False):
-    if (BooleAve and cellAve):
-        print('We\'re doing BoolesAve!')
-        x = BoolesX(omega, physics, t)
-        # I set cellAve to False because that changes the function for the Gaussian, and I want the
-        # Gaussian to be calculated directly if I'm using Boole's Rule.
-        waveFuncPre = func(omega, x, *args, deriv = deriv, cellAve = False)
-        waveFunc = BoolesAve(waveFuncPre)
-    else:
-        x = ShiftX(omega, physics, t)
-        waveFunc = func(omega, x, *args, deriv = deriv, cellAve = cellAve)
-    return waveFunc
-
-def InitCond(omega, physics, func, args, cellAve = True, BooleAve = False, deriv = False):
-    xNode = omega.xNode
-    if (BooleAve and cellAve):
-        print('We\'re doing BoolesAve!')
-        x = BoolesX(omega, physics, t = 0)
-        # I set cellAve to False because that changes the function for the Gaussian, and I want the
-        # Gaussian to be calculated directly if I'm using Boole's Rule.
-        waveFuncPre = func(omega, x, *args, deriv = deriv, cellAve = False)
-        waveFunc = BoolesAve(waveFuncPre)
-    else:
-        x = xNode
-        waveFunc = func(omega, x, *args, deriv = deriv, cellAve = cellAve)
-    return waveFunc
-
-def Gauss(omega, x, sigma, mu, deriv, cellAve):
     # Unpack requisite attributes from omega and physics.
+    xNode = omega.xNode
     xCell = omega.xCell
+    locs = physics.locs
     
     # There is no exact calculation for the calculation of the cell-averaged derivative of a Gaussian; therefore,
     # Boole's Rule approximate average must be taken.
 #     if (deriv):
 #         BooleAve = True
     # If I use Boole's rule to calculate cell-averaged values of my gaussian or gaussian derivative.
-    xL = x[:-1] + 0
-    xR = x[1:] + 0
-    hDiag = xR - xL
-#     zeroIndex = np.where(xR == 0)[0]
-#     for i in range(len(zeroIndex)):
-#         if (xCell[i] > locs[i]):
-#             hDiag[zeroIndex] = hDiag[zeroIndex + 1]
-#         else:
-#             hDiag[zeroIndex] = hDiag[zeroIndex - 1]
-#     xR[zeroIndex] = xL[zeroIndex] + hDiag[zeroIndex] # THIS MAY BE KINDA JANK
-    hMat = LA.inv(np.diag(hDiag))
-    
-    if (cellAve and (not deriv)):
-        const = sigma * np.sqrt(np.pi / 2.)
-        Erf = lambda x: sp.special.erf((x - mu) / (sigma * np.sqrt(2)))
-        # (Divide by xR - xL)
-        gauss = const * (hMat @ (Erf(xR) - Erf(xL)))
-    else:
+    if (BooleAve):
+        # If we are doing a node-centered calculation, then the Boole's rule argument won't matter.
+        if (cellAve):
+            if (not deriv):
+                print('This is not the most accurate option for a cell-averaged Gaussian, and you shouldn\'t use it!')
+            x = BoolesX(omega, physics, t)
+        else:
+            x = xNode # Node-centered BoolesAve calculations aren't set up to handle a shifted x.
         gauss = np.exp(-((x - mu)**2) / (2. * (sigma**2)))
-        if (deriv):
-            if (cellAve):
-                gauss = 2 * hMat @ (gauss(xR) - gauss(xL))
+    else:
+        if (cellAve):
+            # I think you might be able to get rid of the next four lines.
+            if (t == 0):
+                x = xNode
+                hMat = OT.StepMatrix(omega)
             else:
-                gauss = ((mu - x) * gauss) / (sigma ** 2)
+                x = ShiftX(omega, physics, t)
+            xL = x[:-1] + 0
+            xR = x[1:] + 0
+            hDiag = xR - xL
+            
+            zeroIndex = np.where(xR == 0)[0]
+            for i in range(len(zeroIndex)):
+                if (xCell[i] > locs[i]):
+                    hDiag[zeroIndex] = hDiag[zeroIndex + 1]
+                else:
+                    hDiag[zeroIndex] = hDiag[zeroIndex - 1]
+            xR[zeroIndex] = xL[zeroIndex] + hDiag[zeroIndex] # THIS MAY BE KINDA JANK
+            
+            hMat = LA.inv(np.diag(hDiag))
+            
+            const = sigma * np.sqrt(np.pi / 2.)
+            Erf = lambda x: sp.special.erf((x - mu) / (sigma * np.sqrt(2)))
+            # (Divide by xR - xL)
+            gauss = const * (hMat @ (Erf(xR) - Erf(xL)))
+        else:
+            x = BoolesX(omega, physics, t)
+            gauss = np.exp(-((x - mu)**2) / (2. * (sigma**2)))
+
+    if (deriv):
+        gauss = ((mu - x) * gauss) / (sigma ** 2)
+    if (BooleAve):
+        gauss = BoolesAve(gauss)
     return gauss
 
 # ----------------------------------------------------------------------------------------------------------------
@@ -213,7 +156,7 @@ def BoolesX(omega, physics, t):
 # ----------------------------------------------------------------------------------------------------------------
 
 def BoolesAve(f):
-    errorLoc = 'ERROR:\nWaveformTools:\nBoolesAve:\n'
+    errorLoc = 'ERROR:\nTestTools:\nBoolesAve:\n'
     if (len(f) % 4 != 1):
         sys.exit(errorLoc + 'f must be one more than integer multiple of four in length!')
     f_ave = (1. / 90.) * ((7 * f[:-1:4]) + (32 * f[1::4]) + (12 * f[2::4]) + (32 * f[3::4]) + (7 * f[4::4]))
@@ -435,9 +378,7 @@ def ShiftX1(omega, physics, t_in):
     
     return xShift#, xShiftL, xShiftR
 
-# Something's wrong when t=0.
-
-def ShiftX(omega, physics, t, adv = True):
+def ShiftX(omega, physics, t):
     # SWITCH XSHIFT TO CELL-CENTERED!!!
     degFreed = omega.degFreed
     x_0 = omega.xNode
@@ -467,34 +408,31 @@ def ShiftX(omega, physics, t, adv = True):
 #     print(ixcR)
 #     print(ixcL)
 #     print('')
+    
+    xShift[:min(ixc)] = xShifts[0][:min(ixc)]
+    xShift[max(ixc):] = xShifts[1][max(ixc):]
+    
+#     xShiftR[:min(ixcR)] = xShifts[0][:min(ixcR)]
+#     xShiftR[max(ixcR):] = xShifts[1][max(ixcR):]
+    
+#     xShiftL[:min(ixcL)] = xShifts[0][:min(ixcL)]
+#     xShiftL[max(ixcL):] = xShifts[1][max(ixcL):]
 
-    if (adv):
-        xShift[:min(ixc)] = xShifts[0][:min(ixc)]
-        xShift[max(ixc):] = xShifts[1][max(ixc):]
-
-    #     xShiftR[:min(ixcR)] = xShifts[0][:min(ixcR)]
-    #     xShiftR[max(ixcR):] = xShifts[1][max(ixcR):]
-
-    #     xShiftL[:min(ixcL)] = xShifts[0][:min(ixcL)]
-    #     xShiftL[max(ixcL):] = xShifts[1][max(ixcL):]
-
-        tCross = (xShifts[1][ixc] - locs[0]) / cs[1]
-    #     tCrossR = (xShifts[1][ixcR] - locs[0]) / cs[1]
-    #     tCrossL = (xShifts[1][ixcL] - locs[0]) / cs[1]
-
-
-        xShift[ixc] = x_0[ixc] + (cs[0] * tCross) - (cs[1] * (t + tCross))
-    #     xShiftR[ixcR] = x_0[ixcR] + (cs[0] * tCrossR) - (cs[1] * (t + tCrossR))
-    #     xShiftL[ixcL] = x_0[ixcL] + (cs[0] * tCrossL) - (cs[1] * (t + tCrossL))
-
-    #     print(xShift)
-    #     print(xShiftR)
-    #     print(xShiftL)
-    #     print('')
-
-    #     xShiftR = xShiftR[1:]
-    #     xShiftL = xShiftL[:-1]
-    else:
-        xShift = (2 * locs[0]) - (cs[0] * t) - x_0
+    tCross = (xShifts[1][ixc] - locs[0]) / cs[1]
+#     tCrossR = (xShifts[1][ixcR] - locs[0]) / cs[1]
+#     tCrossL = (xShifts[1][ixcL] - locs[0]) / cs[1]
+    
+    
+    xShift[ixc] = x_0[ixc] + (cs[0] * tCross) - (cs[1] * (t + tCross))
+#     xShiftR[ixcR] = x_0[ixcR] + (cs[0] * tCrossR) - (cs[1] * (t + tCrossR))
+#     xShiftL[ixcL] = x_0[ixcL] + (cs[0] * tCrossL) - (cs[1] * (t + tCrossL))
+    
+#     print(xShift)
+#     print(xShiftR)
+#     print(xShiftL)
+#     print('')
+    
+#     xShiftR = xShiftR[1:]
+#     xShiftL = xShiftL[:-1]
     
     return xShift#, xShiftL, xShiftR
