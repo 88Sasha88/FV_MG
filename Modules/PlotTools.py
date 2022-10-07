@@ -72,10 +72,12 @@ def DrawLine(xCenter, yCenter, tickHeight, center = True):
 # In[4]:
 
 
-def TickPlot(omega, ax, tickHeight, yGrid, label = False, u = []):
+def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = []):
     ax = plt.axes(frameon = False)
     if (yGrid):
         ax.grid(True, axis = 'y', zorder = 0)
+    if (xGrid):
+        ax.grid(True, axis = 'x', zorder = 0)
     xAxis = omega.xNode
     yAxis = omega.y
     xCell = omega.xCell
@@ -105,11 +107,9 @@ def TickPlot(omega, ax, tickHeight, yGrid, label = False, u = []):
                 istring = prestring + str(i)
                 shiftExtra = 2 * shiftX
                 if (i == nh - 1):
-                    print('hi')
                     istring = prestring + r'$n - 1$'
                     shiftExtra = 4 * shiftX
                 if (i == nh):
-                    print('ho')
                     istring = prestring + r'$n$'
                     shiftExtra = shiftX
                 plt.text(xi - shiftX - shiftExtra, yi - (1.5 * shiftY), istring, fontsize = 12)
@@ -137,7 +137,7 @@ def TickPlot(omega, ax, tickHeight, yGrid, label = False, u = []):
         i = i + 1
     if (u == []):
         ax.plot(xAxis, yAxis, color = 'k', zorder = 0)
-    plt.tick_params(axis = 'x', which = 'both', bottom = False, top = False, labelbottom = False)
+    plt.tick_params(axis = 'x', which = 'both', bottom = False, top = False, labelbottom = xGrid)
     plt.tick_params(axis = 'y', which = 'both', left = False, right = False, labelleft = yGrid)
     return
 
@@ -203,7 +203,7 @@ def UsefulPlotVals():
 # In[7]:
 
 
-def PlotWaves(omega, waves = [], waveNode = [], nullspace = [], waveTrans = [], ct = 0, save = False, saveName = '', rescale = 1, dpi = 600):
+def PlotWaves(omega, physics, waves = [], waveNode = [], nullspace = [], waveTrans = [], ct = 0, save = False, saveName = '', rescale = 1, dpi = 600):
     nh = omega.nh_max
     x = omega.xNode
     n = omega.degFreed
@@ -244,7 +244,7 @@ def PlotWaves(omega, waves = [], waveNode = [], nullspace = [], waveTrans = [], 
                 waveTransfer = waveTrans[:, k]
         else:
             waveTransfer = []
-        fig = PlotWave(omega, numPoints, X, rescale, waveCell[:, k], waveCont[:, k], waveTrans = waveTransfer, yGrid = False)
+        fig = PlotWave(omega, physics, numPoints, X, rescale, waveCell[:, k], waveCont[:, k], waveTrans = waveTransfer, xGrid = False, yGrid = False)
         if (waveNode != []):
             plt.scatter(x[:], waveNodes[:, k], color = ColorDefault(2), s = 10, zorder = 4)
         plt.xlim([-0.1, 1.25])
@@ -261,11 +261,10 @@ def PlotWaves(omega, waves = [], waveNode = [], nullspace = [], waveTrans = [], 
 # In[8]:
 
 
-def PlotWave(omega, numPoints, X, rescale, waveCell = [], fX = [], title = '', labels = [], waveTrans = [], sym = True, yGrid = False):
+def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], title = '', labels = [], waveTrans = [], sym = True, xGrid = False, yGrid = False):
     errorLoc = 'ERROR:\nPlotTools:\nPlotWave:\n'
     errorMess = ''
     if (fX != []):
-        print('fX is not []')
         yMin, yMax, tickHeight = GetYBound(fX, sym)
         numGraphs = np.ndim(fX)
         if (waveCell is not []):
@@ -313,7 +312,7 @@ def PlotWave(omega, numPoints, X, rescale, waveCell = [], fX = [], title = '', l
     fig, ax = plt.subplots(figsize = size)
     if (waveTrans != []):
         PiecePlot(omega, numPoints, X, waveTrans, color = 3)
-    TickPlot(omega, ax, tickHeight, yGrid)
+    TickPlot(omega, ax, tickHeight, xGrid, yGrid)
     if (numGraphs == 1):
         if (fX != []):
             plt.plot(X, fX, color = ColorDefault(0), zorder = 2, label = labelsOut[0])
@@ -342,6 +341,11 @@ def PlotWave(omega, numPoints, X, rescale, waveCell = [], fX = [], title = '', l
             print('Are you *sure* your labels are ordered correctly?')
     if (title != ''):
         plt.title(title, fontsize = 25)
+    locs = physics.locs
+    for loc in locs:
+        locx = loc * np.ones(2)
+        locy = np.linspace(yMin, yMax, num = 2)
+        plt.plot(locx, locy, color = 'k', zorder = 1)
     plt.ylim([yMin, yMax])
     return fig
 
@@ -351,7 +355,7 @@ def PlotWave(omega, numPoints, X, rescale, waveCell = [], fX = [], title = '', l
 # In[9]:
 
 
-def PlotMixedWave(omega, waves, FCoefs, title = '', labels = [], rescale = 1, plotCont = True, sym = False, save = False, saveName = '', dpi = 600, ct = 0, yGrid = False):
+def PlotMixedWave(omega, physics, waves, FCoefs, title = '', labels = [], rescale = 1, plotCont = True, sym = False, save = False, saveName = '', dpi = 600, ct = 0, xGrid = False, yGrid = False):
     errorLoc = 'ERROR:\nPlotTools:\nPlotMixedWave:\n'
     nh = omega.nh_max
     degFreed = omega.degFreed
@@ -392,7 +396,7 @@ def PlotMixedWave(omega, waves, FCoefs, title = '', labels = [], rescale = 1, pl
             fXCont = waveCont @ FCoef
         else:
             fXCont = []
-        fig = PlotWave(omega, numPoints, X, rescale, fXCell, fXCont, title = title, sym = sym, labels = labels, yGrid = yGrid)
+        fig = PlotWave(omega, physics, numPoints, X, rescale, fXCell, fXCont, title = title, sym = sym, labels = labels, xGrid = xGrid, yGrid = yGrid)
         plt.xlim([-0.1, 1.1])
         if (save):
             if (numPlots > 1):
@@ -528,7 +532,7 @@ def PlotGrid(omega, rescale = 1, save = False, saveName = '', dpi = 600):
     yMin, yMax, tickHeight = GetYBound(0, True)
     size, tickHeight = Resize(rescale, tickHeight)
     fig, ax = plt.subplots(figsize = size)
-    TickPlot(omega, ax, tickHeight, False, label = True)
+    TickPlot(omega, ax, tickHeight, False, False, label = True)
     plt.ylim([yMin, yMax])
     plt.show()
     if (save):

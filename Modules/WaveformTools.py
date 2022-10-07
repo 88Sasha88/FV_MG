@@ -139,8 +139,9 @@ def Gauss(omega, x, sigma, mu, deriv, cellAve):
 #     if (deriv):
 #         BooleAve = True
     # If I use Boole's rule to calculate cell-averaged values of my gaussian or gaussian derivative.
-    xL = x[:-1] + 0
-    xR = x[1:] + 0
+    print('x is', x)
+    xL = x[:-1]
+    xR = x[1:]
     hDiag = xR - xL
 #     zeroIndex = np.where(xR == 0)[0]
 #     for i in range(len(zeroIndex)):
@@ -454,47 +455,49 @@ def ShiftX(omega, physics, t, adv = True):
 
     for i in range(shiftNum):
         xShifts[i] = x_0 - (cs[i] * t)
+    if (locs == []):
+        xShift = xShifts[0]
+    else:
+        ixc1 = np.where(x_0 > locs[0])[0]
+        ixc2 = np.where(xShifts[1] <= locs[0])[0]
 
-    ixc1 = np.where(x_0 > locs[0])[0]
-    ixc2 = np.where(xShifts[1] <= locs[0])[0]
-    
-    ixc = list(set(ixc1).intersection(ixc2))
-#     ixcR = [i + 1 for i in ixc]
-#     ixcL = [i - 1 for i in ixc]
-    
-#     print('')
-#     print(ixc)
-#     print(ixcR)
-#     print(ixcL)
-#     print('')
+        ixc = list(set(ixc1).intersection(ixc2))
+    #     ixcR = [i + 1 for i in ixc]
+    #     ixcL = [i - 1 for i in ixc]
 
-    if (adv):
-        xShift[:min(ixc)] = xShifts[0][:min(ixc)]
-        xShift[max(ixc):] = xShifts[1][max(ixc):]
-
-    #     xShiftR[:min(ixcR)] = xShifts[0][:min(ixcR)]
-    #     xShiftR[max(ixcR):] = xShifts[1][max(ixcR):]
-
-    #     xShiftL[:min(ixcL)] = xShifts[0][:min(ixcL)]
-    #     xShiftL[max(ixcL):] = xShifts[1][max(ixcL):]
-
-        tCross = (xShifts[1][ixc] - locs[0]) / cs[1]
-    #     tCrossR = (xShifts[1][ixcR] - locs[0]) / cs[1]
-    #     tCrossL = (xShifts[1][ixcL] - locs[0]) / cs[1]
-
-
-        xShift[ixc] = x_0[ixc] + (cs[0] * tCross) - (cs[1] * (t + tCross))
-    #     xShiftR[ixcR] = x_0[ixcR] + (cs[0] * tCrossR) - (cs[1] * (t + tCrossR))
-    #     xShiftL[ixcL] = x_0[ixcL] + (cs[0] * tCrossL) - (cs[1] * (t + tCrossL))
-
-    #     print(xShift)
-    #     print(xShiftR)
-    #     print(xShiftL)
+    #     print('')
+    #     print(ixc)
+    #     print(ixcR)
+    #     print(ixcL)
     #     print('')
 
-    #     xShiftR = xShiftR[1:]
-    #     xShiftL = xShiftL[:-1]
-    else:
-        xShift = (2 * locs[0]) - (cs[0] * t) - x_0
+        if (adv):
+            xShift[:min(ixc)] = xShifts[0][:min(ixc)]
+            xShift[max(ixc):] = xShifts[1][max(ixc):]
+
+        #     xShiftR[:min(ixcR)] = xShifts[0][:min(ixcR)]
+        #     xShiftR[max(ixcR):] = xShifts[1][max(ixcR):]
+
+        #     xShiftL[:min(ixcL)] = xShifts[0][:min(ixcL)]
+        #     xShiftL[max(ixcL):] = xShifts[1][max(ixcL):]
+
+            tCross = (xShifts[1][ixc] - locs[0]) / cs[1]
+        #     tCrossR = (xShifts[1][ixcR] - locs[0]) / cs[1]
+        #     tCrossL = (xShifts[1][ixcL] - locs[0]) / cs[1]
+
+
+            xShift[ixc] = x_0[ixc] + (cs[0] * tCross) - (cs[1] * (t + tCross))
+        #     xShiftR[ixcR] = x_0[ixcR] + (cs[0] * tCrossR) - (cs[1] * (t + tCrossR))
+        #     xShiftL[ixcL] = x_0[ixcL] + (cs[0] * tCrossL) - (cs[1] * (t + tCrossL))
+
+        #     print(xShift)
+        #     print(xShiftR)
+        #     print(xShiftL)
+        #     print('')
+
+        #     xShiftR = xShiftR[1:]
+        #     xShiftL = xShiftL[:-1]
+        else:
+            xShift = (2 * locs[0]) - (cs[0] * t) - x_0
     
     return xShift#, xShiftL, xShiftR
