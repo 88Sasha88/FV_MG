@@ -231,13 +231,14 @@ def SolverAmpTheoretical(omega, RK, deriv, CFL):
     theta = (2 * np.pi * ks) / nh_max
     if (deriv == 'U'):
         print('Upwind', RK)
-        x = CFL * (1 - np.exp(-1j * theta))
+        x = CFL * (np.exp(1j * theta) - 1) # CFL * (1 - np.exp(-1j * theta))
     else:
         x = 0.5 * CFL * (np.exp(1j * theta) - np.exp(-1j * theta))
     coefs = np.arange(RK + 1)[::-1]
     coefs = sp.special.factorial(coefs)**-1
-    coefs[1::2] = -coefs[1::2]
+    # coefs[1::2] = -coefs[1::2]
     p = np.poly1d(coefs)
+    print(p)
     amps = p(x)
     return ks, amps
 

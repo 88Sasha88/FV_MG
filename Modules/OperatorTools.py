@@ -460,8 +460,11 @@ def SpaceDeriv(omega, order, diff):
 
 def Block(matrica, var = 1, diag = True):
     errorLoc = 'ERROR:\nOperatorTools:\nBlock:\n'
+    errorMess = ''
     if ((var < 1) or (type(var) != int)):
         errorMess = 'var must be integer value greater than 0!'
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
     if (type(matrica) == list):
         var = np.shape(matrica)[0]
         matricaList = matrica

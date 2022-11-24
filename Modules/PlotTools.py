@@ -72,7 +72,13 @@ def DrawLine(xCenter, yCenter, tickHeight, center = True):
 # In[4]:
 
 
-def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = []):
+def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsize = 10, linewidth = 1.5):
+#     if (enlarge):
+#         labelsize = 25
+#         linewidth = 4
+#     else:
+#         labelsize = 10
+#         linewidth = 1.5
     ax = plt.axes(frameon = False)
     if (yGrid):
         ax.grid(True, axis = 'y', zorder = 0)
@@ -99,7 +105,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = []):
         else:
             height = tickHeight / 2
         (xs, ys) = DrawLine(xi, yi, height)
-        ax.plot(xs, ys, color = 'k', zorder = 1)
+        ax.plot(xs, ys, color = 'k', zorder = 1, linewidth = linewidth)
         if (label):
             print(i)
             if ((i < 3) or (i > nh - 2)):
@@ -136,9 +142,9 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = []):
             plt.text(xCell[i + 1] - shiftX, yi - shiftY, midString, fontsize = 12)
         i = i + 1
     if (u == []):
-        ax.plot(xAxis, yAxis, color = 'k', zorder = 0)
-    plt.tick_params(axis = 'x', which = 'both', bottom = False, top = False, labelbottom = xGrid)
-    plt.tick_params(axis = 'y', which = 'both', left = False, right = False, labelleft = yGrid)
+        ax.plot(xAxis, yAxis, color = 'k', zorder = 0, linewidth = linewidth)
+    plt.tick_params(axis = 'x', which = 'both', bottom = False, top = False, labelbottom = xGrid, labelsize = labelsize)
+    plt.tick_params(axis = 'y', which = 'both', left = False, right = False, labelleft = yGrid, labelsize = labelsize)
     return
 
 
@@ -147,7 +153,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = []):
 # In[5]:
 
 
-def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-', tickHeight = 0):
+def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-', tickHeight = 0, linewidth = 1.5):
     errorLoc = 'ERROR:\nPlotTools:\nPiecePlot:\n'
     errorMess = BT.CheckSize(numPoints, X, nName = 'numPoints', matricaName = 'X')
     if (errorMess != ''):
@@ -155,6 +161,7 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
     x = omega.xNode
     xCell = omega.xCell
     n = len(x) - 1
+    
     if (tickHeight != 0):
         label = []
         n = 4
@@ -166,10 +173,10 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
         highIndex = np.where(X <= x[k + 1])[0][::-1][0] + 1
         cellVals[lowIndex:highIndex] = pieces[k] * cellVals[lowIndex:highIndex]
         if ((k == 0) and (label != [])):
-            plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = linestyle, zorder = 3, label = label)
+            plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = linestyle, zorder = 3, label = label, linewidth = linewidth)
         else:
             if ((k != 0) or (tickHeight == 0)):
-                plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = linestyle, zorder = 3)
+                plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = linestyle, zorder = 3, linewidth = linewidth)
             if ((k != 0) and (tickHeight != 0)):
                 if (k == 1):
                     topString = r'$\left<v\right>_{j - 1}$'
@@ -203,7 +210,7 @@ def UsefulPlotVals():
 # In[7]:
 
 
-def PlotWaves(omega, physics, waves = [], waveNode = [], nullspace = [], waveTrans = [], ct = 0, save = False, saveName = '', rescale = 1, dpi = 600):
+def PlotWaves(omega, physics, waves = [], waveNode = [], nullspace = [], waveTrans = [], ct = 0, save = False, saveName = '', rescale = 1, dpi = 600, enlarge = False):
     nh = omega.nh_max
     x = omega.xNode
     n = omega.degFreed
@@ -261,9 +268,19 @@ def PlotWaves(omega, physics, waves = [], waveNode = [], nullspace = [], waveTra
 # In[8]:
 
 
-def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], title = '', labels = [], waveTrans = [], sym = True, xGrid = False, yGrid = False):
+def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], title = '', labels = [], waveTrans = [], sym = True, xGrid = False, yGrid = False, enlarge = False):
     errorLoc = 'ERROR:\nPlotTools:\nPlotWave:\n'
     errorMess = ''
+    
+    if (enlarge):
+        linewidth = 4
+        fontsize = 35
+        labelsize = 25
+    else:
+        linewidth = 1.5
+        fontsize = 25
+        labelsize = 10
+    
     if (fX != []):
         yMin, yMax, tickHeight = GetYBound(fX, sym)
         numGraphs = np.ndim(fX)
@@ -311,16 +328,16 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
     size, tickHeight = Resize(rescale, tickHeight)
     fig, ax = plt.subplots(figsize = size)
     if (waveTrans != []):
-        PiecePlot(omega, numPoints, X, waveTrans, color = 3)
-    TickPlot(omega, ax, tickHeight, xGrid, yGrid)
+        PiecePlot(omega, numPoints, X, waveTrans, color = 3, linewidth = linewidth)
+    TickPlot(omega, ax, tickHeight, xGrid, yGrid, linewidth = linewidth, labelsize = labelsize)
     if (numGraphs == 1):
         if (fX != []):
-            plt.plot(X, fX, color = ColorDefault(0), zorder = 2, label = labelsOut[0])
+            plt.plot(X, fX, color = ColorDefault(0), zorder = 2, label = labelsOut[0], linewidth = linewidth)
             pieceLabel = []
         else:
             pieceLabel = labelsOut[0]
         if (waveCell != []):
-            PiecePlot(omega, numPoints, X, waveCell, label = pieceLabel)
+            PiecePlot(omega, numPoints, X, waveCell, label = pieceLabel, linewidth = linewidth)
     else:
         i = 0
         for j in range(numGraphs):
@@ -332,7 +349,7 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
                 pieceColor = j
                 pieceLabel = labelsOut[j]
             if (waveCell != []):
-                PiecePlot(omega, numPoints, X, waveCell[:, j], color = pieceColor, label = pieceLabel)
+                PiecePlot(omega, numPoints, X, waveCell[:, j], color = pieceColor, label = pieceLabel, linewidth = linewidth)
             i = i + 1
             if (j == 2):
                 i = i + 1
@@ -340,12 +357,12 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
             plt.legend()
             print('Are you *sure* your labels are ordered correctly?')
     if (title != ''):
-        plt.title(title, fontsize = 25)
+        plt.title(title, fontsize = fontsize)
     locs = physics.locs
     for loc in locs:
         locx = loc * np.ones(2)
         locy = np.linspace(yMin, yMax, num = 2)
-        plt.plot(locx, locy, color = 'k', zorder = 1)
+        plt.plot(locx, locy, color = 'k', zorder = 1, linewidth = linewidth)
     plt.ylim([yMin, yMax])
     return fig
 
@@ -355,7 +372,7 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
 # In[9]:
 
 
-def PlotMixedWave(omega, physics, waves, FCoefs, title = '', labels = [], rescale = 1, plotCont = True, sym = False, save = False, saveName = '', dpi = 600, ct = 0, xGrid = False, yGrid = False):
+def PlotMixedWave(omega, physics, FCoefs, waves = [], title = '', labels = [], rescale = 1, plotCont = True, sym = False, save = False, saveName = '', dpi = 600, ct = 0, xGrid = False, yGrid = False, enlarge = False):
     errorLoc = 'ERROR:\nPlotTools:\nPlotMixedWave:\n'
     nh = omega.nh_max
     degFreed = omega.degFreed
@@ -387,21 +404,34 @@ def PlotMixedWave(omega, physics, waves, FCoefs, title = '', labels = [], rescal
             waveCont = waveCont @ rotMat
     
     for k in range(numPlots):
+        if (k == 0):
+            title1 = title + r' $E$ Field'
+        else:
+            title1 = title + r' $B$ Field'
         if (numGraphs == 1):
             FCoef = FCoefs[k * nh:(k + 1) * nh]
+            title1 = title
         else:
             FCoef = FCoefs[k * nh:(k + 1) * nh, :]
-        fXCell = waves[:nh, :nh] @ FCoef
+            
+        if (waves != []):
+            fXCell = waves[:nh, :nh] @ FCoef
+        else:
+            fXCell = []
         if (plotCont):
             fXCont = waveCont @ FCoef
         else:
             fXCont = []
-        fig = PlotWave(omega, physics, numPoints, X, rescale, fXCell, fXCont, title = title, sym = sym, labels = labels, xGrid = xGrid, yGrid = yGrid)
+        fig = PlotWave(omega, physics, numPoints, X, rescale, fXCell, fXCont, title = title1, sym = sym, labels = labels, xGrid = xGrid, yGrid = yGrid, enlarge = enlarge)
         plt.xlim([-0.1, 1.1])
         if (save):
             if (numPlots > 1):
-                saveString = saveString + 'k'
-            Save(fig, saveString, dpi)
+                if (k == 0):
+                    extraPiece = 'E'
+                else:
+                    extraPiece = 'B'
+                saveString1 = saveString + extraPiece
+            Save(fig, saveString1, dpi)
 #         fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
 #         print('This image has been saved under ' + saveName + '.')
     return
@@ -522,17 +552,27 @@ def Resize(rescale, tickHeight):
     return size, tickHeight
 
 
-def PlotGrid(omega, rescale = 1, save = False, saveName = '', dpi = 600):
+def PlotGrid(omega, rescale = 1, save = False, saveName = '', dpi = 600, enlarge = False):
     numPoints, font, X, savePath = UsefulPlotVals()
     if (saveName != ''):
         save = True
     else:
         saveName = 'Grid'
+    
+    if (enlarge):
+        linewidth = 4
+        fontsize = 35
+        labelsize = 25
+    else:
+        linewidth = 1.5
+        fontsize = 25
+        labelsize = 10
+    
     saveString = savePath + saveName
     yMin, yMax, tickHeight = GetYBound(0, True)
     size, tickHeight = Resize(rescale, tickHeight)
     fig, ax = plt.subplots(figsize = size)
-    TickPlot(omega, ax, tickHeight, False, False, label = True)
+    TickPlot(omega, ax, tickHeight, False, False, label = True, labelsize = labelsize, linewidth = linewidth)
     plt.ylim([yMin, yMax])
     plt.show()
     if (save):
@@ -545,11 +585,21 @@ def Save(fig, saveString, dpi):
     print('This image has been saved under ' + saveString + '.')
     return
 
-def DivergVis(save = False, saveName = '', dpi = 600):
+def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False):
     if (saveName != ''):
         save = True
     else:
         saveName = 'DivergenceVisual'
+    
+    if (enlarge):
+        linewidth = 4
+        fontsize = 35
+        labelsize = 25
+    else:
+        linewidth = 1.5
+        fontsize = 25
+        labelsize = 10
+    
     nh = 32
     omega = BT.Grid(nh)
     h = omega.h[0]
@@ -565,9 +615,9 @@ def DivergVis(save = False, saveName = '', dpi = 600):
     fig, ax = plt.subplots()
     numPoints, font, X, savePath = UsefulPlotVals()
     yMin, yMax, tickHeight = GetYBound(uNode[1:4], False)
-    TickPlot(omega, ax, tickHeight, False, u = uNode)
+    TickPlot(omega, ax, tickHeight, False, False, u = uNode, labelsize = labelsize, linewidth = linewidth)
     plt.scatter(x[1:4], uNode[1:4], s = 10, color = ColorDefault(2))
-    PiecePlot(omega, numPoints, X, uCell, tickHeight = tickHeight)
+    PiecePlot(omega, numPoints, X, uCell, tickHeight = tickHeight, linewidth = linewidth)
     plt.quiver([length], [0], [length], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
     plt.quiver([length], [0], [-length], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
     plt.xlim([-0.1 * length, 2.1 * length])

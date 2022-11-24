@@ -70,6 +70,7 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
         scale = (2 * cs[0]) / (cs[0] + cs[1])
         waveFuncIT[index:] = scale * waveFuncIT[index:]
         if (not I):
+            print('THERE IS NO INCIDENT PART!')
             # Zero out the I part.
             waveFuncIT[:index] = 0
         else: # Is I, might be T.
@@ -90,9 +91,10 @@ def Reflect(omega, physics, func, args, t, cellAve = True, BooleAve = False, der
     x_s = physics.locs[0]
     
     index = np.where(xCell >= x_s)[0][0]
-    
+    if (func == GaussPacket):
+        BooleAve = True
     if (BooleAve and cellAve):
-        x = BoolesX(omega, physics, t, adv = False) # REFLECTION HERE!!!
+        x = BoolesX(omega, physics, t) # REFLECTION HERE!!!
         # I set cellAve to False because that changes the function for the Gaussian, and I want the
         # Gaussian to be calculated directly if I'm using Boole's Rule.
         waveFuncPre = func(omega, x, *args, deriv = deriv, cellAve = False)
@@ -104,29 +106,41 @@ def Reflect(omega, physics, func, args, t, cellAve = True, BooleAve = False, der
     return waveFunc
 
 def Advect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deriv = False):
-    if (BooleAve and cellAve):
-        print('We\'re doing BoolesAve!')
-        x = BoolesX(omega, physics, t)
-        # I set cellAve to False because that changes the function for the Gaussian, and I want the
-        # Gaussian to be calculated directly if I'm using Boole's Rule.
-        waveFuncPre = func(omega, x, *args, deriv = deriv, cellAve = False)
-        waveFunc = BoolesAve(waveFuncPre)
+    if (t == 0):
+        waveFunc = InitCond(omega, physics, func, args, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv)
     else:
-        x = ShiftX(omega, physics, t)
-        waveFunc = func(omega, x, *args, deriv = deriv, cellAve = cellAve)
+        if (func == GaussPacket):
+            BooleAve = True
+        if (BooleAve and cellAve):
+            print('We\'re doing BoolesAve!')
+            x = BoolesX(omega, physics, t)
+            print('x is ' + str(len(x)) + ' long.')
+            # I set cellAve to False because that changes the function for the Gaussian, and I want the
+            # Gaussian to be calculated directly if I'm using Boole's Rule.
+            waveFuncPre = func(omega, x, *args, deriv = deriv, cellAve = False)
+            waveFunc = BoolesAve(waveFuncPre)
+        else:
+            x = ShiftX(omega, physics, t)
+            waveFunc = func(omega, x, *args, deriv = deriv, cellAve = cellAve)
     return waveFunc
 
 def InitCond(omega, physics, func, args, cellAve = True, BooleAve = False, deriv = False):
     xNode = omega.xNode
+    xCell = omega.xCell
+    x = xNode
+    if (func == GaussPacket):
+        BooleAve = True
+        if (cellAve == False):
+            x = xCell
     if (BooleAve and cellAve):
         print('We\'re doing BoolesAve!')
         x = BoolesX(omega, physics, t = 0)
+        print('x is ' + str(len(x)) + ' long.')
         # I set cellAve to False because that changes the function for the Gaussian, and I want the
         # Gaussian to be calculated directly if I'm using Boole's Rule.
         waveFuncPre = func(omega, x, *args, deriv = deriv, cellAve = False)
         waveFunc = BoolesAve(waveFuncPre)
     else:
-        x = xNode
         waveFunc = func(omega, x, *args, deriv = deriv, cellAve = cellAve)
     return waveFunc
 
@@ -139,7 +153,6 @@ def Gauss(omega, x, sigma, mu, deriv, cellAve):
 #     if (deriv):
 #         BooleAve = True
     # If I use Boole's rule to calculate cell-averaged values of my gaussian or gaussian derivative.
-    print('x is', x)
     xL = x[:-1]
     xR = x[1:]
     hDiag = xR - xL
@@ -158,12 +171,13 @@ def Gauss(omega, x, sigma, mu, deriv, cellAve):
         # (Divide by xR - xL)
         gauss = const * (hMat @ (Erf(xR) - Erf(xL)))
     else:
-        gauss = np.exp(-((x - mu)**2) / (2. * (sigma**2)))
+        gaussian = lambda x: np.exp(-((x - mu)**2) / (2. * (sigma**2)))
+        gauss = gaussian(x)
         if (deriv):
             if (cellAve):
-                gauss = 2 * hMat @ (gauss(xR) - gauss(xL))
+                gauss = 2 * hMat @ (gaussian(xR) - gaussian(xL))
             else:
-                gauss = ((mu - x) * gauss) / (sigma ** 2)
+                gauss = ((mu - x) * gaussian(x)) / (sigma ** 2)
     return gauss
 
 # ----------------------------------------------------------------------------------------------------------------
@@ -190,7 +204,10 @@ def BoolesX(omega, physics, t):
     else:
         xNode = ShiftX(omega, physics, t)
     x = xNode
-    h = omega.h
+#     h = omega.h
+    xL = x[:-1]
+    xR = x[1:]
+    h = xR - xL
     for k in range(1, 4):
         x = np.asarray(sorted(set(np.append(x, xNode[:-1] + (k * h) / 4.))))
     return x
@@ -242,8 +259,9 @@ def BoolesAve(f):
 #
 # packet                  np.ndarray              Gaussian wavepacket cell-average values on Grid omega
 # ----------------------------------------------------------------------------------------------------------------
-
-def WavePacket(omega, physics, sigma, mu, modenumber, deriv = False, t = 0):
+# Gauss(omega, x, sigma, mu, deriv, cellAve)
+def GaussPacket(omega, x, sigma, mu, modenumber, deriv = False, cellAve = True):
+    # cellAve is an inert argument here.
     # YOU GOTTA CREATE A WAVES INSTANCE!
     errorLoc = 'ERROR:\nWaveformTools:\nWavePacket:\n'
     nh_max = omega.nh_max
@@ -251,7 +269,7 @@ def WavePacket(omega, physics, sigma, mu, modenumber, deriv = False, t = 0):
     k = int((modenumber + 1) / 2)
     Cosine = lambda x: np.cos(2. * np.pi * k * x)
     Sine = lambda x: np.sin(2. * np.pi * k * x)
-    x = BoolesX(omega, physics, t)
+    # x = BoolesX(omega, physics, t)
     if (modenumber > nh_max):
         errorMess = 'Modenumber out of range for grid resolution!'
         sys.exit(errorLoc + errorMess)
@@ -261,22 +279,22 @@ def WavePacket(omega, physics, sigma, mu, modenumber, deriv = False, t = 0):
 #         else:
 #             wave = Sine(x)
     
-    packetAmp = Gauss(omega, physics, sigma, mu, cellAve = False, t = t)
+    packetAmp = Gauss(omega, x, sigma, mu, cellAve = False, deriv = False)
     if (deriv):
         if (modenumber % 2 == 0):
             part1 = -2 * np.pi * k * packetAmp * Sine(x)
-            part2 = Gauss(omega, physics, sigma, mu, deriv = True, cellAve = False, t = t) * Cosine(x)
+            part2 = Gauss(omega, x, sigma, mu, deriv = True, cellAve = False) * Cosine(x)
         else:
             part1 = 2 * np.pi * k * packetAmp * Cosine(x)
-            part2 = Gauss(omega, physics, sigma, mu, deriv = True, cellAve = False, t = t) * Sine(x)
+            part2 = Gauss(omega, x, sigma, mu, deriv = True, cellAve = False) * Sine(x)
         packet = part1 + part2
     else:
         if (modenumber % 2 == 0):
             packet = packetAmp * Cosine(x)
         else:
             packet = packetAmp * Sine(x)
-    wavepacket = BoolesAve(packet)
-    return wavepacket
+#     wavepacket = BoolesAve(packet)
+    return packet
 
 # ----------------------------------------------------------------------------------------------------------------
 # Function: GaussParams
@@ -472,8 +490,14 @@ def ShiftX(omega, physics, t, adv = True):
     #     print('')
 
         if (adv):
-            xShift[:min(ixc)] = xShifts[0][:min(ixc)]
-            xShift[max(ixc):] = xShifts[1][max(ixc):]
+            if (ixc == []):
+                minimum = max(ixc1)
+                maximum = min(ixc2)
+            else:
+                minimum = min(ixc)
+                maximum = max(ixc)
+            xShift[:minimum] = xShifts[0][:minimum]
+            xShift[maximum:] = xShifts[1][maximum:]
 
         #     xShiftR[:min(ixcR)] = xShifts[0][:min(ixcR)]
         #     xShiftR[max(ixcR):] = xShifts[1][max(ixcR):]

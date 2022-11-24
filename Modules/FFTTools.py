@@ -194,13 +194,20 @@ def PropogateFCoefs(omega, FCoefs, c, t, nullspace = []):
 
 
 def PropWaves(omega, waves, ct): # Change was made here!
+    # Get all my attributes.
     nh2 = omega.nh_max
     nhs = omega.nh
     hs = omega.h
     levels = omega.levels
     refRatios = omega.refRatios
+    
+    # Create rotMat.
     rotMat = OT.MakeRotMat(omega, ct) # Change was made here!
+#     print('rotMat:')
+#     print(rotMat)
     backRotMat = rotMat[::-1, ::-1] + 0
+#     print('backRotMat:')
+#     print(backRotMat)
 #     np.fill_diagonal(backRotMat[1:], np.diagonal(backRotMat, offset = 1))
 #     np.fill_diagonal(backRotMat[:, 1:], -np.diagonal(backRotMat, offset = 1))
     compRotMat = rotMat + 0
@@ -259,9 +266,3 @@ def PropRestrictWaves(omega, waveformIn, ct, Hans = False): # Change was made he
     propFCoefs = FourierCoefs(waves @ nullspace, propWaveform)
     
     return propFCoefs
-
-# In[ ]:
-
-
-
-
