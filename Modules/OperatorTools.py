@@ -336,7 +336,8 @@ def Grad(omega, order, diff):
     
     return
 
-def SpaceDeriv(omega, order, diff):
+# DO NOT CHANGE THIS ONE!!!
+def SpaceDeriv1(omega, order, diff):
     
     # Extract info from omega.
     hs = omega.h
@@ -569,5 +570,112 @@ def ExactTimeDerivOp(omega, physics, waves):
     ETDerivOp = -cMat @ waves @ SpatOp @ FTop
     return ETDerivOp
 
+
+def SpaceDeriv(omega, order, diff):
+    
+    # Extract info from omega.
+    hs = omega.h
+    degFreed = omega.degFreed
+    
+    # Create empty matrizes to fill later.
+    blockMat = np.zeros((degFreed, degFreed), float)
+    zeroMat = np.zeros(degFreed, float)
+    
+    # Interpolate ghost cells.
+    ghostStencL = GTT.GhostCellStencil(order, -0.5)
+    ghostStencR = GTT.GhostCellStencil(order, 0.5)
+    
+    # Create common constituents of row pieces.
+    rightCell = zeroMat + 0
+    leftCell = zeroMat + 0
+    ghostL = zeroMat + 0
+    ghostR = zeroMat + 0
+    ghostL[:order+1] = ghostStencL
+    ghostR[:order+1] = ghostStencR
+    nrollL = int(np.ceil((order + 1) / 3.))
+    nrollR = int(order - nrollL)
+    ghostL = np.roll(ghostL, -nrollL)
+    ghostR = np.roll(ghostR, -nrollR)
+    
+    # Define distinct row pieces between upwind and center difference.
+    if (diff == 'U'):
+        rightCell[0] = 1
+        leftCell[-1] = 1
+        
+        cf1v2 = rightCell + 0
+        cf1v1 = leftCell + 0
+        
+        fc1v2 = rightCell + 0
+        fc1v1 = leftCell + 0
+        
+        hMat = StepMatrix(omega)
+    else:
+        if (diff == 'D'):
+            rightCell[1] = 1
+            leftCell[0] = 1
+            
+            
+        else:
+            rightCell[1] = 1
+            leftCell[-1] = 1
+
+            cf1v2 = zeroMat + 0
+            cf1v2[1] = 0.5
+            cf1v2[2] = 0.5
+            cf1v1 = leftCell + 0
+
+            fc1v2 = ghostR
+            fc1v1 = leftCell + 0
+
+            hMat = 0.5 * StepMatrix(omega)
+    
+    # Define common row pieces between upwind and center difference.
+    cf2v2 = rightCell + 0
+    cf2v1 = ghostL
+    
+    fc2v2 = rightCell + 0
+    fc2v1 = zeroMat + 0
+    fc2v1[-1] = 0.5
+    fc2v1[-2] = 0.5
+    
+    # Define rows.
+    default = rightCell - leftCell
+    cf1 = cf1v2 - cf1v1
+    cf2 = cf2v2 - cf2v1
+    fc1 = fc1v2 - fc1v1
+    fc2 = fc2v2 - fc2v1
+    
+    # Create vector containing intergrid boundary locations.
+    spots = np.roll(hs, -1) - hs
+    
+    # Fill matrix.
+    for k in range(degFreed):
+        if (np.roll(spots, 1 - k)[0] > 0):
+            row = fc2
+        else:
+            if (np.roll(spots, -k)[0] < 0): # This one's okay.
+                row = cf1
+                
+            else:
+                if (np.roll(spots, 1 - k)[0] < 0): # This one's okay.
+                    row = cf2 #fc1
+                    
+                else:
+                    if (spots[k] > 0): # This one's okay.
+                        row = fc1 #cf2
+                    else:
+                        row = default
+        blockMat[k, :] = np.roll(row, k)
+#     print('1/2dx =')
+#     print(hMat)
+#     print('')
+#     print('difference matrix =')
+#     print(blockMat)
+#     print('')
+    blockMat = hMat @ blockMat
+#     print('derivative matrix =')
+#     print(blockMat)
+#     print('')
+    return blockMat
 
 

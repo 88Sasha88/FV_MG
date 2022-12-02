@@ -110,6 +110,7 @@ def AmpError(omega, theoreticalIn, actualIn, tol = 1e-20, printOut = False):
 
 def Upwind(omega, t, u0, c, order):
     derivMat = OT.SpaceDeriv(omega, order, 'U')
+    print(derivMat)
     spatOp = -c @ derivMat
     u = spatOp @ u0
     return u

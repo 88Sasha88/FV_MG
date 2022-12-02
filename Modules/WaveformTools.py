@@ -70,7 +70,7 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
         scale = (2 * cs[0]) / (cs[0] + cs[1])
         waveFuncIT[index:] = scale * waveFuncIT[index:]
         if (not I):
-            print('THERE IS NO INCIDENT PART!')
+            print('BE AWARE THAT YOU HAVE ELECTED FOR THERE TO BE NO INCIDENT PART!')
             # Zero out the I part.
             waveFuncIT[:index] = 0
         else: # Is I, might be T.
