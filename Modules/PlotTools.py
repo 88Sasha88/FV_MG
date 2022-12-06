@@ -430,8 +430,9 @@ def PlotMixedWave(omega, physics, FCoefs, waves = [], title = '', labels = [], r
                     extraPiece = 'E'
                 else:
                     extraPiece = 'B'
-                saveString1 = saveString + extraPiece
-            Save(fig, saveString1, dpi)
+                saveString1 = saveString.copy()
+                saveString = saveString1 + extraPiece
+            Save(fig, saveString, dpi)
 #         fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
 #         print('This image has been saved under ' + saveName + '.')
     return

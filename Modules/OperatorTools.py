@@ -603,10 +603,15 @@ def SpaceDeriv(omega, order, diff):
         leftCell[-1] = 1
         
         cf1v2 = rightCell + 0
-        cf1v1 = leftCell + 0
+        # cf1v1 = leftCell + 0
+        cf2v1 = ghostL
         
         fc1v2 = rightCell + 0
-        fc1v1 = leftCell + 0
+        # fc1v1 = leftCell + 0
+        fc2v1 = zeroMat + 0
+        fc2v1[-1] = 0.5
+        fc2v1[-2] = 0.5
+        fc2v2 = rightCell + 0
         
         hMat = StepMatrix(omega)
     else:
@@ -614,7 +619,15 @@ def SpaceDeriv(omega, order, diff):
             rightCell[1] = 1
             leftCell[0] = 1
             
+            cf1v2 = zeroMat + 0
+            cf1v2[1] = 0.5
+            cf1v2[2] = 0.5
+            cf2v1 = leftCell + 0
             
+            fc1v2 = ghostR
+            fc2v1 = leftCell + 0
+            
+            hMat = StepMatrix(omega)
         else:
             rightCell[1] = 1
             leftCell[-1] = 1
@@ -622,21 +635,28 @@ def SpaceDeriv(omega, order, diff):
             cf1v2 = zeroMat + 0
             cf1v2[1] = 0.5
             cf1v2[2] = 0.5
-            cf1v1 = leftCell + 0
+            # cf1v1 = leftCell + 0
+            cf2v1 = ghostL
 
             fc1v2 = ghostR
-            fc1v1 = leftCell + 0
+            # fc1v1 = leftCell + 0
+            # fc2v2 = rightCell + 0
+            fc2v1 = zeroMat + 0
+            fc2v1[-1] = 0.5
+            fc2v1[-2] = 0.5
 
             hMat = 0.5 * StepMatrix(omega)
     
     # Define common row pieces between upwind and center difference.
+    cf1v1 = leftCell + 0 # New add.
     cf2v2 = rightCell + 0
-    cf2v1 = ghostL
+    # cf2v1 = ghostL
     
+    fc1v1 = leftCell + 0 # New add.
     fc2v2 = rightCell + 0
-    fc2v1 = zeroMat + 0
-    fc2v1[-1] = 0.5
-    fc2v1[-2] = 0.5
+#     fc2v1 = zeroMat + 0
+#     fc2v1[-1] = 0.5
+#     fc2v1[-2] = 0.5
     
     # Define rows.
     default = rightCell - leftCell
