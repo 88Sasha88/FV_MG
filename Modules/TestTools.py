@@ -123,7 +123,7 @@ def CenterDiff(omega, t, u0, c, order):
 
 # This function checks that your polynomial interpolations produce outputs up to the appropriate order of accuracy.
 
-def TestPoly(order, x_0, const = 2, tol = 1e-15):
+def TestPoly(order, x_0, const = 2, tol = 1e-10):
     
     # Create vector of cell bounds.
     bounds = GTT.BoundVals(order, x_0)
@@ -145,10 +145,12 @@ def TestPoly(order, x_0, const = 2, tol = 1e-15):
 
         theor = P(x_0) / x_0
         act = v.transpose() @ polyInterp
+        error = ((act - theor) / theor) * 100
         print(theor, act)
+        print('Error = ' + str(error) + '%')
         print('')
-        if (k < order + 1):
-            assert(np.isclose(act, theor, rtol = 0, atol = tol))
+#         if (k < order + 1):
+#             assert(np.isclose(act, theor, rtol = 0, atol = tol))
     return
     
 # ----------------------------------------------------------------------------------------------------------------

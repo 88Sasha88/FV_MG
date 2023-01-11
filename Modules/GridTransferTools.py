@@ -88,38 +88,152 @@ def CoarsenOp(omega):
     CoarseOp = LA2.block_diag(*matrices)
     return CoarseOp
 
+# ----------------------------------------------------------------------------------------------------------------
+# Function: BoundVals
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function 
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# order                   int                    Order of interpolation
+# x_0                     float                  Farthest face from zero point of cell to interpolate
+# ----------------------------------------------------------------------------------------------------------------
+# Outputs:
+#
+# bounds                  array                  Face values around cells used for interpolation
+# ----------------------------------------------------------------------------------------------------------------
+
 def BoundVals(order, x_0):
+    print('YOU\'RE USING THE UPDATE.')
+    a = abs(int(x_0 / 0.5))
+    cells = order + 1
+    if (cells <= a):
+        n_c = cells
+    else:
+        n_c = a
+        cells_new = cells - a
+        if ((cells_new + 1) % 3 == 0):
+            n_c_add = int(np.floor((cells_new + 1) / 3) - 1)
+        else:
+            n_c_add = int(np.floor((cells_new + 1) / 3))
+        n_c = n_c + n_c_add
+    n_f = cells - n_c
+    
+    if (n_f != 0):
+        bounds = np.linspace(-n_c, n_f / 2., num = (2 * n_c) + n_f + 1)
+        rm = [(2 * k) + 1 for k in range(n_c)]
+        bounds = np.delete(bounds, rm)
+        if (x_0 > 0):
+            bounds = -bounds[::-1]
+    else:
+        if (x_0 % 1 == 0):
+            bounds = np.arange(n_c + 1) + (int(x_0) - int((n_c + 1) / 2))
+        else:
+            bounds = np.arange(n_c + 1) + (int(x_0) - int(n_c / 2))
+    return bounds
+
+def BoundVals1(order, x_0):
+    print('')
+    print('START BoundVals() FUNC!')
+    
     if ((order + 1) % 3 == 0):
+        print('HERE!')
         n_c = int(np.floor((order + 1) / 3))
     else:
         n_c = int(np.floor(((order + 1) / 3) + 1))
+    print('n_c:', n_c)
+    
     n_f = order + 1 - n_c
+    print('n_f:', n_f)
     bounds = np.linspace(-n_c, n_f / 2., num = (2 * n_c) + n_f + 1)
+    print('bounds:', bounds)
     rm = [(2 * k) + 1 for k in range(n_c)]
+    print('rm:', rm)
     bounds = np.delete(bounds, rm)
+    print('bounds:', bounds)
     if (x_0 > 0):
          bounds = -bounds[::-1]
+    print('bounds:', bounds)
+    print('END BoundVals() FUNC!')
+    print('')
     return bounds
 
-# Put this in GTT.
+# ----------------------------------------------------------------------------------------------------------------
+# Function: MomentVander
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function 
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# order                   int                    Order of interpolation
+# bounds                  array                  Face values around cells used for interpolation
+# xVec                    float                  (Not sure)
+# ----------------------------------------------------------------------------------------------------------------
+# Outputs:
+#
+# polyInterp              array                   (Not sure)
+# ----------------------------------------------------------------------------------------------------------------
+
 def MomentVander(order, bounds, xVec):
+#     print('')
+#     print('START MomentVander() FUNC!')
     # Add error catchers!
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
+#     print('intCoefs:', intCoefs)
     polyCoefs = np.diag(intCoefs)
+#     print('polyCoefs:', polyCoefs)
     h = (bounds[1:] - bounds[:-1])**-1.
+#     print('h:', h)
     hInv = np.diag(h)
+#     print('h:', h)
     A = np.diag(bounds[1:]) @ np.vander(bounds[1:])
+#     print('A:', A)
     B = np.diag(bounds[:-1]) @ np.vander(bounds[:-1])
+#     print('B:', B)
     VanderMat = hInv @ (A - B) @ polyCoefs
+#     print('VanderMat:', VanderMat)
     polyInterp = xVec @ LA2.inv(VanderMat)
+#     print('polyInterp:', polyInterp)
+#     print('END MomentVander() FUNC!')
+#     print('')
     return polyInterp
 
+# ----------------------------------------------------------------------------------------------------------------
+# Function: GhostCellStencil
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function 
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# order                   int                    Order of interpolation
+# x_0                     float                  Farthest face from zero point of cell to interpolate
+# ----------------------------------------------------------------------------------------------------------------
+# Outputs:
+#
+# polyInterp              array                   Polynomial interpolation of ghost cell
+# ----------------------------------------------------------------------------------------------------------------
+
 def GhostCellStencil(order, x_0):
+#     print('')
+#     print('START GhostCellStencil() FUNC!')
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
+#     print('intCoefs:', intCoefs)
     polyCoefs = np.diag(intCoefs)
+#     print('polyCoefs:', polyCoefs)
     xVec = np.polynomial.polynomial.polyvander(x_0, order)[0][::-1] @ polyCoefs
+#     print('xVec:', xVec)
     bounds = BoundVals(order, x_0)
+#     print('bounds:', bounds)
     polyInterp = MomentVander(order, bounds, xVec)
+    print('polyInterp:', polyInterp)
+#     print('END GhoseCellStencil() FUNC!')
+    print('')
     return polyInterp
 
 
