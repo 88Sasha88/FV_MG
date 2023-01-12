@@ -132,7 +132,8 @@ def BoundVals(order, x_0):
             bounds = np.arange(n_c + 1) + (int(x_0) - int((n_c + 1) / 2))
         else:
             bounds = np.arange(n_c + 1) + (int(x_0) - int(n_c / 2))
-    return bounds
+    print('bounds:', bounds)
+    return bounds, n_c, n_f
 
 def BoundVals1(order, x_0):
     print('')
@@ -228,13 +229,13 @@ def GhostCellStencil(order, x_0):
 #     print('polyCoefs:', polyCoefs)
     xVec = np.polynomial.polynomial.polyvander(x_0, order)[0][::-1] @ polyCoefs
 #     print('xVec:', xVec)
-    bounds = BoundVals(order, x_0)
+    bounds, n_c, n_f = BoundVals(order, x_0)
 #     print('bounds:', bounds)
     polyInterp = MomentVander(order, bounds, xVec)
     print('polyInterp:', polyInterp)
 #     print('END GhoseCellStencil() FUNC!')
     print('')
-    return polyInterp
+    return polyInterp, n_c, n_f
 
 
 
