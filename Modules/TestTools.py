@@ -176,8 +176,11 @@ def TestPoly(order, x_0, const = 2, tol = 1e-10):
 def DerivPolyTest(omega, diff, order, coefs = []):
     errorLoc = 'ERROR:\nTestTools:\nSpacePoly:\n'
     degFreed = omega.degFreed
+    hs = omega.h
     if (coefs == []):
-        coefs = np.ones(order + 1, float)
+#         coefs = np.ones(order + 1, float)
+        coefs = 1. / (np.arange(order + 1) + 1)
+        coefs = np.append(1, coefs)[::-1]
     else:
         errorMess = BT.CheckSize(order, coefs, nName = 'order', matricaName = 'coefs')
         if (errorMess != ''):
@@ -185,9 +188,13 @@ def DerivPolyTest(omega, diff, order, coefs = []):
     nh_max = omega.nh_max
     waves = WT.MakeWaves(omega)
     x = omega.xCell
-    P = np.poly1d(coefs)
-    waveform = P(x)
+#     P = np.poly1d(coefs)
+    P = np.poly1d(coefs) - 1
+#     waveform = P(x)
+#     waveform = P(x)
+    waveform = (P(x + hs) - P(x)) / hs
     p = np.polyder(P)
+    waveformDeriv = p(x) / hs
     
     const = -np.eye(degFreed)
     derivOp = OT.SpaceDeriv(omega, order, diff)# DiffFunc(omega, 0, waveform, const, order)
@@ -202,9 +209,11 @@ def DerivPolyTest(omega, diff, order, coefs = []):
     print('Polynomial Derivative:')
     print('dp(x)/dx =', p)
     print('Theoretical:')
-    print('dp(x)/dx =\n', p(x))
+    print('dp(x)/dx =\n', waveformDeriv)
     print('Actual:')
     print('dp(x)/dx =\n', wavederiv)
+    print('Difference Between Actual and Theoretical:')
+    print(np.round(p(x) - wavederiv, 11))
     print('')
     return
 

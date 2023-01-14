@@ -5,6 +5,7 @@
 
 
 import os.path
+import scipy as sp
 from scipy import *
 import numpy as np
 from numpy import *
@@ -571,7 +572,7 @@ def ExactTimeDerivOp(omega, physics, waves):
     return ETDerivOp
 
 
-def SpaceDeriv(omega, order, diff):
+def SpaceDeriv1(omega, order, diff):
     
     # Extract info from omega.
     hs = omega.h
@@ -582,8 +583,8 @@ def SpaceDeriv(omega, order, diff):
     zeroMat = np.zeros(degFreed, float)
     
     # Interpolate ghost cells.
-    ghostStencL = GTT.GhostCellStencil(order, -0.5)
-    ghostStencR = GTT.GhostCellStencil(order, 0.5)
+    ghostStencL, n_c, n_f = GTT.GhostCellStencil(order, -0.5)
+    ghostStencR, n_c, n_f = GTT.GhostCellStencil(order, 0.5)
     
     # Create common constituents of row pieces.
     rightCell = zeroMat + 0
@@ -697,5 +698,200 @@ def SpaceDeriv(omega, order, diff):
 #     print(blockMat)
 #     print('')
     return blockMat
+
+# MOVE THIS TO GTT!!!
+
+def CentGhost(omega, order, x_0, diff):
+    errorLoc = 'ERROR:\nGridTransferTools:\nCentGhost:\n'
+    errorMess = ''
+    
+    degFreed = omega.degFreed
+    hs = omega.h
+    
+    spots = np.roll(hs, -1) - hs
+    p = np.where(spots > 0)[0][0]
+    q = np.where(spots < 0)[0][0]
+    
+    h_c = max(hs)
+    h_f = min(hs)
+    
+    n_c_m = list(hs).count(h_c)
+    n_f_m = list(hs).count(h_f)
+    
+    ghostCell, n_c, n_f = GTT.GhostCellStencil(order, x_0)
+    
+    if (n_c > n_c_m):
+        errorMess = 'This grid has too few coarse cells for the order of the polynomial interpolation!'
+    if (n_f > n_f_m):
+        errorMess = 'This grid has too few fine cells for the order of the polynomial interpolation!'
+    
+    cells = n_c + n_f
+    
+    # ADD ERROR CHECKER FOR THE NUMBER OF COURSE AND FINE CELLS ON GRID OF GIVEN SIZE!!!
+    
+
+    fullStenc = np.zeros(degFreed, float)
+    
+    if (x_0 > 0):
+        for k in range(cells):
+            index = (p - n_f + k + 1) % degFreed
+            fullStenc[index] = ghostCell[k]
+    else:
+        if (x_0 < 0):
+            for k in range(cells):
+                index = (q - n_c + k + 1) % degFreed
+                fullStenc[index] = ghostCell[k]
+        else:
+            errorMess = 'Argument x_0 cannot be 0!'
+    
+    
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    
+    
+    return fullStenc
+
+def CDStencil(orderIn):
+    if (orderIn % 2 == 0):
+        order = orderIn
+    else:
+        order = int(orderIn + 1)
+    
+    loops = int(order / 2)
+        
+    coefs = np.zeros(loops)
+    stenc = np.zeros(order + 1)
+    terms = np.arange(order + 1)
+    rCell = np.asarray([1 / sp.math.factorial(j) for j in terms])
+    lCell = rCell + 0
+    lCell[1::2] = -lCell[1::2]
+    deltaXFunc = lambda k: k ** terms
+    tExp = [[] for j in range(loops)]
+    for k in range(loops):
+        rCellNew = rCell * deltaXFunc(k + 1)
+        lCellNew = lCell * deltaXFunc(k + 1)
+        tExp[k] = rCellNew - lCellNew
+
+
+    tExp = np.asarray(tExp).transpose()
+    mat = tExp[1::2, :][1:, :-1]
+    vec = tExp[1::2, :][1:, -1]
+    vec = -vec
+    coefs[-1] = 1
+    coefs[:-1] = LA.inv(mat) @ vec
+    stenc[:loops] = -coefs[::-1]
+    stenc[loops + 1:] = coefs
+    val = abs((tExp @ coefs)[1])
+    stenc = stenc / val
+    
+    return stenc
+
+def SpaceDeriv(omega, order, diff):
+    errorLoc = 'ERROR:\nOperatorTools:\nMakeSpaceDeriv:\n'
+    errorMess = ''
+    if (diff == 'C' or diff == 'CD'):
+        stenc = CDStencil(order)
+        if (order % 2 == 0):
+            orderStenc = order
+        else:
+            orderStenc = int(order + 1)
+        off = int(orderStenc / 2)
+    else:
+        orderStenc = order
+        if (diff == 'U' or diff == 'UD'):
+            stenc = UDStencil(order)
+            off = 0
+        else:
+            if (diff == 'D' or diff == 'DD'):
+                stenc = DDStencil(order)
+                off = 0
+            else:
+                errorMess = 'Invalid entry for variable diff. Must be \'C\', \'U\', \'D\' \'CD\', \'UD\', or \'DD\'.'
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    
+    degFreed = omega.degFreed
+    hs = omega.h
+    
+    spots = np.roll(hs, -1) - hs
+    # Index before fine-coarse interface
+    p = np.where(spots > 0)[0][0]
+    # Index before coarse-fine interface
+    q = np.where(spots < 0)[0][0]
+    
+    polyStencSet = [[] for i in range(orderStenc)]
+    cellFaces = np.linspace(-off / 2, off / 2, num = orderStenc + 1)
+    zeroLoc = np.where(cellFaces == 0)[0][0]
+    cellFaces = np.delete(cellFaces, zeroLoc)
+    
+    
+
+    for i in range(orderStenc):
+        polyStencSet[i] = CentGhost(omega, order, cellFaces[i], diff)
+    
+    polyStencSet = np.asarray(polyStencSet)
+
+    IMat = np.eye(degFreed, degFreed)
+    
+    # YOU'RE GONNA NEED THESE TO RESTRICT FOR HIGHER EVEN ORDERS, TOO.
+    
+    
+    
+    polyMatU = IMat + 0
+    
+    
+    mat = np.zeros((degFreed, degFreed), float)
+    derivOp = mat + 0
+    
+    for d in range(orderStenc + 1):
+        s = off - d
+        
+        derivMat = mat + 0
+        np.fill_diagonal(derivMat, stenc[d])
+        derivMat = np.roll(derivMat, s, axis = 0)
+        
+        polyMat = IMat + 0
+
+        if (s > 0):
+            j = 0
+            pAt = p
+            pLow = (p - 1) % degFreed
+            pHi = (p + 1) % degFreed
+            qAt = (q - s + 1) % degFreed #(q + 1) % degFreed
+            for i in range (s):
+                polyMat[pAt, :] = 0
+                polyMat[pAt, pLow:pHi] = 0.5
+                polyMat[qAt, :] = polyStencSet[j, :]
+                pAt = (pAt - 1) % degFreed
+                pLow = (pLow - 2) % degFreed
+                pHi = (pHi - 2) % degFreed
+                qAt = (qAt + 1) % degFreed
+                j = j + 1
+                
+        if (s < 0):
+            j = off
+            qAt = (q + 1) % degFreed
+            qLow = (q + 1) % degFreed
+            qHi = (q + 3) % degFreed
+            pAt = (p + 1) % degFreed#p
+            for i in range(abs(s)):
+                polyMat[qAt, :] = 0
+                polyMat[qAt, qLow:qHi] = 0.5
+                polyMat[pAt, :] = polyStencSet[j, :]
+                qAt = (qAt + 1) % degFreed
+                qLow = (qLow + 2) % degFreed
+                qHi = (qHi + 2) % degFreed
+                pAt = (pAt + 1) % degFreed
+                j = j + 1
+        
+        matThis = derivMat @ polyMat
+        
+        derivOp = derivOp + matThis
+    
+    hMat = StepMatrix(omega)
+    
+    derivOp = hMat @ derivOp
+        
+    return derivOp
 
 
