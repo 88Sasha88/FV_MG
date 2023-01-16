@@ -781,6 +781,7 @@ def CDStencil(orderIn):
     coefs[:-1] = LA.inv(mat) @ vec
     stenc[:loops] = -coefs[::-1]
     stenc[loops + 1:] = coefs
+    stenc = (-1)**(loops + 1) * stenc
     val = abs((tExp @ coefs)[1])
     stenc = stenc / val
     
@@ -809,6 +810,8 @@ def SpaceDeriv(omega, order, diff):
                 errorMess = 'Invalid entry for variable diff. Must be \'C\', \'U\', \'D\' \'CD\', \'UD\', or \'DD\'.'
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
+    
+#     stenc = np.ones(orderStenc + 1)
     
     degFreed = omega.degFreed
     hs = omega.h
@@ -853,7 +856,7 @@ def SpaceDeriv(omega, order, diff):
         polyMat = IMat + 0
 
         if (s > 0):
-            j = 0
+            j = off - s
             pAt = p
             pLow = (p - 1) % degFreed
             pHi = (p + 1) % degFreed
@@ -869,7 +872,7 @@ def SpaceDeriv(omega, order, diff):
                 j = j + 1
                 
         if (s < 0):
-            j = off
+            j = off # - s - 1
             qAt = (q + 1) % degFreed
             qLow = (q + 1) % degFreed
             qHi = (q + 3) % degFreed
@@ -882,7 +885,7 @@ def SpaceDeriv(omega, order, diff):
                 qLow = (qLow + 2) % degFreed
                 qHi = (qHi + 2) % degFreed
                 pAt = (pAt + 1) % degFreed
-                j = j + 1
+                j = j + 1 # - 1
         
         matThis = derivMat @ polyMat
         

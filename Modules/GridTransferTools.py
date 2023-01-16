@@ -221,18 +221,37 @@ def MomentVander(order, bounds, xVec):
 # ----------------------------------------------------------------------------------------------------------------
 
 def GhostCellStencil(order, x_0):
+    print(x_0)
+    errorLoc = 'ERROR:\nGridTransferTools:\nGhostCellStencil:\n'
+    errorMess = ''
 #     print('')
 #     print('START GhostCellStencil() FUNC!')
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
+#     print(intCoefs)
 #     print('intCoefs:', intCoefs)
     polyCoefs = np.diag(intCoefs)
 #     print('polyCoefs:', polyCoefs)
-    xVec = np.polynomial.polynomial.polyvander(x_0, order)[0][::-1] @ polyCoefs
+    if (x_0 > 0):
+        xValsR = np.polynomial.polynomial.polyvander(x_0, order + 1)[0][1:][::-1] / 0.5   
+        xValsL = np.polynomial.polynomial.polyvander(x_0 - 0.5, order + 1)[0][1:][::-1] / 0.5
+    else:
+        if (x_0 < 0):
+            xValsR = np.polynomial.polynomial.polyvander(x_0 + 0.5, order + 1)[0][1:][::-1] / 0.5
+            xValsL = np.polynomial.polynomial.polyvander(x_0, order + 1)[0][1:][::-1] / 0.5
+        else:
+            errorMess = 'x_0 cannot be zero!'
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    print('xValsR:', xValsR)
+    print('xValsL:', xValsL)
+    print(np.polynomial.polynomial.polyvander(x_0, order)[0][::-1])
+    xVec = (xValsR - xValsL) @ polyCoefs
+#     print(np.polynomial.polynomial.polyvander(x_0, order)[0][::-1])
 #     print('xVec:', xVec)
     bounds, n_c, n_f = BoundVals(order, x_0)
 #     print('bounds:', bounds)
     polyInterp = MomentVander(order, bounds, xVec)
-    print('polyInterp:', polyInterp)
+#     print('polyInterp:', polyInterp)
 #     print('END GhoseCellStencil() FUNC!')
     print('')
     return polyInterp, n_c, n_f

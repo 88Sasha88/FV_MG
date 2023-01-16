@@ -126,7 +126,7 @@ def CenterDiff(omega, t, u0, c, order):
 def TestPoly(order, x_0, const = 2, tol = 1e-10):
     
     # Create vector of cell bounds.
-    bounds = GTT.BoundVals(order, x_0)
+    bounds, n_c, n_f = GTT.BoundVals(order, x_0)
     
     # Find intervals of cell bounds.
     h = bounds[:-1] - bounds[1:]
@@ -140,14 +140,16 @@ def TestPoly(order, x_0, const = 2, tol = 1e-10):
         coefs[0] = const
         p = np.poly1d(coefs)
         P = np.polyint(p)
+        print('p(x) =\n', p)
+        print('P(x) =\n', P)
         v = (P(bounds[:-1]) - P(bounds[1:])) / h
         print('Order ' + str(k) + ':')
 
         theor = P(x_0) / x_0
         act = v.transpose() @ polyInterp
-        error = ((act - theor) / theor) * 100
+        error = (act - theor) / theor
         print(theor, act)
-        print('Error = ' + str(error) + '%')
+        print('Error = ' + str(error))
         print('')
 #         if (k < order + 1):
 #             assert(np.isclose(act, theor, rtol = 0, atol = tol))
@@ -173,12 +175,63 @@ def TestPoly(order, x_0, const = 2, tol = 1e-10):
 #                                                     all ones
 # ----------------------------------------------------------------------------------------------------------------
 
-def DerivPolyTest(omega, diff, order, coefs = []):
+def DerivPolyTest1(omega, diff, orderIn, coefs = [], deriv = 0):
+    order = orderIn # - 1
     errorLoc = 'ERROR:\nTestTools:\nSpacePoly:\n'
     degFreed = omega.degFreed
     hs = omega.h
     if (coefs == []):
-#         coefs = np.ones(order + 1, float)
+        coefs = np.ones(order + 1, float)
+#         coefs = 1. / (np.arange(order + 1) + 1)
+#         coefs = np.append(1, coefs)[::-1]
+    else:
+        errorMess = BT.CheckSize(order, coefs, nName = 'order', matricaName = 'coefs')
+        if (errorMess != ''):
+            sys.exit(errorLoc + errorMess)
+    nh_max = omega.nh_max
+    waves = WT.MakeWaves(omega)
+    
+    x = omega.xCell
+#     x = omega.xNode
+    P = np.poly1d(coefs)
+#     P = np.poly1d(coefs) - 1
+    waveform = P(x)
+#     waveform = (P(x[1:]) - P(x[:-1])) / hs
+    p = np.polyder(P)
+#     p = np.poly1d(np.ones(order + 1)) - 1
+    waveformDeriv = p(x)
+#     waveformDeriv = (p(x[1:]) - p(x[:-1])) / hs
+    
+    const = -np.eye(degFreed)
+    if (deriv == 0):
+        derivOp = OT.SpaceDeriv(omega, order, diff)# DiffFunc(omega, 0, waveform, const, order)
+    else:
+        derivOp = OT.SpaceDeriv1(omega, order, diff)
+    wavederiv = derivOp @ waveform
+    print('x:')
+    print(x)
+    print('')
+    print('Polynomial Function:')
+    print('p(x) =\n', P)
+    print('p(x) =\n', waveform)
+    print('')
+    print('Polynomial Derivative:')
+    print('dp(x)/dx =\n', p)
+    print('Theoretical:')
+    print('dp(x)/dx =\n', waveformDeriv)
+    print('Actual:')
+    print('dp(x)/dx =\n', wavederiv)
+    print('Difference Between Actual and Theoretical:')
+    print(np.round(waveformDeriv - wavederiv, 11))
+    print('')
+    return
+
+def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0):
+    order = orderIn # - 1
+    errorLoc = 'ERROR:\nTestTools:\nSpacePoly:\n'
+    degFreed = omega.degFreed
+    hs = omega.h
+    if (coefs == []):
         coefs = 1. / (np.arange(order + 1) + 1)
         coefs = np.append(1, coefs)[::-1]
     else:
@@ -187,33 +240,34 @@ def DerivPolyTest(omega, diff, order, coefs = []):
             sys.exit(errorLoc + errorMess)
     nh_max = omega.nh_max
     waves = WT.MakeWaves(omega)
-    x = omega.xCell
-#     P = np.poly1d(coefs)
+    
+    x = omega.xNode
     P = np.poly1d(coefs) - 1
-#     waveform = P(x)
-#     waveform = P(x)
-    waveform = (P(x + hs) - P(x)) / hs
-    p = np.polyder(P)
-    waveformDeriv = p(x) / hs
+    waveform = (P(x[1:]) - P(x[:-1])) / hs
+    p = np.poly1d(np.ones(order + 1)) - 1
+    waveformDeriv = (p(x[1:]) - p(x[:-1])) / hs
     
     const = -np.eye(degFreed)
-    derivOp = OT.SpaceDeriv(omega, order, diff)# DiffFunc(omega, 0, waveform, const, order)
+    if (deriv == 0):
+        derivOp = OT.SpaceDeriv(omega, order, diff)# DiffFunc(omega, 0, waveform, const, order)
+    else:
+        derivOp = OT.SpaceDeriv1(omega, order, diff)
     wavederiv = derivOp @ waveform
     print('x:')
     print(x)
     print('')
     print('Polynomial Function:')
-    print('p(x) = ', P)
-    print('p(x) =\n', waveform)
+    print('<p(x)> =\n', P)
+    print('<p(x)> =\n', waveform)
     print('')
     print('Polynomial Derivative:')
-    print('dp(x)/dx =', p)
+    print('<dp(x)/dx> =\n', p)
     print('Theoretical:')
-    print('dp(x)/dx =\n', waveformDeriv)
+    print('<dp(x)/dx> =\n', waveformDeriv)
     print('Actual:')
-    print('dp(x)/dx =\n', wavederiv)
+    print('<dp(x)/dx> =\n', wavederiv)
     print('Difference Between Actual and Theoretical:')
-    print(np.round(p(x) - wavederiv, 11))
+    print(np.round(waveformDeriv - wavederiv, 11))
     print('')
     return
 
