@@ -220,7 +220,7 @@ def MomentVander(order, bounds, xVec):
 # polyInterp              array                   Polynomial interpolation of ghost cell
 # ----------------------------------------------------------------------------------------------------------------
 
-def GhostCellStencil(order, x_0):
+def GhostCellStencil(order, x_0, face = False):
     print(x_0)
     errorLoc = 'ERROR:\nGridTransferTools:\nGhostCellStencil:\n'
     errorMess = ''
@@ -255,7 +255,3 @@ def GhostCellStencil(order, x_0):
 #     print('END GhoseCellStencil() FUNC!')
     print('')
     return polyInterp, n_c, n_f
-
-
-
-

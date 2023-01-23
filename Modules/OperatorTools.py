@@ -787,6 +787,34 @@ def CDStencil(orderIn):
     
     return stenc
 
+def UDStencil(order):
+    coefs = np.zeros(order + 1)
+    stenc = np.zeros(order + 1)
+    terms = np.arange(order + 1)
+    cell = np.asarray([1 / sp.math.factorial(j) for j in terms])
+    deltaXFunc = lambda k: k ** terms
+    tExp = [[] for j in range(order + 1)]
+    for k in range(order + 1):
+        cellNew = cell * deltaXFunc(k)
+        tExp[k] = cellNew
+    
+    tExp = np.asarray(tExp).transpose()
+    mat = np.zeros((order, order), float)
+    vec = np.zeros(order, float)
+    mat[0, :] = tExp[0, :order]
+    mat[1:, :] = tExp[2:, :order]
+    vec[0] = tExp[0, order]
+    vec[1:] = tExp[2:, order]
+    vec = -vec
+    stenc[order] = 1
+    stenc[:order] = LA.inv(mat) @ vec
+    val = (tExp @ stenc)[1]
+    
+#     UNCOMMENT THIS LINE!!!!!
+    stenc = stenc / val
+
+    return stenc
+
 def SpaceDeriv(omega, order, diff):
     errorLoc = 'ERROR:\nOperatorTools:\nMakeSpaceDeriv:\n'
     errorMess = ''
@@ -797,15 +825,22 @@ def SpaceDeriv(omega, order, diff):
         else:
             orderStenc = int(order + 1)
         off = int(orderStenc / 2)
+        loBound = -off / 2.
+        hiBound = off / 2.
     else:
         orderStenc = order
         if (diff == 'U' or diff == 'UD'):
             stenc = UDStencil(order)
             off = 0
+            loBound = 0.
+            hiBound = orderStenc / 2.
         else:
             if (diff == 'D' or diff == 'DD'):
                 stenc = DDStencil(order)
                 off = 0
+                store = loBound
+                loBound = - orderStenc / 2.
+                hiBound = 0.
             else:
                 errorMess = 'Invalid entry for variable diff. Must be \'C\', \'U\', \'D\' \'CD\', \'UD\', or \'DD\'.'
     if (errorMess != ''):
@@ -823,7 +858,7 @@ def SpaceDeriv(omega, order, diff):
     q = np.where(spots < 0)[0][0]
     
     polyStencSet = [[] for i in range(orderStenc)]
-    cellFaces = np.linspace(-off / 2, off / 2, num = orderStenc + 1)
+    cellFaces = np.linspace(loBound, hiBound, num = orderStenc + 1)
     zeroLoc = np.where(cellFaces == 0)[0][0]
     cellFaces = np.delete(cellFaces, zeroLoc)
     
