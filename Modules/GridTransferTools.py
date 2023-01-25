@@ -93,7 +93,8 @@ def CoarsenOp(omega):
 # ----------------------------------------------------------------------------------------------------------------
 # By: Sasha Curcic
 #
-# This function 
+# This function creates an array of face values which flank the cells that will be used to interpolate the ghost
+# cell up to the given order. It chooses the cells closest to the ghost cell.
 # ----------------------------------------------------------------------------------------------------------------
 # Inputs:
 #
@@ -166,7 +167,7 @@ def BoundVals1(order, x_0):
 # ----------------------------------------------------------------------------------------------------------------
 # By: Sasha Curcic
 #
-# This function 
+# This function takes the face value of the side of the ghost cell farthest from the central point to construct 
 # ----------------------------------------------------------------------------------------------------------------
 # Inputs:
 #
@@ -208,7 +209,8 @@ def MomentVander(order, bounds, xVec):
 # ----------------------------------------------------------------------------------------------------------------
 # By: Sasha Curcic
 #
-# This function 
+# This function takes the face value of the side of the ghost cell farthest from the central point to construct a
+# polyno
 # ----------------------------------------------------------------------------------------------------------------
 # Inputs:
 #

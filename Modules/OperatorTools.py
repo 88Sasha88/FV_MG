@@ -787,7 +787,7 @@ def CDStencil(orderIn):
     
     return stenc
 
-def UDStencil(order):
+def UDStencil1(order):
     coefs = np.zeros(order + 1)
     stenc = np.zeros(order + 1)
     terms = np.arange(order + 1)
@@ -815,6 +815,41 @@ def UDStencil(order):
 
     return stenc
 
+def UDStencil(orderIn):
+    errorLoc = 'ERROR:\nOperatorTools:\nUDStencil:\n'
+    errorMess = ''
+    if (orderIn % 2 == 0):
+        order = int(orderIn + 1)
+    else:
+        order = orderIn
+    
+    stenc = np.zeros(order + 1)
+    
+    if (order == 1):
+        faceR = np.asarray([0, 1])
+    else:
+        if (order == 3):
+            faceR = (1. / 6.) * np.asarray([0, -1, 5, 2])
+        else:
+            if (order == 5):
+                faceR = (1. / 60.) * np.asarray([0, 2, -13, 47, 27, -3])
+            else:
+                if (order == 7):
+                    faceR = (1. / 420.) * np.asarray([0, -3, 25, -101, 319, 214, -38, 4])
+                else:
+                    if (order == 9):
+                        faceR = (1. / 2520.) * np.asarray([0, 4, -41, 199, -641, 1879, 1375, -305, 55, -5])
+                    else:
+                        errorMess = 'This program is not designed to handle this order of accuracy for forward- and backward-difference operators.'
+    
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    
+    faceL = np.roll(faceR, -1)
+    stenc = faceR - faceL
+    
+    return stenc
+
 def SpaceDeriv(omega, order, diff):
     errorLoc = 'ERROR:\nOperatorTools:\nMakeSpaceDeriv:\n'
     errorMess = ''
@@ -829,11 +864,15 @@ def SpaceDeriv(omega, order, diff):
         hiBound = off / 2.
     else:
         orderStenc = order
+        if (order % 2 == 0):
+            orderStenc = int(order + 1)
+        else:
+            orderStenc = order
+        off = ((orderStenc + 1) / 2)
         if (diff == 'U' or diff == 'UD'):
             stenc = UDStencil(order)
-            off = 0
-            loBound = 0.
-            hiBound = orderStenc / 2.
+            loBound = -off / 2.
+            hiBound = (off - 1) / 2.
         else:
             if (diff == 'D' or diff == 'DD'):
                 stenc = DDStencil(order)
@@ -861,8 +900,7 @@ def SpaceDeriv(omega, order, diff):
     cellFaces = np.linspace(loBound, hiBound, num = orderStenc + 1)
     zeroLoc = np.where(cellFaces == 0)[0][0]
     cellFaces = np.delete(cellFaces, zeroLoc)
-    
-    
+        
 
     for i in range(orderStenc):
         polyStencSet[i] = CentGhost(omega, order, cellFaces[i], diff)
@@ -882,7 +920,7 @@ def SpaceDeriv(omega, order, diff):
     derivOp = mat + 0
     
     for d in range(orderStenc + 1):
-        s = off - d
+        s = int(off - d)
         
         derivMat = mat + 0
         np.fill_diagonal(derivMat, stenc[d])
@@ -891,12 +929,13 @@ def SpaceDeriv(omega, order, diff):
         polyMat = IMat + 0
 
         if (s > 0):
-            j = off - s
+            j = int(off - s)
             pAt = p
             pLow = (p - 1) % degFreed
             pHi = (p + 1) % degFreed
             qAt = (q - s + 1) % degFreed #(q + 1) % degFreed
             for i in range (s):
+
                 polyMat[pAt, :] = 0
                 polyMat[pAt, pLow:pHi] = 0.5
                 polyMat[qAt, :] = polyStencSet[j, :]
@@ -904,10 +943,10 @@ def SpaceDeriv(omega, order, diff):
                 pLow = (pLow - 2) % degFreed
                 pHi = (pHi - 2) % degFreed
                 qAt = (qAt + 1) % degFreed
-                j = j + 1
+                j = int(j + 1)
                 
         if (s < 0):
-            j = off # - s - 1
+            j = int(off) # - s - 1
             qAt = (q + 1) % degFreed
             qLow = (q + 1) % degFreed
             qHi = (q + 3) % degFreed
@@ -920,7 +959,7 @@ def SpaceDeriv(omega, order, diff):
                 qLow = (qLow + 2) % degFreed
                 qHi = (qHi + 2) % degFreed
                 pAt = (pAt + 1) % degFreed
-                j = j + 1 # - 1
+                j = int(j + 1) # - 1
         
         matThis = derivMat @ polyMat
         
