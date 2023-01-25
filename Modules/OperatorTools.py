@@ -850,6 +850,10 @@ def UDStencil(orderIn):
     
     return stenc
 
+def DDStencil(order):
+    stenc = -UDStencil(order)[::-1]
+    return stenc
+
 def SpaceDeriv(omega, order, diff):
     errorLoc = 'ERROR:\nOperatorTools:\nMakeSpaceDeriv:\n'
     errorMess = ''
@@ -872,14 +876,13 @@ def SpaceDeriv(omega, order, diff):
         if (diff == 'U' or diff == 'UD'):
             stenc = UDStencil(order)
             loBound = -off / 2.
-            hiBound = (off - 1) / 2.
+            hiBound = (off - 1.) / 2.
         else:
             if (diff == 'D' or diff == 'DD'):
                 stenc = DDStencil(order)
-                off = 0
-                store = loBound
-                loBound = - orderStenc / 2.
-                hiBound = 0.
+                off = int(off - 1)
+                loBound = -off / 2.
+                hiBound = (off + 1.) / 2.
             else:
                 errorMess = 'Invalid entry for variable diff. Must be \'C\', \'U\', \'D\' \'CD\', \'UD\', or \'DD\'.'
     if (errorMess != ''):
@@ -900,7 +903,6 @@ def SpaceDeriv(omega, order, diff):
     cellFaces = np.linspace(loBound, hiBound, num = orderStenc + 1)
     zeroLoc = np.where(cellFaces == 0)[0][0]
     cellFaces = np.delete(cellFaces, zeroLoc)
-        
 
     for i in range(orderStenc):
         polyStencSet[i] = CentGhost(omega, order, cellFaces[i], diff)
@@ -910,7 +912,6 @@ def SpaceDeriv(omega, order, diff):
     IMat = np.eye(degFreed, degFreed)
     
     # YOU'RE GONNA NEED THESE TO RESTRICT FOR HIGHER EVEN ORDERS, TOO.
-    
     
     
     polyMatU = IMat + 0
@@ -935,7 +936,6 @@ def SpaceDeriv(omega, order, diff):
             pHi = (p + 1) % degFreed
             qAt = (q - s + 1) % degFreed #(q + 1) % degFreed
             for i in range (s):
-
                 polyMat[pAt, :] = 0
                 polyMat[pAt, pLow:pHi] = 0.5
                 polyMat[qAt, :] = polyStencSet[j, :]
