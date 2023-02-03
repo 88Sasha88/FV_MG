@@ -338,7 +338,7 @@ def Grad(omega, order, diff):
     return
 
 # DO NOT CHANGE THIS ONE!!!
-def SpaceDeriv1(omega, order, diff):
+def SpaceDeriv(omega, order, diff):
     
     # Extract info from omega.
     hs = omega.h
@@ -699,57 +699,7 @@ def SpaceDeriv1(omega, order, diff):
 #     print('')
     return blockMat
 
-# MOVE THIS TO GTT!!!
 
-def CentGhost(omega, order, x_0, diff):
-    errorLoc = 'ERROR:\nGridTransferTools:\nCentGhost:\n'
-    errorMess = ''
-    
-    degFreed = omega.degFreed
-    hs = omega.h
-    
-    spots = np.roll(hs, -1) - hs
-    p = np.where(spots > 0)[0][0]
-    q = np.where(spots < 0)[0][0]
-    
-    h_c = max(hs)
-    h_f = min(hs)
-    
-    n_c_m = list(hs).count(h_c)
-    n_f_m = list(hs).count(h_f)
-    
-    ghostCell, n_c, n_f = GTT.GhostCellStencil(order, x_0)
-    
-    if (n_c > n_c_m):
-        errorMess = 'This grid has too few coarse cells for the order of the polynomial interpolation!'
-    if (n_f > n_f_m):
-        errorMess = 'This grid has too few fine cells for the order of the polynomial interpolation!'
-    
-    cells = n_c + n_f
-    
-    # ADD ERROR CHECKER FOR THE NUMBER OF COURSE AND FINE CELLS ON GRID OF GIVEN SIZE!!!
-    
-
-    fullStenc = np.zeros(degFreed, float)
-    
-    if (x_0 > 0):
-        for k in range(cells):
-            index = (p - n_f + k + 1) % degFreed
-            fullStenc[index] = ghostCell[k]
-    else:
-        if (x_0 < 0):
-            for k in range(cells):
-                index = (q - n_c + k + 1) % degFreed
-                fullStenc[index] = ghostCell[k]
-        else:
-            errorMess = 'Argument x_0 cannot be 0!'
-    
-    
-    if (errorMess != ''):
-        sys.exit(errorLoc + errorMess)
-    
-    
-    return fullStenc
 
 def CDStencil(orderIn):
     if (orderIn % 2 == 0):
@@ -810,7 +760,6 @@ def UDStencil1(order):
     stenc[:order] = LA.inv(mat) @ vec
     val = (tExp @ stenc)[1]
     
-#     UNCOMMENT THIS LINE!!!!!
     stenc = stenc / val
 
     return stenc
@@ -894,10 +843,17 @@ def SpaceDeriv(omega, order, diff):
     hs = omega.h
     
     spots = np.roll(hs, -1) - hs
-    # Index before fine-coarse interface
-    p = np.where(spots > 0)[0][0]
-    # Index before coarse-fine interface
-    q = np.where(spots < 0)[0][0]
+    
+    if (all(spots == 0)):
+        p = []
+        q = []
+        NU = False
+    else:
+        # Index before fine-coarse interface
+        p = np.where(spots > 0)[0][0]
+        # Index before coarse-fine interface
+        q = np.where(spots < 0)[0][0]
+        NU = True
     
     polyStencSet = [[] for i in range(orderStenc)]
     cellFaces = np.linspace(loBound, hiBound, num = orderStenc + 1)
@@ -905,7 +861,7 @@ def SpaceDeriv(omega, order, diff):
     cellFaces = np.delete(cellFaces, zeroLoc)
 
     for i in range(orderStenc):
-        polyStencSet[i] = CentGhost(omega, order, cellFaces[i], diff)
+        polyStencSet[i] = GTT.CentGhost(omega, order, cellFaces[i])
     
     polyStencSet = np.asarray(polyStencSet)
 
@@ -928,38 +884,39 @@ def SpaceDeriv(omega, order, diff):
         derivMat = np.roll(derivMat, s, axis = 0)
         
         polyMat = IMat + 0
+        
+        if (NU):
+            if (s > 0):
+                j = int(off - s)
+                pAt = p
+                pLow = (p - 1) % degFreed
+                pHi = (p + 1) % degFreed
+                qAt = (q - s + 1) % degFreed #(q + 1) % degFreed
+                for i in range (s):
+                    polyMat[pAt, :] = 0
+                    polyMat[pAt, pLow:pHi] = 0.5
+                    polyMat[qAt, :] = polyStencSet[j, :]
+                    pAt = (pAt - 1) % degFreed
+                    pLow = (pLow - 2) % degFreed
+                    pHi = (pHi - 2) % degFreed
+                    qAt = (qAt + 1) % degFreed
+                    j = int(j + 1)
 
-        if (s > 0):
-            j = int(off - s)
-            pAt = p
-            pLow = (p - 1) % degFreed
-            pHi = (p + 1) % degFreed
-            qAt = (q - s + 1) % degFreed #(q + 1) % degFreed
-            for i in range (s):
-                polyMat[pAt, :] = 0
-                polyMat[pAt, pLow:pHi] = 0.5
-                polyMat[qAt, :] = polyStencSet[j, :]
-                pAt = (pAt - 1) % degFreed
-                pLow = (pLow - 2) % degFreed
-                pHi = (pHi - 2) % degFreed
-                qAt = (qAt + 1) % degFreed
-                j = int(j + 1)
-                
-        if (s < 0):
-            j = int(off) # - s - 1
-            qAt = (q + 1) % degFreed
-            qLow = (q + 1) % degFreed
-            qHi = (q + 3) % degFreed
-            pAt = (p + 1) % degFreed#p
-            for i in range(abs(s)):
-                polyMat[qAt, :] = 0
-                polyMat[qAt, qLow:qHi] = 0.5
-                polyMat[pAt, :] = polyStencSet[j, :]
-                qAt = (qAt + 1) % degFreed
-                qLow = (qLow + 2) % degFreed
-                qHi = (qHi + 2) % degFreed
-                pAt = (pAt + 1) % degFreed
-                j = int(j + 1) # - 1
+            if (s < 0):
+                j = int(off) # - s - 1
+                qAt = (q + 1) % degFreed
+                qLow = (q + 1) % degFreed
+                qHi = (q + 3) % degFreed
+                pAt = (p + 1) % degFreed#p
+                for i in range(abs(s)):
+                    polyMat[qAt, :] = 0
+                    polyMat[qAt, qLow:qHi] = 0.5
+                    polyMat[pAt, :] = polyStencSet[j, :]
+                    qAt = (qAt + 1) % degFreed
+                    qLow = (qLow + 2) % degFreed
+                    qHi = (qHi + 2) % degFreed
+                    pAt = (pAt + 1) % degFreed
+                    j = int(j + 1) # - 1
         
         matThis = derivMat @ polyMat
         

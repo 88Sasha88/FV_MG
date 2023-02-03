@@ -94,7 +94,8 @@ def CoarsenOp(omega):
 # By: Sasha Curcic
 #
 # This function creates an array of face values which flank the cells that will be used to interpolate the ghost
-# cell up to the given order. It chooses the cells closest to the ghost cell.
+# cell up to the given order. It also outputs the number of coarse and fine cells used in the interpolation. It
+# selects the order-plus-one many cells closest to the ghost cell location.
 # ----------------------------------------------------------------------------------------------------------------
 # Inputs:
 #
@@ -103,11 +104,12 @@ def CoarsenOp(omega):
 # ----------------------------------------------------------------------------------------------------------------
 # Outputs:
 #
-# bounds                  array                  Face values around cells used for interpolation
+# bounds                  array                  (order+2) many face values around cells used for interpolation
+# n_c                     int                    Number of coarse cells used in interpolation
+# n_f                     int                    Number of fine cells used in interpolation
 # ----------------------------------------------------------------------------------------------------------------
 
 def BoundVals(order, x_0):
-    print('YOU\'RE USING THE UPDATE.')
     a = abs(int(x_0 / 0.5))
     cells = order + 1
     if (cells <= a):
@@ -133,51 +135,28 @@ def BoundVals(order, x_0):
             bounds = np.arange(n_c + 1) + (int(x_0) - int((n_c + 1) / 2))
         else:
             bounds = np.arange(n_c + 1) + (int(x_0) - int(n_c / 2))
-    print('bounds:', bounds)
     return bounds, n_c, n_f
 
-def BoundVals1(order, x_0):
-    print('')
-    print('START BoundVals() FUNC!')
-    
-    if ((order + 1) % 3 == 0):
-        print('HERE!')
-        n_c = int(np.floor((order + 1) / 3))
-    else:
-        n_c = int(np.floor(((order + 1) / 3) + 1))
-    print('n_c:', n_c)
-    
-    n_f = order + 1 - n_c
-    print('n_f:', n_f)
-    bounds = np.linspace(-n_c, n_f / 2., num = (2 * n_c) + n_f + 1)
-    print('bounds:', bounds)
-    rm = [(2 * k) + 1 for k in range(n_c)]
-    print('rm:', rm)
-    bounds = np.delete(bounds, rm)
-    print('bounds:', bounds)
-    if (x_0 > 0):
-         bounds = -bounds[::-1]
-    print('bounds:', bounds)
-    print('END BoundVals() FUNC!')
-    print('')
-    return bounds
 
 # ----------------------------------------------------------------------------------------------------------------
 # Function: MomentVander
 # ----------------------------------------------------------------------------------------------------------------
 # By: Sasha Curcic
 #
-# This function takes the face value of the side of the ghost cell farthest from the central point to construct 
+# This function creates a finite-volume Vandermonde matrix from the bounds array and then multiplies its inverse
+# with the xVec array of cell averaged polynomial ghost cell values to find the polynomial interpolation for that
+# ghost cell.
 # ----------------------------------------------------------------------------------------------------------------
 # Inputs:
 #
 # order                   int                    Order of interpolation
-# bounds                  array                  Face values around cells used for interpolation
-# xVec                    float                  (Not sure)
+# bounds                  array                  (order+2) many face values around cells used for interpolation
+# xVec                    array                  Cell-averaged vector order+1-order polynomial of ghost cell
+#                                                    values
 # ----------------------------------------------------------------------------------------------------------------
 # Outputs:
 #
-# polyInterp              array                   (Not sure)
+# polyInterp              array                  (order+1)-sized array of polynomial interpolation of ghost cell
 # ----------------------------------------------------------------------------------------------------------------
 
 def MomentVander(order, bounds, xVec):
@@ -210,7 +189,8 @@ def MomentVander(order, bounds, xVec):
 # By: Sasha Curcic
 #
 # This function takes the face value of the side of the ghost cell farthest from the central point to construct a
-# polyno
+# finite-volume polynomial interpolation from the cells nearest to the location of the ghost cell. It also outputs
+# the number of coarse and fine cells used in the interpolation.
 # ----------------------------------------------------------------------------------------------------------------
 # Inputs:
 #
@@ -219,41 +199,108 @@ def MomentVander(order, bounds, xVec):
 # ----------------------------------------------------------------------------------------------------------------
 # Outputs:
 #
-# polyInterp              array                   Polynomial interpolation of ghost cell
+# polyInterp              array                  (order+1)-sized array of polynomial interpolation of ghost cell
+# n_c                     int                    Number of coarse cells used in interpolation
+# n_f                     int                    Number of fine cells used in interpolation
 # ----------------------------------------------------------------------------------------------------------------
 
-def GhostCellStencil(order, x_0, face = False):
-    print(x_0)
+def GhostCellStencil(order, x_0):
     errorLoc = 'ERROR:\nGridTransferTools:\nGhostCellStencil:\n'
     errorMess = ''
-#     print('')
-#     print('START GhostCellStencil() FUNC!')
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
-#     print(intCoefs)
-#     print('intCoefs:', intCoefs)
     polyCoefs = np.diag(intCoefs)
 #     print('polyCoefs:', polyCoefs)
-    if (x_0 > 0):
-        xValsR = np.polynomial.polynomial.polyvander(x_0, order + 1)[0][1:][::-1] / 0.5   
-        xValsL = np.polynomial.polynomial.polyvander(x_0 - 0.5, order + 1)[0][1:][::-1] / 0.5
+    if (x_0 % 0.5 != 0):
+        errorMess = 'x_0 must be multiple of 0.5!'
     else:
-        if (x_0 < 0):
-            xValsR = np.polynomial.polynomial.polyvander(x_0 + 0.5, order + 1)[0][1:][::-1] / 0.5
-            xValsL = np.polynomial.polynomial.polyvander(x_0, order + 1)[0][1:][::-1] / 0.5
+        if (x_0 > 0):
+            xValsR = np.polynomial.polynomial.polyvander(x_0, order + 1)[0][1:][::-1] / 0.5   
+            xValsL = np.polynomial.polynomial.polyvander(x_0 - 0.5, order + 1)[0][1:][::-1] / 0.5
         else:
-            errorMess = 'x_0 cannot be zero!'
+            if (x_0 < 0):
+                xValsR = np.polynomial.polynomial.polyvander(x_0 + 0.5, order + 1)[0][1:][::-1] / 0.5
+                xValsL = np.polynomial.polynomial.polyvander(x_0, order + 1)[0][1:][::-1] / 0.5
+            else:
+                errorMess = 'x_0 cannot be zero!'
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
-    print('xValsR:', xValsR)
-    print('xValsL:', xValsL)
-    print(np.polynomial.polynomial.polyvander(x_0, order)[0][::-1])
+
     xVec = (xValsR - xValsL) @ polyCoefs
-#     print(np.polynomial.polynomial.polyvander(x_0, order)[0][::-1])
-#     print('xVec:', xVec)
+
     bounds, n_c, n_f = BoundVals(order, x_0)
-#     print('bounds:', bounds)
+
     polyInterp = MomentVander(order, bounds, xVec)
-#     print('polyInterp:', polyInterp)
-#     print('END GhoseCellStencil() FUNC!')
-    print('')
+    
     return polyInterp, n_c, n_f
+
+# ----------------------------------------------------------------------------------------------------------------
+# Function: CentGhost
+# ----------------------------------------------------------------------------------------------------------------
+# By: Sasha Curcic
+#
+# This function centers the polynomial interpolation for a ghost cell about the appropriate coarse-fine or fine-
+# coarse boundary. If the grid is uniform, it outputs an array of zeros.
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# omega                   Grid                   Object containing all grid attributes
+# order                   int                    Order of interpolation
+# x_0                     float                  Farthest face from zero point of cell to interpolate
+# ----------------------------------------------------------------------------------------------------------------
+# Outputs:
+#
+# fullStenc               array                  (degFreed)-sized array of ghost cell interpolation centered at
+#                                                    patch boundary or zeros
+# ----------------------------------------------------------------------------------------------------------------
+
+def CentGhost(omega, order, x_0):
+    errorLoc = 'ERROR:\nGridTransferTools:\nCentGhost:\n'
+    errorMess = ''
+    
+    degFreed = omega.degFreed
+    hs = omega.h
+    
+    spots = np.roll(hs, -1) - hs
+    
+    if (all(spots == 0)):
+        fullStenc = np.zeros(degFreed, float)
+    else:
+        # Index before fine-coarse interface
+        p = np.where(spots > 0)[0][0]
+        # Index before coarse-fine interface
+        q = np.where(spots < 0)[0][0]
+    
+        h_c = max(hs)
+        h_f = min(hs)
+
+        n_c_m = list(hs).count(h_c)
+        n_f_m = list(hs).count(h_f)
+
+        ghostCell, n_c, n_f = GhostCellStencil(order, x_0)
+
+        if (n_c > n_c_m):
+            errorMess = 'This grid has too few coarse cells for the order of the polynomial interpolation!'
+        if (n_f > n_f_m):
+            errorMess = 'This grid has too few fine cells for the order of the polynomial interpolation!'
+
+        cells = n_c + n_f
+
+
+        fullStenc = np.zeros(degFreed, float)
+
+        if (x_0 > 0):
+            for k in range(cells):
+                index = (p - n_f + k + 1) % degFreed
+                fullStenc[index] = ghostCell[k]
+        else:
+            if (x_0 < 0):
+                for k in range(cells):
+                    index = (q - n_c + k + 1) % degFreed
+                    fullStenc[index] = ghostCell[k]
+
+
+        if (errorMess != ''):
+            sys.exit(errorLoc + errorMess)
+    
+    
+    return fullStenc
