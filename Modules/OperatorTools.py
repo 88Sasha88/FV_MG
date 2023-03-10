@@ -533,7 +533,7 @@ def ExactSpatDerivOp(omega):
     np.fill_diagonal(Op[1:], subsuper[:])
     np.fill_diagonal(Op[:, 1:], -subsuper)
     SpatOp = 2 * np.pi * Op
-    print(Op)
+    
     return SpatOp
 
 

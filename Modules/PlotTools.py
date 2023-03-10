@@ -342,7 +342,7 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
         i = 0
         for j in range(numGraphs):
             if (fX != []):
-                plt.plot(X, fX[:, j], color = ColorDefault(i), zorder = 2, label = labelsOut[j])
+                plt.plot(X, fX[:, j], color = ColorDefault(i), zorder = 2, label = labelsOut[j], linewidth = linewidth)
                 pieceColor = 3
                 pieceLabel = []
             else:

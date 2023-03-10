@@ -207,9 +207,40 @@ def MomentVander(order, bounds, xVec):
 def GhostCellStencil(order, x_0):
     errorLoc = 'ERROR:\nGridTransferTools:\nGhostCellStencil:\n'
     errorMess = ''
+#     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
+#     polyCoefs = np.diag(intCoefs)
+
+#     if (x_0 % 0.5 != 0):
+#         errorMess = 'x_0 must be multiple of 0.5!'
+#     else:
+#         if (x_0 > 0):
+#             xValsR = np.polynomial.polynomial.polyvander(x_0, order + 1)[0][1:][::-1] / 0.5   
+#             xValsL = np.polynomial.polynomial.polyvander(x_0 - 0.5, order + 1)[0][1:][::-1] / 0.5
+#         else:
+#             if (x_0 < 0):
+#                 xValsR = np.polynomial.polynomial.polyvander(x_0 + 0.5, order + 1)[0][1:][::-1] / 0.5
+#                 xValsL = np.polynomial.polynomial.polyvander(x_0, order + 1)[0][1:][::-1] / 0.5
+#             else:
+#                 errorMess = 'x_0 cannot be zero!'
+#     if (errorMess != ''):
+#         sys.exit(errorLoc + errorMess)
+
+#     xVec = (xValsR - xValsL) @ polyCoefs
+    xVec = InterpVec(order, x_0)
+
+    bounds, n_c, n_f = BoundVals(order, x_0)
+
+    polyInterp = MomentVander(order, bounds, xVec)
+    
+    return polyInterp, n_c, n_f
+
+
+def InterpVec(order, x_0):
+    errorLoc = 'ERROR:\nGridTransferTools:\nInterpVec:\n'
+    errorMess = ''
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
     polyCoefs = np.diag(intCoefs)
-#     print('polyCoefs:', polyCoefs)
+
     if (x_0 % 0.5 != 0):
         errorMess = 'x_0 must be multiple of 0.5!'
     else:
@@ -226,12 +257,8 @@ def GhostCellStencil(order, x_0):
         sys.exit(errorLoc + errorMess)
 
     xVec = (xValsR - xValsL) @ polyCoefs
-
-    bounds, n_c, n_f = BoundVals(order, x_0)
-
-    polyInterp = MomentVander(order, bounds, xVec)
     
-    return polyInterp, n_c, n_f
+    return xVec
 
 # ----------------------------------------------------------------------------------------------------------------
 # Function: CentGhost
@@ -284,7 +311,6 @@ def CentGhost(omega, order, x_0):
             errorMess = 'This grid has too few fine cells for the order of the polynomial interpolation!'
 
         cells = n_c + n_f
-
 
         fullStenc = np.zeros(degFreed, float)
 
