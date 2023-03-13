@@ -803,7 +803,7 @@ def DDStencil(order):
     stenc = -UDStencil(order)[::-1]
     return stenc
 
-def SpaceDeriv(omega, order, diff):
+def SpaceDeriv(omega, order, diff, matIndVal = []):
     errorLoc = 'ERROR:\nOperatorTools:\nMakeSpaceDeriv:\n'
     errorMess = ''
     if (diff == 'C' or diff == 'CD'):
@@ -841,6 +841,13 @@ def SpaceDeriv(omega, order, diff):
     
     degFreed = omega.degFreed
     hs = omega.h
+    
+    # HERE IS WHERE YOU MADE SOME EDITS.
+    if (matIndVal is not []):
+        sign = np.sign(matIndVal)
+        matInd = abs(matIndVal)
+    else:
+        sign = 0
     
     spots = np.roll(hs, -1) - hs
     
@@ -896,6 +903,8 @@ def SpaceDeriv(omega, order, diff):
                     polyMat[pAt, :] = 0
                     polyMat[pAt, pLow:pHi] = 0.5
                     polyMat[qAt, :] = polyStencSet[j, :]
+                    if (sign > 0):
+                        polyMat[matInd - i, :] = CentGhostMaterial(omega, order, matInd, int(matInd - i + s), s)
                     pAt = (pAt - 1) % degFreed
                     pLow = (pLow - 2) % degFreed
                     pHi = (pHi - 2) % degFreed
@@ -912,6 +921,8 @@ def SpaceDeriv(omega, order, diff):
                     polyMat[qAt, :] = 0
                     polyMat[qAt, qLow:qHi] = 0.5
                     polyMat[pAt, :] = polyStencSet[j, :]
+                    if (sign < 0):
+                        polyMat[matInd - i, :] = CentGhostMaterial(omega, order, matInd, int(matInd - i + s), s)
                     qAt = (qAt + 1) % degFreed
                     qLow = (qLow + 2) % degFreed
                     qHi = (qHi + 2) % degFreed
