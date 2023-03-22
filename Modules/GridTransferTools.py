@@ -135,6 +135,7 @@ def BoundVals(order, x_0):
             bounds = np.arange(n_c + 1) + (int(x_0) - int((n_c + 1) / 2))
         else:
             bounds = np.arange(n_c + 1) + (int(x_0) - int(n_c / 2))
+    print('bounds:', bounds)
     return bounds, n_c, n_f
 
 
@@ -175,6 +176,10 @@ def MomentVander(order, bounds, xVec):
 #     print('A:', A)
     B = np.diag(bounds[:-1]) @ np.vander(bounds[:-1])
 #     print('B:', B)
+    print('hInv:', np.shape(hInv))
+    print('A:', np.shape(A))
+    print('B:', np.shape(B))
+    print('polyCoefs:', np.shape(polyCoefs))
     VanderMat = hInv @ (A - B) @ polyCoefs
 #     print('VanderMat:', VanderMat)
     polyInterp = xVec @ LA2.inv(VanderMat)
@@ -207,6 +212,8 @@ def MomentVander(order, bounds, xVec):
 def GhostCellStencil(order, x_0):
     errorLoc = 'ERROR:\nGridTransferTools:\nGhostCellStencil:\n'
     errorMess = ''
+    intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
+    polyCoefs = np.diag(intCoefs)
 #     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
 #     polyCoefs = np.diag(intCoefs)
 
@@ -226,7 +233,10 @@ def GhostCellStencil(order, x_0):
 #         sys.exit(errorLoc + errorMess)
 
 #     xVec = (xValsR - xValsL) @ polyCoefs
-    xVec = InterpVec(order, x_0)
+    xVec = np.polynomial.polynomial.polyvander(x_0, order)[0][::-1] @ polyCoefs
+    xVec1 = InterpVec(order, x_0)
+    print('xVec:', xVec)
+    print('xVec1:', xVec1)
 
     bounds, n_c, n_f = BoundVals(order, x_0)
 
@@ -240,6 +250,7 @@ def InterpVec(order, x_0):
     errorMess = ''
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
     polyCoefs = np.diag(intCoefs)
+    print('polyCoefs:', polyCoefs)
 
     if (x_0 % 0.5 != 0):
         errorMess = 'x_0 must be multiple of 0.5!'
@@ -255,6 +266,11 @@ def InterpVec(order, x_0):
                 errorMess = 'x_0 cannot be zero!'
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
+    
+    
+    print('xValsL:', xValsL)
+    print('xValsR:', xValsR)
+        
 
     xVec = (xValsR - xValsL) @ polyCoefs
     
@@ -355,7 +371,7 @@ def CentGhostMaterial(omega, order, matInd, centCellInd, offDiagInd):
     if ((type(offDiagInd) != int) or (offDiagInd == 0)):
         errorMess = 'offDiagInd must be a nonzero integer identifying the number of cells from material boundary!'
     else:
-        if (offDiagInd < 0):
+        if (offDiagInd > 0):
             stenc[matInd + 1:matInd + order + 2] = ghostStenc
         else:
             stenc[matInd - order:matInd + 1] = ghostStenc
@@ -373,7 +389,7 @@ def GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd):
 
     xVec = MaterialInterpVec(omega, order, centCellInd, offDiagInd)
 
-    polyInterp = GTT.MomentVander(order, bounds, xVec)
+    polyInterp = MomentVander(order, bounds, xVec)
     
     return polyInterp
 
@@ -384,8 +400,6 @@ def MaterialInterpVec(omega, order, centCellInd, offDiagInd):
     
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
     polyCoefs = np.diag(intCoefs)
-    
-    matInd = physics.matInd
     
     bounds = xNode[centCellInd:centCellInd + 2]
     h = bounds[-1] - bounds[0]

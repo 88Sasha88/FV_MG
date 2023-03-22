@@ -461,5 +461,8 @@ class PhysProps:
         self.cVec = cVec.transpose()
         self.cMat = np.diag(cVec)
         self.cs = cs
-        self.matInd = max(np.where(x[:-1] <= locs[0])[0])
+        if (locs is []):
+            self.matInd = -1
+        else:
+            self.matInd = max(np.where(x[:-1] < locs[0])[0])
 

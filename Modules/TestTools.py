@@ -132,7 +132,8 @@ def TestPoly(order, x_0, const = 2, tol = 1e-10):
     h = bounds[:-1] - bounds[1:]
     
     # Create stencil.
-    polyInterp = GTT.GhostCellStencil(order, x_0)
+    polyInterp, n_c, n_f = GTT.GhostCellStencil(order, x_0)
+    
     
     # Iterate through monomials up to appropriate order of accuracy to test stencil.
     for k in range(order + 2):
@@ -142,10 +143,10 @@ def TestPoly(order, x_0, const = 2, tol = 1e-10):
         P = np.polyint(p)
         print('p(x) =\n', p)
         print('P(x) =\n', P)
-        v = (P(bounds[:-1]) - P(bounds[1:])) / h
+        v = (np.asarray(P(bounds[:-1])) - np.asarray(P(bounds[1:]))) / h
         print('Order ' + str(k) + ':')
 
-        theor = P(x_0) / x_0
+        theor = P(x_0) / 0.5
         act = v.transpose() @ polyInterp
         error = (act - theor) / theor
         print(theor, act)
@@ -206,7 +207,7 @@ def DerivPolyTest1(omega, diff, orderIn, coefs = [], deriv = 0):
     if (deriv == 0):
         derivOp = OT.SpaceDeriv(omega, order, diff)# DiffFunc(omega, 0, waveform, const, order)
     else:
-        derivOp = OT.SpaceDeriv1(omega, order, diff)
+        derivOp = OT.SpaceDerivOld(omega, order, diff)
     wavederiv = derivOp @ waveform
     print('x:')
     print(x)

@@ -803,7 +803,7 @@ def DDStencil(order):
     stenc = -UDStencil(order)[::-1]
     return stenc
 
-def SpaceDeriv(omega, order, diff, matIndVal = []):
+def SpaceDerivOld(omega, order, diff):
     errorLoc = 'ERROR:\nOperatorTools:\nMakeSpaceDeriv:\n'
     errorMess = ''
     if (diff == 'C' or diff == 'CD'):
@@ -842,12 +842,135 @@ def SpaceDeriv(omega, order, diff, matIndVal = []):
     degFreed = omega.degFreed
     hs = omega.h
     
-    # HERE IS WHERE YOU MADE SOME EDITS.
-    if (matIndVal is not []):
-        sign = np.sign(matIndVal)
-        matInd = abs(matIndVal)
+    spots = np.roll(hs, -1) - hs
+    # Index before fine-coarse interface
+    p = np.where(spots > 0)[0][0]
+    # Index before coarse-fine interface
+    q = np.where(spots < 0)[0][0]
+    
+    polyStencSet = [[] for i in range(orderStenc)]
+    cellFaces = np.linspace(loBound, hiBound, num = orderStenc + 1)
+    zeroLoc = np.where(cellFaces == 0)[0][0]
+    cellFaces = np.delete(cellFaces, zeroLoc)
+
+    for i in range(orderStenc):
+        polyStencSet[i] = GTT.CentGhost(omega, order, cellFaces[i])
+    
+    polyStencSet = np.asarray(polyStencSet)
+
+    IMat = np.eye(degFreed, degFreed)
+    
+    # YOU'RE GONNA NEED THESE TO RESTRICT FOR HIGHER EVEN ORDERS, TOO.
+    
+    
+    polyMatU = IMat + 0
+    
+    
+    mat = np.zeros((degFreed, degFreed), float)
+    derivOp = mat + 0
+    
+    for d in range(orderStenc + 1):
+        s = int(off - d)
+        
+        derivMat = mat + 0
+        np.fill_diagonal(derivMat, stenc[d])
+        derivMat = np.roll(derivMat, s, axis = 0)
+        
+        polyMat = IMat + 0
+
+        if (s > 0):
+            j = int(off - s)
+            pAt = p
+            pLow = (p - 1) % degFreed
+            pHi = (p + 1) % degFreed
+            qAt = (q - s + 1) % degFreed #(q + 1) % degFreed
+            for i in range (s):
+                polyMat[pAt, :] = 0
+                polyMat[pAt, pLow:pHi] = 0.5
+                polyMat[qAt, :] = polyStencSet[j, :]
+                pAt = (pAt - 1) % degFreed
+                pLow = (pLow - 2) % degFreed
+                pHi = (pHi - 2) % degFreed
+                qAt = (qAt + 1) % degFreed
+                j = int(j + 1)
+                
+        if (s < 0):
+            j = int(off) # - s - 1
+            qAt = (q + 1) % degFreed
+            qLow = (q + 1) % degFreed
+            qHi = (q + 3) % degFreed
+            pAt = (p + 1) % degFreed#p
+            for i in range(abs(s)):
+                polyMat[qAt, :] = 0
+                polyMat[qAt, qLow:qHi] = 0.5
+                polyMat[pAt, :] = polyStencSet[j, :]
+                qAt = (qAt + 1) % degFreed
+                qLow = (qLow + 2) % degFreed
+                qHi = (qHi + 2) % degFreed
+                pAt = (pAt + 1) % degFreed
+                j = int(j + 1) # - 1
+        
+        matThis = derivMat @ polyMat
+        
+        derivOp = derivOp + matThis
+    
+    hMat = StepMatrix(omega)
+    
+    derivOp = hMat @ derivOp
+        
+    return derivOp
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def SpaceDeriv(omega, order, diff, matInd = -1):
+    errorLoc = 'ERROR:\nOperatorTools:\nMakeSpaceDeriv:\n'
+    errorMess = ''
+    if (diff == 'C' or diff == 'CD'):
+        stenc = CDStencil(order)
+        if (order % 2 == 0):
+            orderStenc = order
+        else:
+            orderStenc = int(order + 1)
+        off = int(orderStenc / 2)
+        loBound = -off / 2.
+        hiBound = off / 2.
     else:
-        sign = 0
+        orderStenc = order
+        if (order % 2 == 0):
+            orderStenc = int(order + 1)
+        else:
+            orderStenc = order
+        off = ((orderStenc + 1) / 2)
+        if (diff == 'U' or diff == 'UD'):
+            stenc = UDStencil(order)
+            loBound = -off / 2.
+            hiBound = (off - 1.) / 2.
+        else:
+            if (diff == 'D' or diff == 'DD'):
+                stenc = DDStencil(order)
+                off = int(off - 1)
+                loBound = -off / 2.
+                hiBound = (off + 1.) / 2.
+            else:
+                errorMess = 'Invalid entry for variable diff. Must be \'C\', \'U\', \'D\' \'CD\', \'UD\', or \'DD\'.'
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    
+#     stenc = np.ones(orderStenc + 1)
+    
+    degFreed = omega.degFreed
+    hs = omega.h
     
     spots = np.roll(hs, -1) - hs
     
@@ -892,42 +1015,50 @@ def SpaceDeriv(omega, order, diff, matIndVal = []):
         
         polyMat = IMat + 0
         
-        if (NU):
-            if (s > 0):
+        
+        if (s > 0):
+            if (NU):
                 j = int(off - s)
                 pAt = p
                 pLow = (p - 1) % degFreed
                 pHi = (p + 1) % degFreed
                 qAt = (q - s + 1) % degFreed #(q + 1) % degFreed
-                for i in range (s):
+            for i in range (s):
+                if (NU):
                     polyMat[pAt, :] = 0
                     polyMat[pAt, pLow:pHi] = 0.5
                     polyMat[qAt, :] = polyStencSet[j, :]
-                    if (sign > 0):
-                        polyMat[matInd - i, :] = CentGhostMaterial(omega, order, matInd, int(matInd - i + s), s)
                     pAt = (pAt - 1) % degFreed
                     pLow = (pLow - 2) % degFreed
                     pHi = (pHi - 2) % degFreed
                     qAt = (qAt + 1) % degFreed
                     j = int(j + 1)
+                if (matInd >= 0): # sign > 0):
+                    print('matInd is', matInd)
+                    polyMat[matInd - i, :] = GTT.CentGhostMaterial(omega, order, matInd, int(matInd - i + s), s)
+                
 
             if (s < 0):
-                j = int(off) # - s - 1
-                qAt = (q + 1) % degFreed
-                qLow = (q + 1) % degFreed
-                qHi = (q + 3) % degFreed
-                pAt = (p + 1) % degFreed#p
+                if (NU):
+                    j = int(off) # - s - 1
+                    qAt = (q + 1) % degFreed
+                    qLow = (q + 1) % degFreed
+                    qHi = (q + 3) % degFreed
+                    pAt = (p + 1) % degFreed#p
                 for i in range(abs(s)):
-                    polyMat[qAt, :] = 0
-                    polyMat[qAt, qLow:qHi] = 0.5
-                    polyMat[pAt, :] = polyStencSet[j, :]
-                    if (sign < 0):
-                        polyMat[matInd - i, :] = CentGhostMaterial(omega, order, matInd, int(matInd - i + s), s)
-                    qAt = (qAt + 1) % degFreed
-                    qLow = (qLow + 2) % degFreed
-                    qHi = (qHi + 2) % degFreed
-                    pAt = (pAt + 1) % degFreed
-                    j = int(j + 1) # - 1
+                    if (NU):
+                        polyMat[qAt, :] = 0
+                        polyMat[qAt, qLow:qHi] = 0.5
+                        polyMat[pAt, :] = polyStencSet[j, :]
+                        qAt = (qAt + 1) % degFreed
+                        qLow = (qLow + 2) % degFreed
+                        qHi = (qHi + 2) % degFreed
+                        pAt = (pAt + 1) % degFreed
+                        j = int(j + 1) # - 1
+                    if (matInd >= 0): # sign < 0):
+                        print('matInd is', matInd)
+                        polyMat[matInd - i, :] = GTT.CentGhostMaterial(omega, order, matInd, int(matInd - i + s), s)
+                    
         
         matThis = derivMat @ polyMat
         
