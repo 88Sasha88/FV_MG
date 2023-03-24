@@ -448,8 +448,9 @@ class PhysProps:
         indexOld = 0
         for i in range(iters):
             distance = locs[i] - x
+            print('distance is\n', distance, '\n')
             minDist = min(abs(distance))
-            indexNew = np.where(distance == minDist)[0][0]
+            indexNew = np.where(abs(distance) == minDist)[0][0] # The abs in this line might not be correct.
             c = 1. / (L * np.sqrt(epsilons[i] * mus[i]))
             cVec[indexOld:indexNew] = c
             cs[i] = c
@@ -458,4 +459,9 @@ class PhysProps:
         self.cVec = cVec.transpose()
         self.cMat = np.diag(cVec)
         self.cs = cs
+        
+        if (locs is []):
+            self.matInd = -1
+        else:
+            self.matInd = max(np.where(x[:-1] < locs[0])[0])
 
