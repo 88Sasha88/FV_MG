@@ -388,9 +388,9 @@ def CentGhostMaterial(omega, order, matInd, centCellInd, offDiagInd):
         errorMess = 'offDiagInd must be a nonzero integer identifying the number of cells from material boundary!'
     else:
         if (offDiagInd > 0):
-            stenc[matInd + 1:matInd + order + 2] = 20 * np.ones(order + 1) # ghostStenc
+            stenc[matInd + 1:matInd + order + 2] = ghostStenc
         else:
-            stenc[matInd - order:matInd + 1] = 30 * np.ones(order + 1) # ghostStenc
+            stenc[matInd - order:matInd + 1] = ghostStenc
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
     
@@ -403,7 +403,7 @@ def GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd):
     
     bounds = MaterialInterpBounds(omega, order, matInd, offDiagInd)
 
-    xVec = MaterialInterpVec(omega, order, centCellInd, offDiagInd)
+    xVec, xL, xR = MaterialInterpVec(omega, order, centCellInd, offDiagInd)
 
     polyInterp = MomentVander(order, bounds, xVec)
     
@@ -419,14 +419,17 @@ def MaterialInterpVec(omega, order, centCellInd, offDiagInd):
     
     bounds = xNode[centCellInd:centCellInd + 2]
     h = bounds[-1] - bounds[0]
-    bounds = bounds - (offDiagInd * h)
+    bounds = bounds - (offDiagInd * h) # Possible source of error.
     
-    xValsR = np.polynomial.polynomial.polyvander(bounds[-1], order + 1)[0][1:][::-1] / h  
+    xL = bounds[0]
+    xR = bounds[1]
+    
     xValsL = np.polynomial.polynomial.polyvander(bounds[0], order + 1)[0][1:][::-1] / h
+    xValsR = np.polynomial.polynomial.polyvander(bounds[-1], order + 1)[0][1:][::-1] / h  
     
     xVec = (xValsR - xValsL) @ polyCoefs
     
-    return xVec
+    return xVec, xL, xR
 
 
 def MaterialInterpBounds(omega, order, matInd, offDiagInd):
@@ -438,7 +441,7 @@ def MaterialInterpBounds(omega, order, matInd, offDiagInd):
     if ((type(offDiagInd) != int) or (offDiagInd == 0)):
         errorMess = 'offDiagInd must be a nonzero integer identifying the number of cells from material boundary!'
     else:
-        if (offDiagInd > 0):
+        if (offDiagInd > 0): # Possible source of error.
             print('this one.')
             bounds = xNode[matInd:matInd+order+2]
         else:

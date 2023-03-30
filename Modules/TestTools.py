@@ -237,7 +237,7 @@ def DerivPolyTest1(omega, diff, orderIn, coefs = [], deriv = 0):
     print('')
     return
 
-def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0):
+def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0, matInd = -1):
     order = orderIn # - 1
     errorLoc = 'ERROR:\nTestTools:\nSpacePoly:\n'
     degFreed = omega.degFreed
@@ -260,7 +260,7 @@ def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0):
     
     const = -np.eye(degFreed)
     if (deriv == 0):
-        derivOp = OT.SpaceDeriv(omega, order, diff)# DiffFunc(omega, 0, waveform, const, order)
+        derivOp = OT.SpaceDeriv(omega, order, diff, matInd = matInd)# DiffFunc(omega, 0, waveform, const, order)
     else:
         derivOp = OT.SpaceDeriv1(omega, order, diff)
     wavederiv = derivOp @ waveform
