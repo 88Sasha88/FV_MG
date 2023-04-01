@@ -263,6 +263,8 @@ def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0, matInd = -1):
         derivOp = OT.SpaceDeriv(omega, order, diff, matInd = matInd)# DiffFunc(omega, 0, waveform, const, order)
     else:
         derivOp = OT.SpaceDeriv1(omega, order, diff)
+    np.set_printoptions(suppress=True)
+    print(derivOp)
     wavederiv = derivOp @ waveform
     print('x:')
     print(x)

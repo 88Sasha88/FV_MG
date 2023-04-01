@@ -388,9 +388,15 @@ def CentGhostMaterial(omega, order, matInd, centCellInd, offDiagInd):
         errorMess = 'offDiagInd must be a nonzero integer identifying the number of cells from material boundary!'
     else:
         if (offDiagInd > 0):
-            stenc[matInd + 1:matInd + order + 2] = ghostStenc
+            if (matInd == degFreed - 1):
+                stenc[:order + 1] = ghostStenc
+            else:
+                stenc[matInd + 1:matInd + order + 2] = ghostStenc
         else:
-            stenc[matInd - order:matInd + 1] = ghostStenc
+            if (matInd == degFreed - 1):
+                stenc[degFreed - order - 1:degFreed] = ghostStenc
+            else:
+                stenc[matInd - order:matInd + 1] = ghostStenc
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
     
@@ -406,6 +412,7 @@ def GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd):
     xVec, xL, xR = MaterialInterpVec(omega, order, centCellInd, offDiagInd)
 
     polyInterp = MomentVander(order, bounds, xVec)
+    print('polyInterp is', polyInterp)
     
     return polyInterp
 
@@ -413,13 +420,20 @@ def GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd):
 def MaterialInterpVec(omega, order, centCellInd, offDiagInd):
     xNode = omega.xNode
     xCell = omega.xCell
+    degFreed = omega.degFreed
+    print('centCellInd is', centCellInd)
     
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
     polyCoefs = np.diag(intCoefs)
     
-    bounds = xNode[centCellInd:centCellInd + 2]
+    if (centCellInd >= degFreed):
+        bounds = xNode[:2]
+    else:
+        bounds = xNode[centCellInd:centCellInd + 2]
     h = bounds[-1] - bounds[0]
     bounds = bounds - (offDiagInd * h) # Possible source of error.
+    
+    print('bounds is', bounds, '(This isn\'t right yet.)')
     
     xL = bounds[0]
     xR = bounds[1]
@@ -437,15 +451,23 @@ def MaterialInterpBounds(omega, order, matInd, offDiagInd):
     errorMess = ''
     
     xNode = omega.xNode
+    degFreed = omega.degFreed
     
     if ((type(offDiagInd) != int) or (offDiagInd == 0)):
         errorMess = 'offDiagInd must be a nonzero integer identifying the number of cells from material boundary!'
     else:
         if (offDiagInd > 0): # Possible source of error.
-            print('this one.')
-            bounds = xNode[matInd:matInd+order+2]
+            if (matInd == degFreed - 1):
+                print('This case.')
+                bounds = xNode[:order+2]
+            else:
+                bounds = xNode[matInd:matInd+order+2]
         else:
-            bounds = xNode[matInd-order-1:matInd + 1]
+            if (matInd == degFreed - 1):
+                print('That case.')
+                bounds = xNode[degFreed-order-2:degFreed]
+            else:
+                bounds = xNode[matInd-order-1:matInd + 1]
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
     
