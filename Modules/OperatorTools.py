@@ -803,7 +803,7 @@ def DDStencil(order):
     stenc = -UDStencil(order)[::-1]
     return stenc
 
-def SpaceDeriv(omega, order, diff, matInd = -1):
+def SpaceDeriv(omega, order, diff, matInd0 = -1):
     errorLoc = 'ERROR:\nOperatorTools:\nMakeSpaceDeriv:\n'
     errorMess = ''
     if (diff == 'C' or diff == 'CD'):
@@ -879,16 +879,18 @@ def SpaceDeriv(omega, order, diff, matInd = -1):
     
     # CHANGE MADE HERE!
     
-    if (matInd >= 0):
-        if ((order > matInd) or (order > degFreed - matInd - 2)):
+    if (matInd0 >= 0):
+        if ((order > matInd0) or (order > degFreed - matInd0 - 2)):
             errorMess = 'order is too high for given patch boundary and material boundary locations!'
         else:
             materialOverwrite = True
+            matIndVec = [matInd0, degFreed - 1]
     else:
         materialOverwrite = False
     
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
+    
     
     # END CHANGE MADE!
     
@@ -922,16 +924,20 @@ def SpaceDeriv(omega, order, diff, matInd = -1):
                 # CHANGE MADE HERE!
             
                 if (materialOverwrite):
-                    if ((matInd <= p) and (p - matInd <= s)):
-                        for i in range(matInd-s+1, matInd+2): # (matInd+s+1, matInd+(2*s)+2):
-                            polyMat[i, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
-                    else:
-                        if ((matInd <= q) and (q - matInd <= s)):
-                            for i in range(matInd-s+1, q+1): # (matInd+s+1, q+(2*s)+1):
-                                polyMat[i, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
+                    for matInd in matIndVec:
+                        if ((matInd <= p) and (p - matInd <= s)):
+                            for i in range(matInd-s+1, matInd+2): # (matInd+s+1, matInd+(2*s)+2):
+                                j = i % degFreed
+                                polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
                         else:
-                            for i in range(matInd-s+1, matInd+1): # (matInd+s+1, matInd+(2*s)+1):
-                                polyMat[i, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
+                            if ((matInd <= q) and (q - matInd <= s)):
+                                for i in range(matInd-s+1, q+1): # (matInd+s+1, q+(2*s)+1):
+                                    j = i % degFreed
+                                    polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
+                            else:
+                                for i in range(matInd-s+1, matInd+1): # (matInd+s+1, matInd+(2*s)+1):
+                                    j = i % degFreed
+                                    polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
 
             # END CHANGE MADE!
 
@@ -955,15 +961,19 @@ def SpaceDeriv(omega, order, diff, matInd = -1):
                 # CHANGE MADE HERE!
             
                 if (materialOverwrite):
-                    if ((matInd <= p) and (matInd - p <= abs(s))):
-                        for i in range(p+1, matInd-s+1): # (p+(2*s)+1, matInd+s+1):
-                            polyMat[i, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
-                    else:
-                        for i in range(matInd+1, matInd-s+1): # (matInd+(2*s)+1, matInd+s+1):
-                            polyMat[i, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
-                        if ((matInd < p) and (p - matInd < abs(s))):
-                            for i in range(matInd-s+1, p-s+1): # (matInd+s+1, p+s+1):
-                                polyMat[i, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
+                    for matInd in matIndVec:
+                        if ((matInd <= p) and (matInd - p <= abs(s))):
+                            for i in range(p+1, matInd-s+1): # (p+(2*s)+1, matInd+s+1):
+                                j = i % degFreed
+                                polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
+                        else:
+                            for i in range(matInd+1, matInd-s+1): # (matInd+(2*s)+1, matInd+s+1):
+                                j = i % degFreed
+                                polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
+                            if ((matInd < p) and (p - matInd < abs(s))):
+                                for i in range(matInd-s+1, p-s+1): # (matInd+s+1, p+s+1):
+                                    j = i % degFreed
+                                    polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
 
             # END CHANGE MADE!
         

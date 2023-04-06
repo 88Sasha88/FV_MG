@@ -260,7 +260,7 @@ def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0, matInd = -1):
     
     const = -np.eye(degFreed)
     if (deriv == 0):
-        derivOp = OT.SpaceDeriv(omega, order, diff, matInd = matInd)# DiffFunc(omega, 0, waveform, const, order)
+        derivOp = OT.SpaceDeriv(omega, order, diff, matInd0 = matInd)# DiffFunc(omega, 0, waveform, const, order)
     else:
         derivOp = OT.SpaceDeriv1(omega, order, diff)
     np.set_printoptions(suppress=True)

@@ -379,6 +379,7 @@ def CentGhostMaterial(omega, order, matInd, centCellInd, offDiagInd):
     errorMess = ''
     
     degFreed = omega.degFreed
+    centCellInd = centCellInd % degFreed
     
     stenc = np.zeros(degFreed, float)
     
