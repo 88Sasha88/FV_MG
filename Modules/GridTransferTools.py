@@ -374,7 +374,7 @@ def CentGhost(omega, order, x_0):
 
 
 
-def CentGhostMaterial(omega, order, matInd, centCellInd, offDiagInd):
+def CentGhostMaterial(omega, order, matInd, centCellInd, offDiagInd, revBounds = False):
     errorLoc = 'ERROR:\nGridTransferTools:\nCenterGhostCellMaterial:\n'
     errorMess = ''
     
@@ -383,12 +383,12 @@ def CentGhostMaterial(omega, order, matInd, centCellInd, offDiagInd):
     
     stenc = np.zeros(degFreed, float)
     
-    ghostStenc = GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd)
+    ghostStenc = GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd, revBounds)
     
     if ((type(offDiagInd) != int) or (offDiagInd == 0)):
         errorMess = 'offDiagInd must be a nonzero integer identifying the number of cells from material boundary!'
     else:
-        if (offDiagInd > 0):
+        if (revBounds or (offDiagInd > 0)):
             if (matInd == degFreed - 1):
                 stenc[:order + 1] = ghostStenc
             else:
@@ -404,11 +404,11 @@ def CentGhostMaterial(omega, order, matInd, centCellInd, offDiagInd):
     return stenc
 
 
-def GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd):
+def GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd, revBounds):
     errorLoc = 'ERROR:\nGridTransferTools:\nGhostCellMaterialStencil:\n'
     errorMess = ''
     
-    bounds = MaterialInterpBounds(omega, order, matInd, offDiagInd)
+    bounds = MaterialInterpBounds(omega, order, matInd, offDiagInd, revBounds)
 
     xVec, xL, xR = MaterialInterpVec(omega, order, centCellInd, offDiagInd)
 
@@ -427,10 +427,7 @@ def MaterialInterpVec(omega, order, centCellInd, offDiagInd):
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
     polyCoefs = np.diag(intCoefs)
     
-    if (centCellInd >= degFreed):
-        bounds = xNode[:2]
-    else:
-        bounds = xNode[centCellInd:centCellInd + 2]
+    bounds = xNode[centCellInd:centCellInd + 2]
     h = bounds[-1] - bounds[0]
     bounds = bounds - (offDiagInd * h) # Possible source of error.
     
@@ -447,7 +444,7 @@ def MaterialInterpVec(omega, order, centCellInd, offDiagInd):
     return xVec, xL, xR
 
 
-def MaterialInterpBounds(omega, order, matInd, offDiagInd):
+def MaterialInterpBounds(omega, order, matInd, offDiagInd, revBounds):
     errorLoc = 'ERROR:\nGridTransferTools:\nMaterialInterpBounds:\n'
     errorMess = ''
     
@@ -457,16 +454,18 @@ def MaterialInterpBounds(omega, order, matInd, offDiagInd):
     if ((type(offDiagInd) != int) or (offDiagInd == 0)):
         errorMess = 'offDiagInd must be a nonzero integer identifying the number of cells from material boundary!'
     else:
-        if (offDiagInd > 0): # Possible source of error.
+        if ((revBounds and (offDiagInd < 0)) or (offDiagInd > 0)): # Possible source of error.
+            print('k should be positive, or this is an exception case.')
             if (matInd == degFreed - 1):
                 print('This case.')
                 bounds = xNode[:order+2]
             else:
                 bounds = xNode[matInd:matInd+order+2]
         else:
+            print('k should be negative.')
             if (matInd == degFreed - 1):
                 print('That case.')
-                bounds = xNode[degFreed-order-2:degFreed]
+                bounds = xNode[degFreed-order-1:] #[degFreed-order-2:degFreed]
             else:
                 bounds = xNode[matInd-order-1:matInd + 1]
     if (errorMess != ''):

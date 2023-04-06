@@ -925,7 +925,7 @@ def SpaceDeriv(omega, order, diff, matInd0 = -1):
             
                 if (materialOverwrite):
                     for matInd in matIndVec:
-                        if ((matInd <= p) and (p - matInd <= s)):
+                        if ((matInd >= p) and (p - matInd <= s)):
                             for i in range(matInd-s+1, matInd+2): # (matInd+s+1, matInd+(2*s)+2):
                                 j = i % degFreed
                                 polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
@@ -962,7 +962,7 @@ def SpaceDeriv(omega, order, diff, matInd0 = -1):
             
                 if (materialOverwrite):
                     for matInd in matIndVec:
-                        if ((matInd <= p) and (matInd - p <= abs(s))):
+                        if ((matInd <= p) and (matInd - p <= abs(s))): # This is where you changed an inequality.
                             for i in range(p+1, matInd-s+1): # (p+(2*s)+1, matInd+s+1):
                                 j = i % degFreed
                                 polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
@@ -970,10 +970,10 @@ def SpaceDeriv(omega, order, diff, matInd0 = -1):
                             for i in range(matInd+1, matInd-s+1): # (matInd+(2*s)+1, matInd+s+1):
                                 j = i % degFreed
                                 polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
-                            if ((matInd < p) and (p - matInd < abs(s))):
+                            if ((matInd < p) and (p - matInd <= abs(s))): # This is where you changed an inequality.
                                 for i in range(matInd-s+1, p-s+1): # (matInd+s+1, p+s+1):
                                     j = i % degFreed
-                                    polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
+                                    polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s, revBounds = True)
 
             # END CHANGE MADE!
         
