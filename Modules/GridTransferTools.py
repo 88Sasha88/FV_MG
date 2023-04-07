@@ -175,6 +175,10 @@ def MomentVander(order, bounds, xVec):
 #     print('A:', A)
     B = np.diag(bounds[:-1]) @ np.vander(bounds[:-1])
 #     print('B:', B)
+#     print(hInv)
+#     print(A)
+#     print(B)
+#     print(polyCoefs)
     VanderMat = hInv @ (A - B) @ polyCoefs
 #     print('VanderMat:', VanderMat)
     polyInterp = xVec @ LA2.inv(VanderMat)
@@ -333,7 +337,7 @@ def CentGhost(omega, order, x_0):
             sys.exit(errorLoc + errorMess)
     
     
-    return fullStenc
+    return fullStenc, n_c, n_f
 
 
 
@@ -397,7 +401,7 @@ def CentGhostMaterial(omega, order, matInd, centCellInd, offDiagInd, revBounds =
             if (matInd == degFreed - 1):
                 stenc[degFreed - order - 1:degFreed] = ghostStenc
             else:
-                stenc[matInd - order:matInd + 1] = ghostStenc
+                stenc[matInd - order:matInd + 1] = ghostStenc # [matInd - order:matInd + 1]
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
     
@@ -411,9 +415,11 @@ def GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd, revB
     bounds = MaterialInterpBounds(omega, order, matInd, offDiagInd, revBounds)
 
     xVec, xL, xR = MaterialInterpVec(omega, order, centCellInd, offDiagInd)
+#     print('bounds =', bounds)
+#     print('xVec =', xVec)
 
     polyInterp = MomentVander(order, bounds, xVec)
-    print('polyInterp is', polyInterp)
+#     print('polyInterp is', polyInterp)
     
     return polyInterp
 
@@ -422,7 +428,7 @@ def MaterialInterpVec(omega, order, centCellInd, offDiagInd):
     xNode = omega.xNode
     xCell = omega.xCell
     degFreed = omega.degFreed
-    print('centCellInd is', centCellInd)
+#     print('centCellInd is', centCellInd)
     
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
     polyCoefs = np.diag(intCoefs)
@@ -431,7 +437,7 @@ def MaterialInterpVec(omega, order, centCellInd, offDiagInd):
     h = bounds[-1] - bounds[0]
     bounds = bounds - (offDiagInd * h) # Possible source of error.
     
-    print('bounds is', bounds, '(This isn\'t right yet.)')
+#     print('bounds is', bounds, '(This isn\'t right yet.)')
     
     xL = bounds[0]
     xR = bounds[1]
@@ -455,22 +461,22 @@ def MaterialInterpBounds(omega, order, matInd, offDiagInd, revBounds):
         errorMess = 'offDiagInd must be a nonzero integer identifying the number of cells from material boundary!'
     else:
         if (revBounds or (offDiagInd > 0)): # Possible source of error.
-            print('k should be positive, or this is an exception case.')
+#             print('k should be positive, or this is an exception case.')
             if (matInd == degFreed - 1):
-                print('This case.')
+#                 print('This case.')
                 bounds = xNode[:order+2]
             else:
                 bounds = xNode[matInd+1:matInd+order+3] # [matInd:matInd+order+2]
         else:
-            print('k should be negative.')
+#             print('k should be negative.')
             if (matInd == degFreed - 1):
-                print('That case.')
+#                 print('That case.')
                 bounds = xNode[degFreed-order-1:] #[degFreed-order-2:degFreed]
             else:
                 bounds = xNode[matInd-order-1:matInd + 1]
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
     
-    print('Bounds are:', bounds, '<=', xNode[matInd])
+#     print('Bounds are:', bounds, '<=', xNode[matInd])
     
     return bounds
