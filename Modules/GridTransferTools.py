@@ -454,13 +454,13 @@ def MaterialInterpBounds(omega, order, matInd, offDiagInd, revBounds):
     if ((type(offDiagInd) != int) or (offDiagInd == 0)):
         errorMess = 'offDiagInd must be a nonzero integer identifying the number of cells from material boundary!'
     else:
-        if ((revBounds and (offDiagInd < 0)) or (offDiagInd > 0)): # Possible source of error.
+        if (revBounds or (offDiagInd > 0)): # Possible source of error.
             print('k should be positive, or this is an exception case.')
             if (matInd == degFreed - 1):
                 print('This case.')
                 bounds = xNode[:order+2]
             else:
-                bounds = xNode[matInd:matInd+order+2]
+                bounds = xNode[matInd+1:matInd+order+3] # [matInd:matInd+order+2]
         else:
             print('k should be negative.')
             if (matInd == degFreed - 1):

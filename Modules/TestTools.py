@@ -237,7 +237,7 @@ def DerivPolyTest1(omega, diff, orderIn, coefs = [], deriv = 0):
     print('')
     return
 
-def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0, matInd = -1):
+def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0, matInd = -1, printOut = True):
     order = orderIn # - 1
     errorLoc = 'ERROR:\nTestTools:\nSpacePoly:\n'
     degFreed = omega.degFreed
@@ -264,21 +264,21 @@ def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0, matInd = -1):
     else:
         derivOp = OT.SpaceDeriv1(omega, order, diff)
     np.set_printoptions(suppress=True)
-    print(derivOp)
     wavederiv = derivOp @ waveform
-    print('x:')
-    print(x)
-    print('')
-    print('Polynomial Function:')
-    print('<p(x)> =\n', P)
-    print('<p(x)> =\n', waveform)
-    print('')
-    print('Polynomial Derivative:')
-    print('<dp(x)/dx> =\n', p)
-    print('Theoretical:')
-    print('<dp(x)/dx> =\n', waveformDeriv)
-    print('Actual:')
-    print('<dp(x)/dx> =\n', wavederiv)
+    if (printOut):
+        print('x:')
+        print(x)
+        print('')
+        print('Polynomial Function:')
+        print('<p(x)> =\n', P)
+        print('<p(x)> =\n', waveform)
+        print('')
+        print('Polynomial Derivative:')
+        print('<dp(x)/dx> =\n', p)
+        print('Theoretical:')
+        print('<dp(x)/dx> =\n', waveformDeriv)
+        print('Actual:')
+        print('<dp(x)/dx> =\n', wavederiv)
     print('Difference Between Actual and Theoretical:')
     print(np.round(waveformDeriv - wavederiv, 11))
     print('')
