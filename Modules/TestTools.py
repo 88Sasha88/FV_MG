@@ -266,6 +266,9 @@ def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0, matInd = -1, prin
     np.set_printoptions(suppress=True)
     wavederiv = derivOp @ waveform
     print(derivOp)
+    print('')
+    print(sum(derivOp, axis = 1))
+    print('')
     if (printOut):
         print('x:')
         print(x)
@@ -282,6 +285,7 @@ def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0, matInd = -1, prin
         print('<dp(x)/dx> =\n', wavederiv)
     print('Difference Between Actual and Theoretical:')
     print(np.round(waveformDeriv - wavederiv, 11))
+    print('')
     print('')
     return
 

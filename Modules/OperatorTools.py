@@ -897,7 +897,7 @@ def SpaceDeriv(omega, order, diff, matInd0 = -1):
     polyStencSet = np.asarray(polyStencSet)
 
     
-    
+    np.set_printoptions(suppress=True)
     # END CHANGE MADE!
     
     

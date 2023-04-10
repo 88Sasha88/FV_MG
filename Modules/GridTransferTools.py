@@ -208,9 +208,10 @@ def MomentVander(order, bounds, xVec):
 # n_f                     int                    Number of fine cells used in interpolation
 # ----------------------------------------------------------------------------------------------------------------
 
-def GhostCellStencil(order, x_0):
+def GhostCellStencil(order, x_0, h_rat = 1):
     errorLoc = 'ERROR:\nGridTransferTools:\nGhostCellStencil:\n'
     errorMess = ''
+    
 #     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
 #     polyCoefs = np.diag(intCoefs)
 # #     print('polyCoefs:', polyCoefs)
@@ -231,16 +232,17 @@ def GhostCellStencil(order, x_0):
 
 #     xVec = (xValsR - xValsL) @ polyCoefs
 
-    xVec = InterpVec(order, x_0)
+    xVec = InterpVec(order, x_0, h_rat = h_rat)
     
     bounds, n_c, n_f = BoundVals(order, x_0)
+    bounds = h_rat * bounds
 
     polyInterp = MomentVander(order, bounds, xVec)
     
     return polyInterp, n_c, n_f
 
 
-def InterpVec(order, x_0):
+def InterpVec(order, x_0, h_rat = 1):
     errorLoc = 'ERROR:\nGridTransferTools:\nInterpVec:\n'
     errorMess = ''
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
@@ -250,12 +252,12 @@ def InterpVec(order, x_0):
         errorMess = 'x_0 must be multiple of 0.5!'
     else:
         if (x_0 > 0):
-            xValsR = np.polynomial.polynomial.polyvander(x_0, order + 1)[0][1:][::-1] / 0.5   
-            xValsL = np.polynomial.polynomial.polyvander(x_0 - 0.5, order + 1)[0][1:][::-1] / 0.5
+            xValsR = np.polynomial.polynomial.polyvander(h_rat * x_0, order + 1)[0][1:][::-1] / (h_rat * 0.5)
+            xValsL = np.polynomial.polynomial.polyvander(h_rat * (x_0 - 0.5), order + 1)[0][1:][::-1] / (h_rat * 0.5)
         else:
             if (x_0 < 0):
-                xValsR = np.polynomial.polynomial.polyvander(x_0 + 0.5, order + 1)[0][1:][::-1] / 0.5
-                xValsL = np.polynomial.polynomial.polyvander(x_0, order + 1)[0][1:][::-1] / 0.5
+                xValsR = np.polynomial.polynomial.polyvander(h_rat * (x_0 + 0.5), order + 1)[0][1:][::-1] / (h_rat * 0.5)
+                xValsL = np.polynomial.polynomial.polyvander(h_rat * x_0, order + 1)[0][1:][::-1] / (h_rat * 0.5)
             else:
                 errorMess = 'x_0 cannot be zero!'
     if (errorMess != ''):
@@ -294,6 +296,10 @@ def CentGhost(omega, order, x_0):
     degFreed = omega.degFreed
     hs = omega.h
     
+    h_min = min(hs)
+    
+    h_rat = h_min / 0.5
+    
     spots = np.roll(hs, -1) - hs
     
     if (all(spots == 0)):
@@ -310,7 +316,7 @@ def CentGhost(omega, order, x_0):
         n_c_m = list(hs).count(h_c)
         n_f_m = list(hs).count(h_f)
 
-        ghostCell, n_c, n_f = GhostCellStencil(order, x_0)
+        ghostCell, n_c, n_f = GhostCellStencil(order, x_0, h_rat = h_rat)
 
         if (n_c > n_c_m):
             errorMess = 'This grid has too few coarse cells for the order of the polynomial interpolation!'
@@ -419,7 +425,7 @@ def GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd, revB
 #     print('xVec =', xVec)
 
     polyInterp = MomentVander(order, bounds, xVec)
-#     print('polyInterp is', polyInterp)
+    print('polyInterp is', polyInterp)
     
     return polyInterp
 
@@ -428,7 +434,7 @@ def MaterialInterpVec(omega, order, centCellInd, offDiagInd):
     xNode = omega.xNode
     xCell = omega.xCell
     degFreed = omega.degFreed
-#     print('centCellInd is', centCellInd)
+    print('centCellInd is', centCellInd)
     
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
     polyCoefs = np.diag(intCoefs)
