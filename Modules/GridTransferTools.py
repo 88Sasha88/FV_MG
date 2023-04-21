@@ -304,6 +304,8 @@ def CentGhost(omega, order, x_0):
     
     if (all(spots == 0)):
         fullStenc = np.zeros(degFreed, float)
+        n_c = 0
+        n_f = 0
     else:
         # Index before fine-coarse interface
         p = np.where(spots > 0)[0][0]
