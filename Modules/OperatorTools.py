@@ -15,6 +15,7 @@ from scipy import linalg as LA2
 import sys as sys
 import time
 import matplotlib.pyplot as plt
+from fractions import Fraction
 from Modules import BasicTools as BT
 from Modules import GridTransferTools as GTT
 
@@ -991,188 +992,16 @@ def SpaceDeriv(omega, order, diff, matInd0 = -1):
     hMat = StepMatrix(omega)
     
     derivOp = hMat @ derivOp
+    
+    rowSums = np.round(sum(derivOp, axis = 1), 11)
+    
+    probRows = np.where(rowSums != 0)[0]
+    
+    for row in probRows:
+        for j in range(degFreed):
+            frac = Fraction(derivOp[row, j]).limit_denominator(10**order)
+            num = frac.numerator
+            denom = frac.denominator
+            derivOp[row, j] = num / denom
         
     return derivOp
-
-
-# def SpaceDeriv2(omega, order, diff, matInd0 = -1):
-#     errorLoc = 'ERROR:\nOperatorTools:\nMakeSpaceDeriv:\n'
-#     errorMess = ''
-#     if (diff == 'C' or diff == 'CD'):
-#         stenc = CDStencil(order)
-#         if (order % 2 == 0):
-#             orderStenc = order
-#         else:
-#             orderStenc = int(order + 1)
-#         off = int(orderStenc / 2)
-#         loBound = -off / 2.
-#         hiBound = off / 2.
-#     else:
-#         orderStenc = order
-#         if (order % 2 == 0):
-#             orderStenc = int(order + 1)
-#         else:
-#             orderStenc = order
-#         off = ((orderStenc + 1) / 2)
-#         if (diff == 'U' or diff == 'UD'):
-#             stenc = UDStencil(order)
-#             loBound = -off / 2.
-#             hiBound = (off - 1.) / 2.
-#         else:
-#             if (diff == 'D' or diff == 'DD'):
-#                 stenc = DDStencil(order)
-#                 off = int(off - 1)
-#                 loBound = -off / 2.
-#                 hiBound = (off + 1.) / 2.
-#             else:
-#                 errorMess = 'Invalid entry for variable diff. Must be \'C\', \'U\', \'D\' \'CD\', \'UD\', or \'DD\'.'
-#     if (errorMess != ''):
-#         sys.exit(errorLoc + errorMess)
-    
-# #     stenc = np.ones(orderStenc + 1)
-    
-#     degFreed = omega.degFreed
-#     hs = omega.h
-    
-#     spots = np.roll(hs, -1) - hs
-#     # Index before fine-coarse interface
-#     p = np.where(spots > 0)[0][0]
-#     # Index before coarse-fine interface
-#     q = np.where(spots < 0)[0][0]
-    
-#     polyStencSet = [[] for i in range(orderStenc)]
-#     cellFaces = np.linspace(loBound, hiBound, num = orderStenc + 1)
-#     zeroLoc = np.where(cellFaces == 0)[0][0]
-#     cellFaces = np.delete(cellFaces, zeroLoc)
-    
-    
-
-#     IMat = np.eye(degFreed, degFreed)
-    
-#     # YOU'RE GONNA NEED THESE TO RESTRICT FOR HIGHER EVEN ORDERS, TOO.
-    
-    
-    
-#     polyMatU = IMat + 0
-    
-    
-#     mat = np.zeros((degFreed, degFreed), float)
-#     derivOp = mat + 0
-    
-#     # CHANGE MADE HERE!
-    
-    
-#     if (matInd0 >= 0):
-#         if ((order >= matInd0) or (order > degFreed - matInd0 - 2)):
-#             errorMess = 'order is too high for given patch boundary and material boundary locations!'
-#         else:
-#             materialOverwrite = True
-#             matIndVec = [matInd0, degFreed - 1]
-#     else:
-#         materialOverwrite = False
-#         matIndVec = []
-    
-#     if (errorMess != ''):
-#         sys.exit(errorLoc + errorMess)
-    
-#     n_c_max = abs(off)
-#     for i in range(orderStenc):
-#         polyStencSet[i], n_c, n_f = GTT.CentGhost(omega, order, cellFaces[i])
-#         for matInd in (matIndVec):
-#             if ((abs(p - matInd) < n_c) and (cellFaces[i] > 0) and (n_c > n_c_max)):
-#                 n_c_max = n_c
-    
-#     polyStencSet = np.asarray(polyStencSet)
-    
-#     # END CHANGE MADE!
-    
-#     for d in range(orderStenc + 1):
-#         s = int(off - d)
-        
-#         derivMat = mat + 0
-#         np.fill_diagonal(derivMat, stenc[d])
-#         derivMat = np.roll(derivMat, s, axis = 0)
-        
-#         polyMat = IMat + 0
-
-#         if (s > 0):
-#             j = int(off - s)
-#             pAt = p
-#             pLow = (p - 1) % degFreed
-#             pHi = (p + 1) % degFreed
-#             qAt = (q - s + 1) % degFreed #(q + 1) % degFreed
-#             for i in range(s):
-#                 polyMat[pAt, :] = 0
-#                 polyMat[pAt, pLow:pHi] = 0.5
-#                 polyMat[qAt, :] = polyStencSet[j, :]
-#                 pAt = (pAt - 1) % degFreed
-#                 pLow = (pLow - 2) % degFreed
-#                 pHi = (pHi - 2) % degFreed
-#                 qAt = (qAt + 1) % degFreed
-#                 j = int(j + 1)
-                
-#             # CHANGE MADE HERE!
-            
-#             if (materialOverwrite):
-#                 for matInd in matIndVec:
-#                     if ((matInd <= p) and (p - matInd <= s)):
-#                         for i in range(matInd-s+1, matInd+2): # (matInd+s+1, matInd+(2*s)+2):
-#                             j = i % degFreed
-#                             polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
-#                     else:
-#                         if ((matInd <= q) and (q - matInd <= s)):
-#                             for i in range(matInd-s+1, q+1): # (matInd+s+1, q+(2*s)+1):
-#                                 j = i % degFreed
-#                                 polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
-#                         else:
-#                             for i in range(matInd-s+1, matInd+1): # (matInd+s+1, matInd+(2*s)+1):
-#                                 j = i % degFreed
-#                                 polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
-                    
-#             # END CHANGE MADE!
-        
-#         if (s < 0):
-#             j = int(off) # - s - 1
-#             qAt = (q + 1) % degFreed
-#             qLow = (q + 1) % degFreed
-#             qHi = (q + 3) % degFreed
-#             pAt = (p + 1) % degFreed#p
-#             for i in range(abs(s)):
-#                 polyMat[qAt, :] = 0
-#                 polyMat[qAt, qLow:qHi] = 0.5
-#                 polyMat[pAt, :] = polyStencSet[j, :]
-#                 qAt = (qAt + 1) % degFreed
-#                 qLow = (qLow + 2) % degFreed
-#                 qHi = (qHi + 2) % degFreed
-#                 pAt = (pAt + 1) % degFreed
-#                 j = int(j + 1) # - 1
-            
-#             # CHANGE MADE HERE!
-            
-#             if (materialOverwrite):
-#                 for matInd in matIndVec:
-#                     if ((matInd >= p) and (matInd - p <= abs(s))):
-#                         for i in range(p+1, matInd-s+1): # (p+(2*s)+1, matInd+s+1):
-#                             j = i % degFreed
-#                             polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
-#                     else:
-#                         for i in range(matInd+1, matInd-s+1): # (matInd+(2*s)+1, matInd+s+1):
-#                             j = i % degFreed
-#                             polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
-#                         if ((matInd < p) and (p - matInd <= n_c_max)):
-#                             for i in range(matInd-s+1, p-s+1): # (matInd+s+1, p+s+1):
-#                                 j = i % degFreed
-#                                 polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s, revBounds = True)
-
-#                 # END CHANGE MADE!
-        
-#         matThis = derivMat @ polyMat
-
-        
-#         derivOp = derivOp + matThis
-    
-#     hMat = StepMatrix(omega)
-    
-#     derivOp = hMat @ derivOp
-        
-#     return derivOp

@@ -50,10 +50,11 @@ np.set_printoptions( linewidth = 10000, threshold = 100000)
 #
 # gauss                   np.ndarray              Gaussian waveform values on Grid omega in space-space
 # ----------------------------------------------------------------------------------------------------------------
-def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve = False, deriv = False):
+def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve = False, deriv = False, field = 'E'):
     xCell = omega.xCell
     cs = physics.cs
     x_s = physics.locs[0]
+    mus = physics.mus
     
     IRT = IRT.upper()
     I = IRT.find('I') + 1
@@ -67,7 +68,9 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
     if (I or T):
         waveFuncIT = Advect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv)
         # Scale the T part.
-        scale = (2 * cs[0]) / (cs[0] + cs[1])
+        scale = (2 * cs[1]) / (cs[0] + cs[1]) # Switch numerator to cs[0].
+        if (field == 'B'):
+            scale = (mus[1] * scale) / mus[0] # Switch mus.
         waveFuncIT[index:] = scale * waveFuncIT[index:]
         if (not I):
             print('BE AWARE THAT YOU HAVE ELECTED FOR THERE TO BE NO INCIDENT PART!')
@@ -81,7 +84,7 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
     if (R):
         waveFuncR = Reflect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv)
         # Scale R part.
-        scale = (cs[0] - cs[1]) / (cs[0] + cs[1])
+        scale = -(cs[0] - cs[1]) / (cs[0] + cs[1]) # Remove negative sign out front.
         waveFuncR = scale * waveFuncR
     waveFunc = waveFuncIT + waveFuncR
     return waveFunc

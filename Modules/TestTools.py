@@ -265,8 +265,9 @@ def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0, matInd = -1, prin
         derivOp = OT.SpaceDeriv1(omega, order, diff)
     np.set_printoptions(suppress=True)
     wavederiv = derivOp @ waveform
-    print(derivOp)
+#     print(derivOp)
     print('')
+    print('Sum Over Rows:')
     print(sum(derivOp, axis = 1))
     print('')
     if (printOut):

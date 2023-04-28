@@ -392,7 +392,7 @@ def PlotMixedWave(omega, physics, FCoefs, waves = [], title = '', labels = [], r
         save = True
     else:
         saveName = 'MixedWave'
-    saveString = savePath + saveName
+    saveString1 = savePath + saveName
     
     numGraphs = np.ndim(FCoefs)
     
@@ -430,8 +430,10 @@ def PlotMixedWave(omega, physics, FCoefs, waves = [], title = '', labels = [], r
                     extraPiece = 'E'
                 else:
                     extraPiece = 'B'
-                saveString1 = saveString
-                saveString = saveString1 + extraPiece
+                saveString2 = saveString1
+                saveString = saveString2 + extraPiece
+            else:
+                saveString = saveString1
             Save(fig, saveString, dpi)
 #         fig.savefig(saveName + '.png', bbox_inches = 'tight', dpi = 600, transparent = True)
 #         print('This image has been saved under ' + saveName + '.')

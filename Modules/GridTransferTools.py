@@ -427,7 +427,7 @@ def GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd, revB
 #     print('xVec =', xVec)
 
     polyInterp = MomentVander(order, bounds, xVec)
-    print('polyInterp is', polyInterp)
+#     print('polyInterp is', polyInterp)
     
     return polyInterp
 
@@ -436,7 +436,7 @@ def MaterialInterpVec(omega, order, centCellInd, offDiagInd):
     xNode = omega.xNode
     xCell = omega.xCell
     degFreed = omega.degFreed
-    print('centCellInd is', centCellInd)
+#     print('centCellInd is', centCellInd)
     
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
     polyCoefs = np.diag(intCoefs)
