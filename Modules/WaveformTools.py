@@ -69,9 +69,12 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
         waveFuncIT = Advect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv)
         # Scale the T part.
         scale = (2 * cs[1]) / (cs[0] + cs[1]) # Switch numerator to cs[0].
-        if (field == 'B'):
-            scale = (mus[1] * scale) / mus[0] # Switch mus.
+#         if (field == 'B'):
+#             scale = (mus[0] * scale) / mus[1] # Switch mus.
         waveFuncIT[index:] = scale * waveFuncIT[index:]
+        if (field == 'B'):
+            waveFuncIT[index:] = waveFuncIT[index:] / cs[1]
+            waveFuncIT[:index] = waveFuncIT[:index] / cs[0]
         if (not I):
             print('BE AWARE THAT YOU HAVE ELECTED FOR THERE TO BE NO INCIDENT PART!')
             # Zero out the I part.
@@ -86,6 +89,8 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
         # Scale R part.
         scale = -(cs[0] - cs[1]) / (cs[0] + cs[1]) # Remove negative sign out front.
         waveFuncR = scale * waveFuncR
+        if (field == 'B'):
+            waveFuncR = -waveFuncR / cs[0]
     waveFunc = waveFuncIT + waveFuncR
     return waveFunc
 
@@ -528,3 +533,37 @@ def ShiftX(omega, physics, t, adv = True):
             xShift = (2 * locs[0]) - (cs[0] * t) - x_0
     
     return xShift#, xShiftL, xShiftR
+
+
+
+def SquareWave(omega, x, width, center, deriv, cellAve):
+    # Unpack requisite attributes from omega and physics.
+    errorLoc = 'ERROR:\nWaveformTools:\nSquareWave:\n'
+    degFreed = omega.degFreed
+    xL = x[:-1]
+    xR = x[1:]
+    
+    edgeL = center - (width / 2)
+    edgeR = center + (width / 2)
+    sqWave = np.zeros(degFreed, float)
+    sqWave[xL >= edgeL] = 1
+    sqWave[xR > edgeR] = 0
+    if (cellAve):
+        if ((edgeL >= 0) and (np.shape(np.where(xL == edgeL)[0])[0] == 0)):
+            leftPtLInd = np.where(xL < edgeL)[0][-1]
+            rightPtLInd = leftPtLInd + 1
+            area = x[rightPtLInd] - edgeL
+            dx = x[rightPtLInd] - x[leftPtLInd]
+            sqWave[leftPtLInd] = area / dx
+        if ((edgeR >= 0) and (np.shape(np.where(xR == edgeR)[0])[0] == 0)):
+            leftPtRInd = np.where(xL < edgeR)[0][-1]
+            rightPtRInd = leftPtRInd + 1
+            area = edgeR - x[leftPtRInd]
+            dx = x[rightPtRInd] - x[leftPtRInd]
+            sqWave[leftPtRInd] = area / dx
+    
+    if (deriv):
+        errorMess = 'This function includes no provision for the derivative!'
+        sys.exit(errorLoc + errorMess)
+    
+    return sqWave
