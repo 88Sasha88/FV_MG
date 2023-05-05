@@ -303,6 +303,7 @@ def CentGhost(omega, order, x_0):
     spots = np.roll(hs, -1) - hs
     
     if (all(spots == 0)):
+        errorMess = 'Why are you trying to do a polynomial interpolation on a uniform grid?'
         fullStenc = np.zeros(degFreed, float)
         n_c = 0
         n_f = 0

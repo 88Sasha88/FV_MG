@@ -87,7 +87,7 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
     if (R):
         waveFuncR = Reflect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv)
         # Scale R part.
-        scale = -(cs[0] - cs[1]) / (cs[0] + cs[1]) # Remove negative sign out front.
+        scale = (cs[1] - cs[0]) / (cs[0] + cs[1]) # Remove negative sign out front.
         waveFuncR = scale * waveFuncR
         if (field == 'B'):
             waveFuncR = -waveFuncR / cs[0]
