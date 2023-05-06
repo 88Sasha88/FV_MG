@@ -872,6 +872,7 @@ def SpaceDeriv(omega, order, diff, matInd0 = -1):
             for j in range(patchBounds): # YOU CHANGED THIS!!!!
                 p = ps[j] # YOU CHANGED THIS!!!!
                 if ((abs(p - matInd) < n_c) and (cellFaces[i] > 0) and (n_c > n_c_max[j])): # YOU CHANGED THIS!!!!
+                    print('n_c_max was changed from ' + str(abs(off)) + ' to ' + str(n_c) + '!')
                     n_c_max[j] = n_c # YOU CHANGED THIS!!!!
     
     polyStencSet = np.asarray(polyStencSet)
@@ -890,8 +891,8 @@ def SpaceDeriv(omega, order, diff, matInd0 = -1):
         
         polyMat = IMat + 0
         
-        if (NU):
-            if (s > 0):
+        if (s > 0): # YOU CHANGED THIS!!!!
+            if (NU): # YOU CHANGED THIS!!!!
                 for k in range(patchBounds): # YOU CHANGED THIS!!!!
                     p = ps[k] # YOU CHANGED THIS!!!!
                     q = qs[k] # YOU CHANGED THIS!!!!
@@ -928,10 +929,18 @@ def SpaceDeriv(omega, order, diff, matInd0 = -1):
                                     for i in range(matInd-s+1, matInd+1): # (matInd+s+1, matInd+(2*s)+1):
                                         j = i % degFreed
                                         polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s)
+            else: # YOU CHANGED THIS!!!!
+                if (materialOverwrite): # YOU CHANGED THIS!!!!
+                    for matInd in matIndVec: # YOU CHANGED THIS!!!!
+                        for i in range(matInd-s+1, matInd+1): # (matInd+s+1, matInd+(2*s)+1): # YOU CHANGED THIS!!!!
+                            j = i % degFreed # YOU CHANGED THIS!!!!
+                            polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s) # YOU CHANGED THIS!!!!
+                
 
                 # END CHANGE MADE!
 
-            if (s < 0):
+        if (s < 0): # YOU CHANGED THIS!!!!
+            if (NU): # YOU CHANGED THIS!!!!
                 for k in range(patchBounds): # YOU CHANGED THIS!!!!
                     p = ps[k] # YOU CHANGED THIS!!!!
                     q = qs[k] # YOU CHANGED THIS!!!!
@@ -968,6 +977,12 @@ def SpaceDeriv(omega, order, diff, matInd0 = -1):
                                     for i in range(matInd-s+1, p-s+1): # (matInd+s+1, p+s+1):
                                         j = i % degFreed
                                         polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s, revBounds = True)
+            else: # YOU CHANGED THIS!!!!
+                if (materialOverwrite): # YOU CHANGED THIS!!!!
+                    for matInd in matIndVec: # YOU CHANGED THIS!!!!
+                        for i in range(matInd+1, matInd-s+1): # (matInd+(2*s)+1, matInd+s+1): # YOU CHANGED THIS!!!!
+                            j = i % degFreed # YOU CHANGED THIS!!!!
+                            polyMat[j, :] = GTT.CentGhostMaterial(omega, order, matInd, i+s, s) # YOU CHANGED THIS!!!!
 
             # END CHANGE MADE!
         
