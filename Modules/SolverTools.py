@@ -68,13 +68,13 @@ def RungeKutta(omega, physics, waves, u0, nt, CFL, RK, op = [], left = True):
     return uCoefs
     
 
-def ForwardEuler(u0, t, dt, op, waves, left = True): #(omega, waves, u0, nt, const, CFL, func, order = 0):
+def ForwardEuler(u0, t, dt, op, waves, left = True, charOp = []): #(omega, waves, u0, nt, const, CFL, func, order = 0):
     if (left):
         func = LeftMult
     else:
         func = FDeriv
 
-    u = u0 + (dt * func(t, u0, op, waves))
+    u = u0 + (dt * func(t, u0, op, waves, charOp))
     t = t + dt
 #         if (func == TimePoly):
 #             if (n == nt - 1):
@@ -106,36 +106,6 @@ def CalcTime(omega, CFL, c, nt = 0, t = 0):
         t = nt * dt
     return t, nt
 
-# NOT IN USE!
-
-def Upwind(omega, t, u0, const, order):
-    degFreed = omega.degFreed
-    dx = omega.h
-    B = dx - np.roll(dx, 1)
-    B[B > 0] = 0.5
-    # B[B > 0] = 0
-    B[B < 0] = 2. / 3.
-    C = B + 0 # np.roll(B, -1)
-    # D = np.roll(B, -1)
-#     D[D != 2. / 3.] = 0
-#     C = C - D
-    B[B < 2. / 3.] = 1.
-    C[C == 0] = 1.
-    D = C + 0
-    D[D != 0.5] = 0
-    print('')
-    print('Start:')
-    print(B)
-    print(dx)
-    print('')
-    print(C)
-    print(np.roll(dx, 1))
-    print('')
-    print(D)
-    print(np.roll(dx, 2))
-    print('')
-    f = -(const / dx) @ ((B * u0) - (C * np.roll(u0, 1)) - (D * np.roll(u0, 2)))
-    return f
 
 # NOT IN USE!
 
@@ -188,28 +158,28 @@ def Upwind(omega, t, u0, const, order):
 #     f = -(const / (2 * dx)) @ ((H * np.roll(dx, -2)) + (E * np.roll(dx, -1)) + (A * dx) + (C * np.roll(dx, 1)) + (G * np.roll(dx, 2)))
 #     return f
 
-def MidpointMeth(u, t, dt, op, waves, left = True): #(omega, waves, u0, nt, const, CFL, func, order = 0):
+def MidpointMeth(u, t, dt, op, waves, left = True, charOp = []): #(omega, waves, u0, nt, const, CFL, func, order = 0):
     if (left):
         func = LeftMult
     else:
         func = FDeriv
     
-    k1 = func(t, u, op, waves)
-    k2 = func(t + (dt / 2.), u + ((dt / 2.) * k1), op, waves)
+    k1 = func(t, u, op, waves, charOp)
+    k2 = func(t + (dt / 2.), u + ((dt / 2.) * k1), op, waves, charOp)
     u = u + (dt * k2)
     t = t + dt
     return u, t
 
-def RK4(u, t, dt, op, waves, left = True): # (omega, waves, u0, nt, const, CFL, func, order = 0):
+def RK4(u, t, dt, op, waves, left = True, charOp = []): # (omega, waves, u0, nt, const, CFL, func, order = 0):
     if (left):
         func = LeftMult
     else:
         func = FDeriv
     
-    k1 = func(t, u, op, waves)
-    k2 = func(t + (dt / 2.), u + ((dt / 2.) * k1), op, waves)
-    k3 = func(t + (dt / 2.), u + ((dt / 2.) * k2), op, waves)
-    k4 = func(t + dt, u + (dt * k3), op, waves)
+    k1 = func(t, u, op, waves, charOp)
+    k2 = func(t + (dt / 2.), u + ((dt / 2.) * k1), op, waves, charOp)
+    k3 = func(t + (dt / 2.), u + ((dt / 2.) * k2), op, waves, charOp)
+    k4 = func(t + dt, u + (dt * k3), op, waves, charOp)
     u = u + ((dt / 6.) * (k1 + (2. * k2) + (2. * k3) + k4))
     t = t + dt
     return u, t
@@ -245,11 +215,17 @@ def TimePoly(omega, t, u, const, order, deriv = True):
 
 
 
-def LeftMult(t, u0, op, waves):
-    u = op @ u0
+def LeftMult(t, u0, op, waves, charOp):
+    if (charOp == []):
+        u = op @ u0
+    else:
+        charOpInv = LA.inv(charOp)
+        v0 = charOpInv @ u0
+        v = op @ v0
+        u = charOp @ v
     return u
 
-def FDeriv(t, u0, op, waves):
+def FDeriv(t, u0, op, waves, charOp):
     fcoefs = FFTT.FourierCoefs(waves, u0)
     fcoefsderiv = op @ fcoefs
     u = waves @ fcoefsderiv
