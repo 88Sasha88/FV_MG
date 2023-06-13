@@ -107,56 +107,6 @@ def CalcTime(omega, CFL, c, nt = 0, t = 0):
     return t, nt
 
 
-# NOT IN USE!
-
-# def CenterDiff(omega, t, u0, const, order):
-#     degFreed = omega.degFreed
-#     dx = omega.h
-    
-#     # A is the main diagonal; C is the subdiagonal; G is the sub-subdiagonal; E is the superdiagonal; H is the super-superdiagonal.
-#     A = dx - np.roll(dx, 1)
-#     B = A + 0
-#     F = np.roll(A, -1)
-#     F[F > 0] = 1. / 3.
-#     F[F != 1. / 3.] = 0
-#     A[A < 0] = -1. / 3.
-#     A[A != -1. / 3.] = 0
-#     A = A - F
-#     B[B > 0] = 0.5
-#     B[B < 0] = 2. / 3.
-#     C = -B
-#     B[B < 2. / 3.] = 1.
-#     C[C == 0] = -1.
-#     D = C + 0
-#     D[D != -0.5] = 0
-#     E = -C
-#     E[E == 0.5] = 4. /3.
-#     E[E == 2. / 3.] = 0.5
-#     G = C + 0
-#     G[G != -0.5] = 0
-#     H = E + 0
-#     H[H != 0.5] = 0
-    
-#     print('')
-#     print('Start:')
-#     print(H)
-#     print(np.roll(dx, -2))
-#     print('')
-#     print(E)
-#     print(np.roll(dx, -1))
-#     print('')
-#     print(A)
-#     print(dx)
-#     print('')
-#     print(C)
-#     print(np.roll(dx, 1))
-#     print('')
-#     print(G)
-#     print(np.roll(dx, 2))
-#     print('')
-    
-#     f = -(const / (2 * dx)) @ ((H * np.roll(dx, -2)) + (E * np.roll(dx, -1)) + (A * dx) + (C * np.roll(dx, 1)) + (G * np.roll(dx, 2)))
-#     return f
 
 def MidpointMeth(u, t, dt, op, waves, left = True, charOp = []): #(omega, waves, u0, nt, const, CFL, func, order = 0):
     if (left):
