@@ -448,7 +448,6 @@ class PhysProps:
         indexOld = 0
         for i in range(iters):
             distance = locs[i] - x
-            print('distance is\n', distance, '\n')
             minDist = min(abs(distance))
             indexNew = np.where(abs(distance) == minDist)[0][0] # The abs in this line might not be correct.
             c = 1. / (L * np.sqrt(epsilons[i] * mus[i]))

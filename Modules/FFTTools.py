@@ -153,8 +153,21 @@ def GetXSpaceCoefs(omega, coefs, waves):
 
 
 def FourierCoefs(waves, waveform, printBool = False): # YOU GOT RID OF OMEGA HERE!!!
+    errorLoc = 'ERROR:\nFFTTools:\nFourierCoefs:\n'
+    errorMess = ''
     FTOp = OT.FourierTransOp(waves)
-    FCoefs = FTOp @ waveform
+    waveDim = np.shape(waves)[0]
+    formDim = np.shape(waveform)[0]
+    if (formDim == waveDim):
+        FCoefs = FTOp @ waveform
+    else:
+        if (formDim == int(2 * waveDim)):
+            FTOpBlock = OT.Block(FTOp, var = 2)
+            FCoefs = FTOpBlock @ waveform
+        else:
+            errorMess = 'The size of waves, ' + str(waveDim) + 'x' + str(waveDim = np.shape(waves)[1]) + ', does not match up with the size of waveform, ' + str(formDim) + '!'
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
     return FCoefs
 
 

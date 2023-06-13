@@ -357,14 +357,14 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
         labelsOut = [str(i + 1) for i in range(numGraphs)]
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
-    size, tickHeight = Resize(rescale, tickHeight)
+    size, tickHeight, labelfont = Resize(rescale, tickHeight)
     fig, ax = plt.subplots(figsize = size)
     if (waveTrans != []):
         PiecePlot(omega, numPoints, X, waveTrans, color = 3, linewidth = linewidth)
     TickPlot(omega, ax, tickHeight, xGrid, yGrid, linewidth = linewidth, labelsize = labelsize)
     if (numGraphs == 1):
         if (fX != []):
-            plt.plot(X, fX, color = ColorDefault(0), zorder = 2, label = labelsOut[0], linewidth = linewidth)
+            plt.plot(X, fX, color = ColorDefault(0), zorder = 2, label = labelsOut[0], linewidth = linewidth) # Fuck with this when you have time to worry about the line thickness of the analytic solution for a single plot.
             pieceLabel = []
         else:
             pieceLabel = labelsOut[0]
@@ -386,7 +386,7 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
             if (j == 2):
                 i = i + 1
         if (labels != []):
-            plt.legend()
+            plt.legend(fontsize = labelfont)
             print('Are you *sure* your labels are ordered correctly?')
     if (title != ''):
         plt.title(title, fontsize = fontsize)
@@ -411,7 +411,7 @@ def PlotMixedWave(omega, physics, FCoefs, waves = [], title = '', labels = [], r
     numPoints, font, X, savePath = UsefulPlotVals()
     lenFCoefs = np.shape(FCoefs)[0]
     if (lenFCoefs % nh != 0):
-        errorMess = 'FCoefs must have length which is integer multiple of degFreed!'
+        errorMess = 'FCoefs must have length which is integer multiple of nh_max! Currently, FCoefs is ' + str(lenFCoefs) + ' long, and nh_max is ' + str(nh) + '!'
     else:
         errorMess = ''
         numPlots = int(lenFCoefs / nh)
@@ -548,43 +548,51 @@ def FixStrings(omega, nullspace, shift):
 def Load(*vecs):
     errorLoc = 'ERROR:\nPlotTools:\nLoad:\n'
     i = 0
-    for vec in vecs:
-        i = i + 1
-        if (len(vec) != len(vecs[0])):
-            if (i % 10 == 1):
-                appendage = 'st'
-            else:
-                if (i % 10 == 2):
-                    appendage = 'nd'
+    if (len(vecs) == 1):
+        for vec in vecs:
+            loadedVecs = vec
+    else:
+        for vec in vecs:
+            i = i + 1
+            if (len(vec) != len(vecs[0])):
+                if (i % 10 == 1):
+                    appendage = 'st'
                 else:
-                    if (i % 10 == 3):
-                        appendage = 'rd'
+                    if (i % 10 == 2):
+                        appendage = 'nd'
                     else:
-                        appendage = 'th'
-            indexString = str(i) + appendage
-            errorMess = '%s vector\'s size does not match size of 1st vector!' %indexString
-            sys.exit(errorLoc + errorMess)
-    loadedVecs = np.asarray(list(zip(*vecs)))
+                        if (i % 10 == 3):
+                            appendage = 'rd'
+                        else:
+                            appendage = 'th'
+                indexString = str(i) + appendage
+                errorMess = '%s vector\'s size does not match size of 1st vector!' %indexString
+                sys.exit(errorLoc + errorMess)
+        loadedVecs = np.asarray(list(zip(*vecs)))
     return loadedVecs
 
 
 # In[ ]:
 
 def Resize(rescale, tickHeight):
+    errorLoc = 'ERROR:\nPlotTools:\nResize:\n'
+    labelfont = 10
     if np.any(np.asarray(rescale) <= 0):
         errorMess = 'All values of rescale must be greater than 0!'
         sys.exit(errorLoc + errorMess)
     if (np.shape(rescale) == ()):
         size = [5 * rescale, 2.5 * rescale]
         tickHeight = tickHeight / rescale
+        labelfont = int(rescale) + labelfont
     else:
         if (np.shape(rescale) == (2,)):
             size = [5 * rescale[0], 2.5 * rescale[1]]
             tickHeight = tickHeight / rescale[1]
+            labelfont = int(min(rescale)) + labelfont
         else:
             errorMess = 'Invalid shape of rescale object entered!'
             sys.exit(errorLoc + errorMess)
-    return size, tickHeight
+    return size, tickHeight, labelfont
 
 
 def PlotGrid(omega, rescale = 1, save = False, saveName = '', dpi = 600, enlarge = False):
@@ -605,7 +613,7 @@ def PlotGrid(omega, rescale = 1, save = False, saveName = '', dpi = 600, enlarge
     
     saveString = savePath + saveName
     yMin, yMax, tickHeight = GetYBound(0, True)
-    size, tickHeight = Resize(rescale, tickHeight)
+    size, tickHeight, labelfont = Resize(rescale, tickHeight)
     fig, ax = plt.subplots(figsize = size)
     TickPlot(omega, ax, tickHeight, False, False, label = True, labelsize = labelsize, linewidth = linewidth)
     plt.ylim([yMin, yMax])

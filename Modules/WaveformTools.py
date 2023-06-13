@@ -50,7 +50,8 @@ np.set_printoptions( linewidth = 10000, threshold = 100000)
 #
 # gauss                   np.ndarray              Gaussian waveform values on Grid omega in space-space
 # ----------------------------------------------------------------------------------------------------------------
-def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve = False, deriv = False, field = 'E'):
+def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve = False, deriv = False, field = 'EB'):
+    
     xCell = omega.xCell
     cs = physics.cs
     x_s = physics.locs[0]
@@ -67,31 +68,43 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
     waveFuncR = 0
     if (I or T):
         waveFuncIT = Advect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv)
+        EFuncIT = waveFuncIT.copy()
         # Scale the T part.
         scale = (2 * cs[1]) / (cs[0] + cs[1]) # Switch numerator to cs[0].
 #         if (field == 'B'):
 #             scale = (mus[0] * scale) / mus[1] # Switch mus.
-        waveFuncIT[index:] = scale * waveFuncIT[index:]
-        if (field == 'B'):
-            waveFuncIT[index:] = waveFuncIT[index:] / cs[1]
-            waveFuncIT[:index] = waveFuncIT[:index] / cs[0]
+        EFuncIT[index:] = scale * EFuncIT[index:]
+        BFuncIT = EFuncIT.copy()
+        BFuncIT[index:] = BFuncIT[index:] / cs[1]
+        BFuncIT[:index] = BFuncIT[:index] / cs[0]
         if (not I):
             print('BE AWARE THAT YOU HAVE ELECTED FOR THERE TO BE NO INCIDENT PART!')
             # Zero out the I part.
-            waveFuncIT[:index] = 0
+            EFuncIT[:index] = 0
+            BFuncIT[:index] = 0
         else: # Is I, might be T.
             if (not T):
                 # Zero out the T part.
-                waveFuncIT[index:] = 0
+                EFuncIT[index:] = 0
+                BFuncIT[index:] = 0
                 
     if (R):
         waveFuncR = Reflect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv)
         # Scale R part.
+        EFuncR = waveFuncR.copy()
         scale = (cs[1] - cs[0]) / (cs[0] + cs[1]) # Remove negative sign out front.
-        waveFuncR = scale * waveFuncR
+        EFuncR = scale * EFuncR
+        BFuncR = EFuncR.copy()
+        BFuncR = -BFuncR / cs[0]
+    EFunc = EFuncIT + EFuncR
+    BFunc = BFuncIT + BFuncR
+    if (field == 'E'):
+        waveFunc = EFunc
+    else:
         if (field == 'B'):
-            waveFuncR = -waveFuncR / cs[0]
-    waveFunc = waveFuncIT + waveFuncR
+            waveFunc = BFunc
+        else:
+            waveFunc = np.append(EFunc, BFunc)
     return waveFunc
 
 def Reflect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deriv = False):
@@ -132,10 +145,13 @@ def Advect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deri
             waveFunc = func(omega, x, *args, deriv = deriv, cellAve = cellAve)
     return waveFunc
 
-def InitCond(omega, physics, func, args, cellAve = True, BooleAve = False, deriv = False):
+def InitCond(omega, physics, func, args, cellAve = True, BooleAve = False, deriv = False, field = 'EB'):
     xNode = omega.xNode
     xCell = omega.xCell
     x = xNode
+    cMat = physics.cMat
+    cMatInv = LA.inv(cMat)
+    
     if (func == GaussPacket):
         BooleAve = True
         if (cellAve == False):
@@ -146,10 +162,21 @@ def InitCond(omega, physics, func, args, cellAve = True, BooleAve = False, deriv
         print('x is ' + str(len(x)) + ' long.')
         # I set cellAve to False because that changes the function for the Gaussian, and I want the
         # Gaussian to be calculated directly if I'm using Boole's Rule.
-        waveFuncPre = func(omega, x, *args, deriv = deriv, cellAve = False)
-        waveFunc = BoolesAve(waveFuncPre)
+        EFuncPre = func(omega, x, *args, deriv = deriv, cellAve = False)
+        EFunc = BoolesAve(EFuncPre)
     else:
-        waveFunc = func(omega, x, *args, deriv = deriv, cellAve = cellAve)
+        EFunc = func(omega, x, *args, deriv = deriv, cellAve = cellAve)
+    
+    BFunc = cMatInv @ EFunc
+    
+    if (field == 'E'):
+        waveFunc = EFunc
+    else:
+        if (field == 'B'):
+            waveFunc = BFunc
+        else:
+            waveFunc = np.append(EFunc, BFunc)
+    
     return waveFunc
 
 def Gauss(omega, x, sigma, mu, deriv, cellAve):
