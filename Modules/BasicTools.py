@@ -460,7 +460,7 @@ class PhysProps:
         self.cs = cs
         
         if (locs is []):
-            self.matInd = -1
+            self.matInd = -2
         else:
             self.matInd = max(np.where(x[:-1] < locs[0])[0])
 
