@@ -94,7 +94,7 @@ def CalcTime(omega, CFL, c, nt = 0, t = 0):
     dx, dt = FindDxDt(omega, CFL, c)
     
     if (nt <= 0):
-        nt = int(t / nt)
+        nt = int(t / dt)
         t = nt * dt
         if (t <= 0):
             errorMess = 'There must be a greater-than-zero input for either nt or t!'

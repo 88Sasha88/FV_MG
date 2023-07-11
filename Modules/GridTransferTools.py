@@ -181,6 +181,7 @@ def MomentVander(order, bounds, xVec):
 #     print(polyCoefs)
     VanderMat = hInv @ (A - B) @ polyCoefs
 #     print('VanderMat:', VanderMat)
+    print(VanderMat)
     polyInterp = xVec @ LA2.inv(VanderMat)
 #     print('polyInterp:', polyInterp)
 #     print('END MomentVander() FUNC!')
