@@ -50,7 +50,7 @@ np.set_printoptions( linewidth = 10000, threshold = 100000)
 #
 # gauss                   np.ndarray              Gaussian waveform values on Grid omega in space-space
 # ----------------------------------------------------------------------------------------------------------------
-def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve = False, deriv = False, field = 'EB'):
+def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve = False, deriv = False, field = 'EB', tol = 1e-15):
     
     xCell = omega.xCell
     cs = physics.cs
@@ -67,7 +67,7 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
     waveFuncIT = 0
     waveFuncR = 0
     if (I or T):
-        waveFuncIT = Advect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv)
+        waveFuncIT = Advect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv, tol = tol)
         EFuncIT = waveFuncIT.copy()
         # Scale the T part.
         scale = (2 * cs[1]) / (cs[0] + cs[1]) # Switch numerator to cs[0].
@@ -89,7 +89,7 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
                 BFuncIT[index:] = 0
                 
     if (R):
-        waveFuncR = Reflect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv)
+        waveFuncR = Reflect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv, tol = tol)
         # Scale R part.
         EFuncR = waveFuncR.copy()
         scale = (cs[1] - cs[0]) / (cs[0] + cs[1]) # Remove negative sign out front.
@@ -107,7 +107,7 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
             waveFunc = np.append(EFunc, BFunc)
     return waveFunc
 
-def Reflect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deriv = False):
+def Reflect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deriv = False, tol = 1e-15):
     xCell = omega.xCell
     x_s = physics.locs[0]
     
@@ -118,17 +118,17 @@ def Reflect(omega, physics, func, args, t, cellAve = True, BooleAve = False, der
         x = BoolesX(omega, physics, t) # REFLECTION HERE!!!
         # I set cellAve to False because that changes the function for the Gaussian, and I want the
         # Gaussian to be calculated directly if I'm using Boole's Rule.
-        waveFuncPre = func(omega, x, *args, deriv = deriv, cellAve = False)
+        waveFuncPre = func(omega, x, *args, deriv = deriv, cellAve = False, tol = tol)
         waveFunc = BoolesAve(waveFuncPre)
     else:
         x = ShiftX(omega, physics, t, adv = False) # REFLECTION HERE!!!
-        waveFunc = func(omega, x, *args, deriv = deriv, cellAve = cellAve)
+        waveFunc = func(omega, x, *args, deriv = deriv, cellAve = cellAve, tol = tol)
     waveFunc[index:] = 0
     return waveFunc
 
-def Advect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deriv = False):
+def Advect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deriv = False, tol = 1e-15):
     if (t == 0):
-        waveFunc = InitCond(omega, physics, func, args, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv)
+        waveFunc = InitCond(omega, physics, func, args, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv, tol = tol)
     else:
         if (func == GaussPacket):
             BooleAve = True
@@ -138,14 +138,14 @@ def Advect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deri
             print('x is ' + str(len(x)) + ' long.')
             # I set cellAve to False because that changes the function for the Gaussian, and I want the
             # Gaussian to be calculated directly if I'm using Boole's Rule.
-            waveFuncPre = func(omega, x, *args, deriv = deriv, cellAve = False)
+            waveFuncPre = func(omega, x, *args, deriv = deriv, cellAve = False, tol = tol)
             waveFunc = BoolesAve(waveFuncPre)
         else:
             x = ShiftX(omega, physics, t)
-            waveFunc = func(omega, x, *args, deriv = deriv, cellAve = cellAve)
+            waveFunc = func(omega, x, *args, deriv = deriv, cellAve = cellAve, tol = tol)
     return waveFunc
 
-def InitCond(omega, physics, func, args, cellAve = True, BooleAve = False, deriv = False, field = 'EB'):
+def InitCond(omega, physics, func, args, cellAve = True, BooleAve = False, deriv = False, field = 'EB', tol = 1e-15):
     xNode = omega.xNode
     xCell = omega.xCell
     x = xNode
@@ -162,10 +162,10 @@ def InitCond(omega, physics, func, args, cellAve = True, BooleAve = False, deriv
         print('x is ' + str(len(x)) + ' long.')
         # I set cellAve to False because that changes the function for the Gaussian, and I want the
         # Gaussian to be calculated directly if I'm using Boole's Rule.
-        EFuncPre = func(omega, x, *args, deriv = deriv, cellAve = False)
+        EFuncPre = func(omega, x, *args, deriv = deriv, cellAve = False, tol = tol)
         EFunc = BoolesAve(EFuncPre)
     else:
-        EFunc = func(omega, x, *args, deriv = deriv, cellAve = cellAve)
+        EFunc = func(omega, x, *args, deriv = deriv, cellAve = cellAve, tol = tol)
     
     BFunc = cMatInv @ EFunc
     
@@ -179,7 +179,7 @@ def InitCond(omega, physics, func, args, cellAve = True, BooleAve = False, deriv
     
     return waveFunc
 
-def Gauss(omega, x, sigma, mu, deriv, cellAve):
+def Gauss(omega, x, sigma, mu, deriv, cellAve, tol = 1e-15):
     # Unpack requisite attributes from omega and physics.
     xCell = omega.xCell
     
@@ -213,6 +213,9 @@ def Gauss(omega, x, sigma, mu, deriv, cellAve):
                 gauss = 2 * hMat @ (gaussian(xR) - gaussian(xL))
             else:
                 gauss = ((mu - x) * gaussian(x)) / (sigma ** 2)
+    
+    gauss[abs(gauss) < tol] = 0
+    
     return gauss
 
 # ----------------------------------------------------------------------------------------------------------------
@@ -295,7 +298,7 @@ def BoolesAve(f):
 # packet                  np.ndarray              Gaussian wavepacket cell-average values on Grid omega
 # ----------------------------------------------------------------------------------------------------------------
 # Gauss(omega, x, sigma, mu, deriv, cellAve)
-def GaussPacket(omega, x, sigma, mu, modenumber, deriv = False, cellAve = True):
+def GaussPacket(omega, x, sigma, mu, modenumber, deriv = False, cellAve = True, tol = 1e-15):
     # cellAve is an inert argument here.
     # YOU GOTTA CREATE A WAVES INSTANCE!
     errorLoc = 'ERROR:\nWaveformTools:\nWavePacket:\n'
@@ -329,6 +332,7 @@ def GaussPacket(omega, x, sigma, mu, modenumber, deriv = False, cellAve = True):
         else:
             packet = packetAmp * Sine(x)
 #     wavepacket = BoolesAve(packet)
+    packet[abs(packet) < tol] = 0
     return packet
 
 # ----------------------------------------------------------------------------------------------------------------
@@ -563,7 +567,7 @@ def ShiftX(omega, physics, t, adv = True):
 
 
 
-def SquareWave(omega, x, width, center, deriv, cellAve):
+def SquareWave(omega, x, width, center, deriv, cellAve, tol = 1e-15):
     # Unpack requisite attributes from omega and physics.
     errorLoc = 'ERROR:\nWaveformTools:\nSquareWave:\n'
     degFreed = omega.degFreed
@@ -592,5 +596,7 @@ def SquareWave(omega, x, width, center, deriv, cellAve):
     if (deriv):
         errorMess = 'This function includes no provision for the derivative!'
         sys.exit(errorLoc + errorMess)
+    
+    sqWave[abs(sqWave) < tol] = 0
     
     return sqWave
