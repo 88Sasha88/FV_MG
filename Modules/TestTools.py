@@ -237,7 +237,7 @@ def DerivPolyTest1(omega, diff, orderIn, coefs = [], deriv = 0):
     print('')
     return
 
-def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0, matInd = -1, printOut = True):
+def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0, printOut = True, iterate = False):
     order = orderIn # - 1
     errorLoc = 'ERROR:\nTestTools:\nSpacePoly:\n'
     degFreed = omega.degFreed
@@ -260,34 +260,44 @@ def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0, matInd = -1, prin
     
     const = -np.eye(degFreed)
     if (deriv == 0):
-        derivOp = OT.SpaceDeriv(omega, order, diff, matInd0 = matInd)# DiffFunc(omega, 0, waveform, const, order)
+        derivOp = OT.SpaceDeriv(omega, order, diff)# DiffFunc(omega, 0, waveform, const, order)
     else:
         derivOp = OT.SpaceDeriv1(omega, order, diff)
     np.set_printoptions(suppress=True)
     wavederiv = derivOp @ waveform
 #     print(derivOp)
-    print('')
-    print('Sum Over Rows:')
-    print(sum(derivOp, axis = 1))
-    print('')
-    if (printOut):
-        print('x:')
-        print(x)
+    error = np.round(waveformDeriv - wavederiv, 11)
+    if (iterate):
+        PF = np.count_nonzero(error)
+        if (PF == order):
+            print('PASS')
+        else:
+            print('FAIL')
+        print(error)
         print('')
-        print('Polynomial Function:')
-        print('<p(x)> =\n', P)
-        print('<p(x)> =\n', waveform)
+    else:
         print('')
-        print('Polynomial Derivative:')
-        print('<dp(x)/dx> =\n', p)
-        print('Theoretical:')
-        print('<dp(x)/dx> =\n', waveformDeriv)
-        print('Actual:')
-        print('<dp(x)/dx> =\n', wavederiv)
-    print('Difference Between Actual and Theoretical:')
-    print(np.round(waveformDeriv - wavederiv, 11))
-    print('')
-    print('')
+        print('Sum Over Rows:')
+        print(sum(derivOp, axis = 1))
+        print('')
+        if (printOut):
+            print('x:')
+            print(x)
+            print('')
+            print('Polynomial Function:')
+            print('<p(x)> =\n', P)
+            print('<p(x)> =\n', waveform)
+            print('')
+            print('Polynomial Derivative:')
+            print('<dp(x)/dx> =\n', p)
+            print('Theoretical:')
+            print('<dp(x)/dx> =\n', waveformDeriv)
+            print('Actual:')
+            print('<dp(x)/dx> =\n', wavederiv)
+        print('Difference Between Actual and Theoretical:')
+        print(error)
+        print('')
+        print('')
     return
 
 
