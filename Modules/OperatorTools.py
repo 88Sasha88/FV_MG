@@ -626,3 +626,254 @@ def SpaceDeriv(omega, order, diff):
     derivOp = hMat @ derivOp
         
     return derivOp
+
+
+
+def UDFace(orderIn):
+    errorLoc = 'ERROR:\nOperatorTools:\nUDFace:\n'
+    errorMess = ''
+    if (orderIn % 2 == 0):
+        order = int(orderIn + 1)
+    else:
+        order = orderIn
+    
+    stenc = np.zeros(order + 1)
+    
+    if (order == 1):
+        face = np.asarray([1])
+    else:
+        if (order == 3):
+            face = (1. / 6.) * np.asarray([-1, 5, 2])
+        else:
+            if (order == 5):
+                face = (1. / 60.) * np.asarray([2, -13, 47, 27, -3])
+            else:
+                if (order == 7):
+                    face = (1. / 420.) * np.asarray([-3, 25, -101, 319, 214, -38, 4])
+                else:
+                    if (order == 9):
+                        face = (1. / 2520.) * np.asarray([4, -41, 199, -641, 1879, 1375, -305, 55, -5])
+                    else:
+                        errorMess = 'This program is not designed to handle this order of accuracy for forward- and backward-difference operators.'
+    
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    
+    return face
+
+def DDFace(order):
+    stenc = UDFace(order)[::-1]
+    return stenc
+
+
+def MomentMatrix(x, x0, h, ixs, P):
+    ilo = min(ixs)
+    ihi = max(ixs)
+    xhi = (x[ilo+1:ihi+2] - x0)/h
+    xlo = (x[ilo:ihi+1] - x0)/h
+    A = np.zeros((np.shape(ixs)[0],P), float)
+    for p in range(P):
+        A[:,p] = (xhi**(p + 1) - xlo**(p + 1)) / ((p + 1) * (xhi - xlo))
+    A = np.asarray(A)
+    return A
+
+
+
+
+# Fill in cell-average ghost cells using jump conditions
+
+def GhostCellsJump(omega, physics, phiavg,Ng,P):
+    
+    dx = omega.h[0]
+    xNode = omega.xNode
+    matInd = physics.matInd
+    loc = physics.locs[0]
+    
+#     print('My x:')
+#     print(xNode[matInd-P:matInd+P+1] - loc)
+    
+    # Create the cell average interpolation matrix
+    x = xNode[matInd-P:matInd+P+1] - loc # np.arange(-P, P + 1).transpose()*dx
+#     print('Hans\' x:')
+#     print(x)
+    print('')
+    x0 = 0
+    ixs = np.arange(2*P).transpose()
+    A = MomentMatrix(x,x0,dx,ixs,P)
+
+    # Build up an interpolant using the jump condition
+    ix = np.arange(P)
+    phi1 = phiavg[int(matInd-P)+ix] # phi avg in domain 1
+    ix2 = np.arange(P)+P # domain 2 entries
+    phi2 = phiavg[int(matInd-P)+ix2] # phi avg in domain 2
+    B = Block([A[ix,:], A[ix2,:]]) # add the fit to the matrix
+    addOn = np.zeros(2 * P, float)
+    addOn[0] = 1
+    addOn[P] = -1
+    
+    # Add the jump cond constraint - constant coef is same at x=0
+    B = np.vstack([B, addOn])
+    
+    # Solve it with LS
+    phic = LA.pinv(B)@np.concatenate([phi1, phi2, np.zeros(1, float)])
+
+    # Evaluate the phi1 ghost cell values
+    ix = P+np.arange(Ng)
+    phig1 = A[ix,:]@phic[:P]
+
+    # Evaluate the phi2 ghost cell values
+    ix = np.arange(P-Ng, P)
+    phig2 = A[ix,:]@phic[P:2*P]
+    
+    return phig1, phig2
+
+
+
+def FaceOp(omega, order, diff, RL, Ng):
+    errorLoc = 'ERROR:\nOperatorTools:\nFaceOp:\n'
+    errorMess = ''
+    
+    if ((diff == 'U' or diff == 'UD') and (RL == 'L')):
+        diff = 'D'
+    else:
+        if ((diff == 'D' or diff == 'DD') and (RL == 'R')):
+            diff = 'U'
+    
+    if (diff == 'C' or diff == 'CD'):
+        stenc = OT.CDStencil(order)
+        if (order % 2 == 0):
+            orderStenc = order
+        else:
+            orderStenc = int(order + 1)
+        off = int(orderStenc / 2)
+        loBound = -off / 2.
+        hiBound = off / 2.
+    else:
+        orderStenc = order
+        if (order % 2 == 0):
+            orderStenc = order # int(order + 1)
+        else:
+            orderStenc = int(order - 1) # order
+        off = int(orderStenc / 2) # int((orderStenc + 1) / 2)
+        if (diff == 'U' or diff == 'UD'):
+            stenc = UDFace(order) # OT.UDStencil(order)
+            loBound = -off / 2.
+            hiBound = off / 2. #(off - 1.) / 2.
+        else:
+            if (diff == 'D' or diff == 'DD'):
+                stenc = DDFace(order) # OT.DDStencil(order)
+                # off = int(off - 1)
+                loBound = -off / 2. # -(off + 1.) / 2. # -off / 2.
+                hiBound = off / 2. # (off + 1.) / 2.
+            else:
+                errorMess = 'Invalid entry for variable diff. Must be \'C\', \'U\', \'D\' \'CD\', \'UD\', or \'DD\'.'
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    
+#     stenc = np.ones(orderStenc + 1)
+    
+    np.set_printoptions(precision=24, suppress=True)
+    
+    degFreed = omega.degFreed
+    hs = omega.h
+    
+    halfDeg = int(degFreed / 2)
+      
+    spots = np.roll(hs, -1) - hs
+    
+    if (all(spots == 0)):
+        p = []
+        q = []
+        NU = False
+    else:
+        # Index before fine-coarse interface
+        p = np.where(spots > 0)[0][0]
+        # Index before coarse-fine interface
+        q = np.where(spots < 0)[0][0]
+        NU = True
+    
+    polyStencSet = [[] for i in range(orderStenc)]
+    cellFaces = np.linspace(loBound, hiBound, num = orderStenc + 1)
+    zeroLoc = np.where(cellFaces == 0)[0][0]
+    cellFaces = np.delete(cellFaces, zeroLoc)
+    addZeros = np.zeros((orderStenc, Ng), float)
+
+    for i in range(orderStenc):
+        polyStencSet[i], n_c, n_f = GTT.CentGhost(omega, order, cellFaces[i])
+    
+    polyStencSet = np.asarray(polyStencSet)
+    polyStencSet = np.hstack([addZeros, polyStencSet, addZeros])
+
+    IMat = np.eye(degFreed + 2 * Ng, degFreed + 2 * Ng) # np.eye(degFreed, degFreed)
+    
+    # YOU'RE GONNA NEED THESE TO RESTRICT FOR HIGHER EVEN ORDERS, TOO.
+    
+    
+    polyMatU = IMat + 0
+    
+    
+    mat = np.zeros((degFreed, degFreed + 2 * Ng), float) # np.zeros((degFreed, degFreed), float)
+    faceOp = mat + 0
+    
+    for d in range(orderStenc + 1):
+        s = int(off - d)
+        
+        derivMat = mat + 0
+        np.fill_diagonal(derivMat[:, Ng:Ng+degFreed], stenc[d]) # np.fill_diagonal(derivMat, stenc[d])
+        derivMat = np.roll(derivMat, -s, axis = 1) # np.roll(derivMat, s, axis = 0)
+        
+        polyMat = IMat + 0
+        
+        if (NU):
+            if (s > 0):
+                j = int(off - s)
+                pAt = (p + Ng) % (degFreed + 2 * Ng) # p
+                pLo = (p + Ng - 1) % (degFreed + 2 * Ng) # (p - 1) % degFreed
+                qAt = (q - s + Ng + 1) % (degFreed + 2 * Ng) # (q - s + 1) % degFreed #(q + 1) % degFreed
+                for i in range (s):
+                    polyMat[pAt, :] = 0
+                    polyMat[pAt, pLo:pLo+2] = 0.5
+                    polyMat[qAt, :] = polyStencSet[j, :]
+                    pAt = (pAt - 1) % (degFreed + 2 * Ng) # (pAt - 1) % degFreed
+                    pLo = (pLo - 2) % (degFreed + 2 * Ng) # (pLo - 2) % degFreed
+                    qAt = (qAt + 1) % (degFreed + 2 * Ng) # (qAt + 1) % degFreed
+                    j = int(j + 1)
+
+            if (s < 0):
+                j = int(off) # - s - 1
+                qAt = (q + Ng + 1) % (degFreed + 2 * Ng) # (q + 1) % degFreed
+                qLo = (q + Ng + 1) % (degFreed + 2 * Ng) # (q + 1) % degFreed
+                pAt = (p + Ng + 1) % (degFreed + 2 * Ng) # (p + 1) % degFreed
+                for i in range(abs(s)):
+                    polyMat[qAt, :] = 0
+                    polyMat[qAt, qLo:qLo+2] = 0.5
+                    polyMat[pAt, :] = polyStencSet[j, :]
+                    qAt = (qAt + 1) % (degFreed + 2 * Ng) # (qAt + 1) % degFreed
+                    qLo = (qLo + 2) % (degFreed + 2 * Ng) # (qLo + 2) % degFreed
+                    pAt = (pAt + 1) % (degFreed + 2 * Ng) # (pAt + 1) % degFreed
+                    j = int(j + 1) # - 1
+        
+        matThis = derivMat @ polyMat
+        
+        faceOp = faceOp + matThis
+    
+    finRow = np.zeros((1, halfDeg + 2 * Ng), float)
+    
+    faceOp1 = faceOp[:halfDeg, :halfDeg + 2 * Ng]
+    faceOp2 = faceOp[-halfDeg:, -halfDeg - 2 * Ng:]
+    
+    
+    if (RL == 'R'):
+        finRow[0, :order-Ng] = stenc[Ng-order:]
+        faceOp1 = np.concatenate((finRow, faceOp1), axis = 0)
+        faceOp2 = np.concatenate((finRow, faceOp2), axis = 0)
+    else:
+        finRow[0, Ng-order:] = stenc[:order-Ng]
+        faceOp1 = np.concatenate((faceOp1, finRow), axis = 0)
+        faceOp2 = np.concatenate((faceOp1, finRow), axis = 0)
+    
+    # hMat = OT.StepMatrix(omega)
+    
+    # derivOp = hMat @ derivOp
+        
+    return faceOp1, faceOp2

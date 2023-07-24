@@ -490,3 +490,19 @@ def MaterialInterpBounds(omega, order, matInd, offDiagInd, revBounds):
 #     print('Bounds are:', bounds, '<=', xNode[matInd])
     
     return bounds
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
