@@ -802,7 +802,8 @@ def FaceOp(omega, order, diff, RL, Ng):
         polyStencSet[i], n_c, n_f = GTT.CentGhost(omega, order, cellFaces[i])
     
     polyStencSet = np.asarray(polyStencSet)
-    polyStencSet = np.hstack([addZeros, polyStencSet, addZeros])
+    if (Ng != 0):
+        polyStencSet = np.hstack([addZeros, polyStencSet, addZeros])
 
     IMat = np.eye(degFreed + 2 * Ng, degFreed + 2 * Ng) # np.eye(degFreed, degFreed)
     
@@ -858,22 +859,29 @@ def FaceOp(omega, order, diff, RL, Ng):
         faceOp = faceOp + matThis
     
     finRow = np.zeros((1, halfDeg + 2 * Ng), float)
+    finRowMaj = np.zeros((1, degFreed + 2 * Ng), float)
     
     faceOp1 = faceOp[:halfDeg, :halfDeg + 2 * Ng]
     faceOp2 = faceOp[-halfDeg:, -halfDeg - 2 * Ng:]
     
     
     if (RL == 'R'):
-        finRow[0, :order-Ng] = stenc[Ng-order:]
+        if (order > 1):
+            finRow[0, :order-Ng] = stenc[Ng-order:]
+            finRowMaj[0, :order-Ng] = stenc[Ng-order:]
         faceOp1 = np.concatenate((finRow, faceOp1), axis = 0)
         faceOp2 = np.concatenate((finRow, faceOp2), axis = 0)
+        faceOp = np.concatenate((finRowMaj, faceOp), axis = 0)
     else:
-        finRow[0, Ng-order:] = stenc[:order-Ng]
+        if (order > 1):
+            finRow[0, Ng-order:] = stenc[:order-Ng]
+            finRowMaj[0, Ng-order:] = stenc[:order-Ng]
         faceOp1 = np.concatenate((faceOp1, finRow), axis = 0)
         faceOp2 = np.concatenate((faceOp1, finRow), axis = 0)
+        faceOp = np.concatenate((faceOp, finRowMaj), axis = 0)
     
     # hMat = OT.StepMatrix(omega)
     
     # derivOp = hMat @ derivOp
         
-    return faceOp1, faceOp2
+    return faceOp1, faceOp2, faceOp

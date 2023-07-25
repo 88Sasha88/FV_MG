@@ -237,7 +237,7 @@ def DerivPolyTest1(omega, diff, orderIn, coefs = [], deriv = 0):
     print('')
     return
 
-def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0, printOut = True, iterate = False):
+def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0, printOut = True):
     order = orderIn # - 1
     errorLoc = 'ERROR:\nTestTools:\nSpacePoly:\n'
     degFreed = omega.degFreed
@@ -267,37 +267,30 @@ def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0, printOut = True, 
     wavederiv = derivOp @ waveform
 #     print(derivOp)
     error = np.round(waveformDeriv - wavederiv, 11)
-    if (iterate):
-        PF = np.count_nonzero(error)
-        if (PF == order):
-            print('PASS')
-        else:
-            print('FAIL')
-        print(error)
-        print('')
-    else:
-        print('')
+    PF = np.count_nonzero(error)
+    
+    if (printOut):
         print('Sum Over Rows:')
         print(sum(derivOp, axis = 1))
         print('')
-        if (printOut):
-            print('x:')
-            print(x)
-            print('')
-            print('Polynomial Function:')
-            print('<p(x)> =\n', P)
-            print('<p(x)> =\n', waveform)
-            print('')
-            print('Polynomial Derivative:')
-            print('<dp(x)/dx> =\n', p)
-            print('Theoretical:')
-            print('<dp(x)/dx> =\n', waveformDeriv)
-            print('Actual:')
-            print('<dp(x)/dx> =\n', wavederiv)
-        print('Difference Between Actual and Theoretical:')
-        print(error)
+        print('x:')
+        print(x)
         print('')
+        print('Polynomial Function:')
+        print('<p(x)> =\n', P)
+        print('<p(x)> =\n', waveform)
         print('')
+        print('Polynomial Derivative:')
+        print('<dp(x)/dx> =\n', p)
+        print('Theoretical:')
+        print('<dp(x)/dx> =\n', waveformDeriv)
+        print('Actual:')
+        print('<dp(x)/dx> =\n', wavederiv)
+    print('Difference Between Actual and Theoretical:')
+    print(error)
+    print('Total Nonzero Error Elements:', PF)
+    print('')
+    print('')
     return
 
 
@@ -458,3 +451,159 @@ def ExactSpatDeriv(omega, t, u0, c, order):
     return u
 
 # In[ ]:
+
+
+
+def FacePolyTest(omega, physics, diff, orderIn, Ng, coefs = [], printOut = True, pieces = True):
+    order = orderIn
+    errorLoc = 'ERROR:\nTestTools:\nFacePolyTest:\n'
+    degFreed = omega.degFreed
+    hs = omega.h
+    
+    halfDeg = int(degFreed / 2)
+    
+    if (coefs == []):
+        coefs = 1. / (np.arange(order + 1) + 1)
+        coefs = np.append(1, coefs)[::-1]
+    else:
+        errorMess = BT.CheckSize(order, coefs, nName = 'order', matricaName = 'coefs')
+        if (errorMess != ''):
+            sys.exit(errorLoc + errorMess)
+    nh_max = omega.nh_max
+    waves = WT.MakeWaves(omega)
+    
+    x = omega.xNode
+#     x = np.append(-hs[0], x)
+#     hs = np.append(hs[0], hs)
+    P = np.poly1d(coefs) - 1
+    waveform = (P(x[1:]) - P(x[:-1])) / hs
+    waveform1 = waveform[:halfDeg]
+    waveform2 = waveform[halfDeg:]
+    if (Ng != 0):
+        leftPiece = np.zeros(Ng, float)
+        rightPiece = np.full(Ng, waveform[-1])
+        
+        wG1, wG2 = OT.GhostCellsJump(omega, physics, waveform, Ng, order)
+        
+        waveform1 = np.hstack([leftPiece, waveform1, wG1])
+        waveform2 = np.hstack([wG2, waveform2, rightPiece])
+        waveform = np.hstack([leftPiece, waveform, rightPiece])
+    
+    p = np.poly1d(np.ones(order + 1)) - 1
+    waveformDeriv = (p(x[1:]) - p(x[:-1])) / hs
+    
+    const = -np.eye(degFreed)
+    faceOp1, faceOp2, faceOp = OT.FaceOp(omega, order, diff, 'R', Ng)# DiffFunc(omega, 0, waveform, const, order)
+    hMat = OT.StepMatrix(omega)
+    hMat1 = hMat[:halfDeg, :halfDeg]
+    hMat2 = hMat[halfDeg:, halfDeg:]
+    np.set_printoptions(suppress = True)
+    waveFace1 = faceOp1 @ waveform1
+    waveFace2 = faceOp2 @ waveform2
+    waveFace = faceOp @ waveform
+    wavederiv1 = hMat1 @ (waveFace1[1:] - waveFace1[:-1])
+    wavederiv2 = hMat2 @ (waveFace2[1:] - waveFace2[:-1])
+    wavederiv = hMat @ (waveFace[1:] - waveFace[:-1])
+    
+#     print(derivOp)
+    error1 = np.round(waveformDeriv[:halfDeg] - wavederiv1, 11)
+    error2 = np.round(waveformDeriv[halfDeg:] - wavederiv2, 11)
+    error = np.round(waveformDeriv - wavederiv, 11)
+    PF = np.count_nonzero(error)
+    PF1 = np.count_nonzero(error1)
+    PF2 = np.count_nonzero(error2)
+
+    print('')
+    if (printOut):
+        print('x:')
+        print(x)
+        print('')
+        print('Polynomial Function:')
+        print('<p(x)> =\n', P)
+        print('<p(x)> =\n', waveform)
+        print('')
+        print('Polynomial Derivative:')
+        print('<dp(x)/dx> =\n', p)
+        print('Theoretical:')
+        print('<dp(x)/dx> =\n', waveformDeriv)
+        print('Actual:')
+        print('<dp(x)/dx> =')
+        if (pieces):
+            print(wavederiv1)
+            print(wavederiv2)
+        else:
+            print(wavederiv)
+    print('Difference Between Actual and Theoretical:')
+    if (pieces):
+        print(error1)
+        print(error2)
+        print('Total Nonzero Error Elements:', PF1 + PF2)
+    else:
+        print(error)
+        print('Total Nonzero Error Elements:', PF)
+    print('')
+    print('')
+    return
+
+
+def FacePolyTest1(omega, diff, orderIn, RL, coefs = [], printOut = True):
+    order = orderIn
+    errorLoc = 'ERROR:\nTestTools:\nFacePolyTest:\n'
+    degFreed = omega.degFreed
+    hs = omega.h
+    if (coefs == []):
+        coefs = 1. / (np.arange(order + 1) + 1)
+        coefs = np.append(1, coefs)[::-1]
+    else:
+        errorMess = BT.CheckSize(order, coefs, nName = 'order', matricaName = 'coefs')
+        if (errorMess != ''):
+            sys.exit(errorLoc + errorMess)
+    Ng = 0
+    nh_max = omega.nh_max
+    waves = WT.MakeWaves(omega)
+    
+    x = omega.xNode
+    # This is if RL == 'R'!!!
+#     x = np.append(-hs[0], x)
+#     hs = np.append(hs[0], hs)
+    
+    P = np.poly1d(coefs) - 1
+    waveform = (P(x[1:]) - P(x[:-1])) / hs
+    p = np.poly1d(np.ones(order + 1)) - 1
+    waveformDeriv = (p(x[1:]) - p(x[:-1])) / hs
+    
+    const = -np.eye(degFreed)
+    faceOp1, faceOp2, faceOp = OT.FaceOp(omega, order, diff, RL, Ng)# DiffFunc(omega, 0, waveform, const, order)
+    hMat = OT.StepMatrix(omega)
+    if (RL == 'R'):
+        faceOp = faceOp[1:, :]
+#         hMat = hMat[:-1, :]
+    else:
+        faceOp = faceOp[:-1, :]
+#         hMat = hMat[1:, :]
+    np.set_printoptions(suppress=True)
+    waveFace = faceOp @ waveform
+    wavederiv = hMat @ (waveFace - np.roll(waveFace, 1)) # (np.roll(waveFace, -1) - waveFace)
+    error = np.round(waveformDeriv - wavederiv, 11)
+    PF = np.count_nonzero(error)
+
+    if (printOut):
+        print('x:')
+        print(x)
+        print('')
+        print('Polynomial Function:')
+        print('<p(x)> =\n', P)
+        print('<p(x)> =\n', waveform)
+        print('')
+        print('Polynomial Derivative:')
+        print('<dp(x)/dx> =\n', p)
+        print('Theoretical:')
+        print('<dp(x)/dx> =\n', waveformDeriv)
+        print('Actual:')
+        print('<dp(x)/dx> =\n', wavederiv)
+    print('Difference Between Actual and Theoretical:')
+    print(error)
+    print('Total Nonzero Error Elements:', PF)
+    print('')
+    print('')
+    return
