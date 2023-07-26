@@ -454,7 +454,7 @@ def ExactSpatDeriv(omega, t, u0, c, order):
 
 
 
-def FacePolyTest(omega, physics, diff, orderIn, Ng, coefs = [], printOut = True, pieces = True):
+def FacePolyTest(omega, physics, diff, orderIn, RL, Ng, coefs = [], printOut = True, pieces = True):
     order = orderIn
     errorLoc = 'ERROR:\nTestTools:\nFacePolyTest:\n'
     degFreed = omega.degFreed
@@ -493,17 +493,48 @@ def FacePolyTest(omega, physics, diff, orderIn, Ng, coefs = [], printOut = True,
     waveformDeriv = (p(x[1:]) - p(x[:-1])) / hs
     
     const = -np.eye(degFreed)
-    faceOp1, faceOp2, faceOp = OT.FaceOp(omega, order, diff, 'R', Ng)# DiffFunc(omega, 0, waveform, const, order)
+    faceOp1A, faceOp2A, faceOpA = OT.FaceOp(omega, order, diff, RL, Ng)
+    faceOp1B, faceOp2B, faceOpB = OT.FaceOp(omega, order, diff, RL, Ng, True)
+    
+    if (RL == 'R'):
+        faceOpR = faceOpA
+        faceOpL = faceOpB
+        faceOp1R = faceOp1A
+        faceOp1L = faceOp1B
+        faceOp2R = faceOp2A
+        faceOp2L = faceOp2B
+    else:
+        faceOpR = faceOpB
+        faceOpL = faceOpA
+        faceOp1R = faceOp1B
+        faceOp1L = faceOp1A
+        faceOp2R = faceOp2B
+        faceOp2L = faceOp2A
+    
     hMat = OT.StepMatrix(omega)
     hMat1 = hMat[:halfDeg, :halfDeg]
     hMat2 = hMat[halfDeg:, halfDeg:]
     np.set_printoptions(suppress = True)
-    waveFace1 = faceOp1 @ waveform1
-    waveFace2 = faceOp2 @ waveform2
-    waveFace = faceOp @ waveform
-    wavederiv1 = hMat1 @ (waveFace1[1:] - waveFace1[:-1])
-    wavederiv2 = hMat2 @ (waveFace2[1:] - waveFace2[:-1])
-    wavederiv = hMat @ (waveFace[1:] - waveFace[:-1])
+    
+    waveFaceR = faceOpR @ waveform
+    waveFaceL = faceOpL @ waveform
+    waveFace1R = faceOp1R @ waveform1
+    waveFace1L = faceOp1L @ waveform1
+    waveFace2R = faceOp2R @ waveform2
+    waveFace2L = faceOp2L @ waveform2
+    
+    wavediff = waveFaceR - waveFaceL
+    wavediff1 = waveFace1R - waveFace1L
+    wavediff2 = waveFace2R - waveFace2L
+    
+    if (RL == 'R'):
+        wavederiv = hMat @ wavediff[1:]
+        wavederiv1 = hMat1 @ wavediff1[1:]
+        wavederiv2 = hMat2 @ wavediff2[1:]
+    else:
+        wavederiv = hMat @ wavediff[:-1]
+        wavederiv1 = hMat1 @ wavediff1[:-1]
+        wavederiv2 = hMat2 @ wavediff2[:-1]
     
 #     print(derivOp)
     error1 = np.round(waveformDeriv[:halfDeg] - wavederiv1, 11)
@@ -573,17 +604,23 @@ def FacePolyTest1(omega, diff, orderIn, RL, coefs = [], printOut = True):
     waveformDeriv = (p(x[1:]) - p(x[:-1])) / hs
     
     const = -np.eye(degFreed)
-    faceOp1, faceOp2, faceOp = OT.FaceOp(omega, order, diff, RL, Ng)# DiffFunc(omega, 0, waveform, const, order)
+    
+    garbage1, garbage2, faceOp1 = OT.FaceOp(omega, order, diff, RL, Ng)
+    garbage1, garbage2, faceOp2 = OT.FaceOp(omega, order, diff, RL, Ng, True)
+
     hMat = OT.StepMatrix(omega)
     if (RL == 'R'):
-        faceOp = faceOp[1:, :]
+        faceOpR = faceOp1[1:, :]
+        faceOpL = faceOp2[1:, :]
 #         hMat = hMat[:-1, :]
     else:
-        faceOp = faceOp[:-1, :]
+        faceOpR = faceOp2[:-1, :]
+        faceOpL = faceOp1[:-1, :]
 #         hMat = hMat[1:, :]
     np.set_printoptions(suppress=True)
-    waveFace = faceOp @ waveform
-    wavederiv = hMat @ (waveFace - np.roll(waveFace, 1)) # (np.roll(waveFace, -1) - waveFace)
+    waveFaceR = faceOpR @ waveform
+    waveFaceL = faceOpL @ waveform
+    wavederiv = hMat @ (waveFaceR - waveFaceL) # (np.roll(waveFace, -1) - waveFace)
     error = np.round(waveformDeriv - wavederiv, 11)
     PF = np.count_nonzero(error)
 

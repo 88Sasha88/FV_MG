@@ -536,7 +536,7 @@ def SpaceDeriv(omega, order, diff):
                 loBound = -off / 2.
                 hiBound = (off + 1.) / 2.
             else:
-                errorMess = 'Invalid entry for variable diff. Must be \'C\', \'U\', \'D\' \'CD\', \'UD\', or \'DD\'.'
+                errorMess = 'Invalid entry for variable diff. Must be \'C\', \'U\', \'D\', \'CD\', \'UD\', or \'DD\'.'
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
     
@@ -624,6 +624,7 @@ def SpaceDeriv(omega, order, diff):
     hMat = StepMatrix(omega)
     
     derivOp = hMat @ derivOp
+
         
     return derivOp
 
@@ -729,18 +730,12 @@ def GhostCellsJump(omega, physics, phiavg,Ng,P):
 
 
 
-def FaceOp(omega, order, diff, RL, Ng):
+def FaceOp(omega, order, diff, RL, Ng, otherFace = False):
     errorLoc = 'ERROR:\nOperatorTools:\nFaceOp:\n'
     errorMess = ''
     
-    if ((diff == 'U' or diff == 'UD') and (RL == 'L')):
-        diff = 'D'
-    else:
-        if ((diff == 'D' or diff == 'DD') and (RL == 'R')):
-            diff = 'U'
-    
     if (diff == 'C' or diff == 'CD'):
-        stenc = OT.CDStencil(order)
+        stenc = CDStencil(order)
         if (order % 2 == 0):
             orderStenc = order
         else:
@@ -756,17 +751,29 @@ def FaceOp(omega, order, diff, RL, Ng):
             orderStenc = int(order - 1) # order
         off = int(orderStenc / 2) # int((orderStenc + 1) / 2)
         if (diff == 'U' or diff == 'UD'):
-            stenc = UDFace(order) # OT.UDStencil(order)
             loBound = -off / 2.
             hiBound = off / 2. #(off - 1.) / 2.
-        else:
-            if (diff == 'D' or diff == 'DD'):
-                stenc = DDFace(order) # OT.DDStencil(order)
-                # off = int(off - 1)
-                loBound = -off / 2. # -(off + 1.) / 2. # -off / 2.
-                hiBound = off / 2. # (off + 1.) / 2.
+            if (RL == 'R'):
+                stenc = UDFace(order) # UDStencil(order)
             else:
-                errorMess = 'Invalid entry for variable diff. Must be \'C\', \'U\', \'D\' \'CD\', \'UD\', or \'DD\'.'
+                if (RL == 'L'):
+                    stenc = DDFace(order)
+                else:
+                    errorMess = 'Variable RL must be set either to \'R\' for right-moving wave or \'L\' for left-moving wave.'
+            
+#         else:
+#             if (diff == 'D' or diff == 'DD'):
+#                 stenc = DDFace(order) # DDStencil(order)
+#                 # off = int(off - 1)
+#                 loBound = -off / 2. # -(off + 1.) / 2. # -off / 2.
+#                 hiBound = off / 2. # (off + 1.) / 2.
+        else:
+            errorMess = 'Invalid entry for variable diff. Must be \'C\', \'U\', \'CD\', or \'UD\'.'
+    if (Ng > off + 1):
+        errorMess = 'Too many ghost cells for this order of face approximation!'
+    
+    val = Ng + off
+    
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
     
@@ -792,19 +799,42 @@ def FaceOp(omega, order, diff, RL, Ng):
         q = np.where(spots < 0)[0][0]
         NU = True
     
-    polyStencSet = [[] for i in range(orderStenc)]
+    
+    
+    if (otherFace):
+        val = val - 1
+        if (RL == 'R'): # Then everything shifts left.
+            off = off + 1
+            loBound = loBound - 0.5
+            hiBound = hiBound - 0.5
+#             if (NU):
+#                 p = (p - 1) % (degFreed + 2 * Ng)
+#                 q = (q - 1) % (degFreed + 2 * Ng)
+        else:
+            off = off - 1
+            loBound = loBound + 0.5
+            hiBound = hiBound + 0.5
+#             if (NU):
+#                 p = (p + 1) % (degFreed + 2 * Ng)
+#                 q = (q + 1) % (degFreed + 2 * Ng)
+    
+    
     cellFaces = np.linspace(loBound, hiBound, num = orderStenc + 1)
-    zeroLoc = np.where(cellFaces == 0)[0][0]
-    cellFaces = np.delete(cellFaces, zeroLoc)
-    addZeros = np.zeros((orderStenc, Ng), float)
+    zeroLoc = np.where(cellFaces == 0)[0]
+    if (len(zeroLoc) != 0):
+        cellFaces = np.delete(cellFaces, zeroLoc[0])
+    polys = np.shape(cellFaces)[0]
+    polyStencSet = [[] for i in range(polys)]
+    
+    addZeros = np.zeros((polys, Ng), float)
 
-    for i in range(orderStenc):
+    for i in range(polys):
         polyStencSet[i], n_c, n_f = GTT.CentGhost(omega, order, cellFaces[i])
     
     polyStencSet = np.asarray(polyStencSet)
-    if (Ng != 0):
+    if ((Ng != 0) and (polys != 0)):
         polyStencSet = np.hstack([addZeros, polyStencSet, addZeros])
-
+    
     IMat = np.eye(degFreed + 2 * Ng, degFreed + 2 * Ng) # np.eye(degFreed, degFreed)
     
     # YOU'RE GONNA NEED THESE TO RESTRICT FOR HIGHER EVEN ORDERS, TOO.
@@ -821,7 +851,7 @@ def FaceOp(omega, order, diff, RL, Ng):
         
         derivMat = mat + 0
         np.fill_diagonal(derivMat[:, Ng:Ng+degFreed], stenc[d]) # np.fill_diagonal(derivMat, stenc[d])
-        derivMat = np.roll(derivMat, -s, axis = 1) # np.roll(derivMat, s, axis = 0)
+        derivMat = np.roll(derivMat, -s, axis = 1) # np.roll(derivMat, s, axis = 0)s
         
         polyMat = IMat + 0
         
@@ -861,26 +891,37 @@ def FaceOp(omega, order, diff, RL, Ng):
     finRow = np.zeros((1, halfDeg + 2 * Ng), float)
     finRowMaj = np.zeros((1, degFreed + 2 * Ng), float)
     
+    
+#     rowSums = np.round(sum(faceOp, axis = 1), 11)
+#     probRows = np.where(rowSums != 0)[0]
+    
+#     for row in probRows:
+#         for j in range(degFreed):
+#             frac = Fraction(faceOp[row, j]).limit_denominator(10**order)
+#             num = frac.numerator
+#             denom = frac.denominator
+#             faceOp[row, j] = num / denom
+    
     faceOp1 = faceOp[:halfDeg, :halfDeg + 2 * Ng]
     faceOp2 = faceOp[-halfDeg:, -halfDeg - 2 * Ng:]
     
-    
     if (RL == 'R'):
-        if (order > 1):
-            finRow[0, :order-Ng] = stenc[Ng-order:]
-            finRowMaj[0, :order-Ng] = stenc[Ng-order:]
+        if ((order > 1) and (val > 0)):
+            finRow[0, :val] = stenc[-val:]
+            finRowMaj[0, :val] = stenc[-val:]
         faceOp1 = np.concatenate((finRow, faceOp1), axis = 0)
         faceOp2 = np.concatenate((finRow, faceOp2), axis = 0)
         faceOp = np.concatenate((finRowMaj, faceOp), axis = 0)
     else:
-        if (order > 1):
-            finRow[0, Ng-order:] = stenc[:order-Ng]
-            finRowMaj[0, Ng-order:] = stenc[:order-Ng]
+        if ((order > 1) and (val > 0)):
+            finRow[0, -val:] = stenc[:val]
+            finRowMaj[0, -val:] = stenc[:val]
         faceOp1 = np.concatenate((faceOp1, finRow), axis = 0)
         faceOp2 = np.concatenate((faceOp1, finRow), axis = 0)
         faceOp = np.concatenate((faceOp, finRowMaj), axis = 0)
     
-    # hMat = OT.StepMatrix(omega)
+    
+    # hMat = StepMatrix(omega)
     
     # derivOp = hMat @ derivOp
         
