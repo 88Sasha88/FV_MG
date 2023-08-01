@@ -923,7 +923,7 @@ def FaceOp(omega, order, diff, RL, Ng, otherFace = False):
             finRow[0, -val:] = stenc[:val]
             finRowMaj[0, -val:] = stenc[:val]
         faceOp1 = np.concatenate((faceOp1, finRow), axis = 0)
-        faceOp2 = np.concatenate((faceOp1, finRow), axis = 0)
+        faceOp2 = np.concatenate((faceOp2, finRow), axis = 0)
         faceOp = np.concatenate((faceOp, finRowMaj), axis = 0)
         
     return faceOp1, faceOp2, faceOp
