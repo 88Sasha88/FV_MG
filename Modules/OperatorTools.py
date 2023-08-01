@@ -666,6 +666,32 @@ def DDFace(order):
     stenc = UDFace(order)[::-1]
     return stenc
 
+def CDFace(orderIn):
+    errorLoc = 'ERROR:\nOperatorTools:\nCDFace:\n'
+    errorMess = ''
+    if (orderIn % 2 == 0):
+        order = orderIn
+    else:
+        order = int(orderIn + 1)
+    
+    stenc = np.zeros(order + 1)
+    
+    if (order == 2):
+        face = (1. / 2.) * np.asarray([1, 1])
+    else:
+        if (order == 4):
+            face = (1. / 12.) * np.asarray([-1, 7, 7, -1])
+        else:
+            if (order == 6):
+                face = (1. / 60.) * np.asarray([1, -8, 37, 37, -8, 1])
+            else:
+                errorMess = 'This program is not designed to handle this order of accuracy for center-difference operators.'
+    
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    
+    return face
+
 
 def MomentMatrix(x, x0, h, ixs, P):
     ilo = min(ixs)
@@ -735,14 +761,20 @@ def FaceOp(omega, order, diff, RL, Ng, otherFace = False):
     errorMess = ''
     
     if (diff == 'C' or diff == 'CD'):
-        stenc = CDStencil(order)
+        stenc = CDFace(order)
         if (order % 2 == 0):
-            orderStenc = order
+            orderStenc = int(order - 1) # order
         else:
-            orderStenc = int(order + 1)
+            orderStenc = order # int(order + 1)
         off = int(orderStenc / 2)
+        hiBound = (off + 1.) / 2. # off / 2.
+        if (RL == 'L'):
+            off = int(off + 1)
+            hiBound = (off - 1.) / 2. # off / 2.
+        else:
+            if (RL != 'R'):
+                errorMess = 'Variable RL must be set either to \'R\' for right-moving wave or \'L\' for left-moving wave.'
         loBound = -off / 2.
-        hiBound = off / 2.
     else:
         orderStenc = order
         if (order % 2 == 0):
@@ -753,22 +785,14 @@ def FaceOp(omega, order, diff, RL, Ng, otherFace = False):
         if (diff == 'U' or diff == 'UD'):
             loBound = -off / 2.
             hiBound = off / 2. #(off - 1.) / 2.
-            if (RL == 'R'):
-                stenc = UDFace(order) # UDStencil(order)
+            stenc = UDFace(order)
+            if (RL == 'L'):
+                stenc = stenc[::-1]
             else:
-                if (RL == 'L'):
-                    stenc = DDFace(order)
-                else:
+                if (RL != 'R'):
                     errorMess = 'Variable RL must be set either to \'R\' for right-moving wave or \'L\' for left-moving wave.'
-            
-#         else:
-#             if (diff == 'D' or diff == 'DD'):
-#                 stenc = DDFace(order) # DDStencil(order)
-#                 # off = int(off - 1)
-#                 loBound = -off / 2. # -(off + 1.) / 2. # -off / 2.
-#                 hiBound = off / 2. # (off + 1.) / 2.
         else:
-            errorMess = 'Invalid entry for variable diff. Must be \'C\', \'U\', \'CD\', or \'UD\'.'
+            errorMess = 'Invalid entry for variable diff. Must be \'C\' or \'CD\', for center-difference, or \'U\' or \'UD\', for upwind-difference.'
     if (Ng > off + 1):
         errorMess = 'Too many ghost cells for this order of face approximation!'
     
@@ -798,31 +822,23 @@ def FaceOp(omega, order, diff, RL, Ng, otherFace = False):
         # Index before coarse-fine interface
         q = np.where(spots < 0)[0][0]
         NU = True
-    
-    
-    
+
     if (otherFace):
         val = val - 1
         if (RL == 'R'): # Then everything shifts left.
             off = off + 1
             loBound = loBound - 0.5
             hiBound = hiBound - 0.5
-#             if (NU):
-#                 p = (p - 1) % (degFreed + 2 * Ng)
-#                 q = (q - 1) % (degFreed + 2 * Ng)
         else:
             off = off - 1
             loBound = loBound + 0.5
             hiBound = hiBound + 0.5
-#             if (NU):
-#                 p = (p + 1) % (degFreed + 2 * Ng)
-#                 q = (q + 1) % (degFreed + 2 * Ng)
-    
     
     cellFaces = np.linspace(loBound, hiBound, num = orderStenc + 1)
     zeroLoc = np.where(cellFaces == 0)[0]
     if (len(zeroLoc) != 0):
         cellFaces = np.delete(cellFaces, zeroLoc[0])
+
     polys = np.shape(cellFaces)[0]
     polyStencSet = [[] for i in range(polys)]
     
@@ -851,7 +867,7 @@ def FaceOp(omega, order, diff, RL, Ng, otherFace = False):
         
         derivMat = mat + 0
         np.fill_diagonal(derivMat[:, Ng:Ng+degFreed], stenc[d]) # np.fill_diagonal(derivMat, stenc[d])
-        derivMat = np.roll(derivMat, -s, axis = 1) # np.roll(derivMat, s, axis = 0)s
+        derivMat = np.roll(derivMat, -s, axis = 1) # np.roll(derivMat, s, axis = 0)
         
         polyMat = IMat + 0
         
@@ -892,16 +908,6 @@ def FaceOp(omega, order, diff, RL, Ng, otherFace = False):
     finRowMaj = np.zeros((1, degFreed + 2 * Ng), float)
     
     
-#     rowSums = np.round(sum(faceOp, axis = 1), 11)
-#     probRows = np.where(rowSums != 0)[0]
-    
-#     for row in probRows:
-#         for j in range(degFreed):
-#             frac = Fraction(faceOp[row, j]).limit_denominator(10**order)
-#             num = frac.numerator
-#             denom = frac.denominator
-#             faceOp[row, j] = num / denom
-    
     faceOp1 = faceOp[:halfDeg, :halfDeg + 2 * Ng]
     faceOp2 = faceOp[-halfDeg:, -halfDeg - 2 * Ng:]
     
@@ -919,10 +925,6 @@ def FaceOp(omega, order, diff, RL, Ng, otherFace = False):
         faceOp1 = np.concatenate((faceOp1, finRow), axis = 0)
         faceOp2 = np.concatenate((faceOp1, finRow), axis = 0)
         faceOp = np.concatenate((faceOp, finRowMaj), axis = 0)
-    
-    
-    # hMat = StepMatrix(omega)
-    
-    # derivOp = hMat @ derivOp
         
     return faceOp1, faceOp2, faceOp
+

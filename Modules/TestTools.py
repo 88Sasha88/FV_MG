@@ -534,6 +534,8 @@ def FacePolyTest(omega, physics, diff, orderIn, RL, Ng, coefs = [], printOut = T
     else:
         wavederiv = hMat @ wavediff[:-1]
         wavederiv1 = hMat1 @ wavediff1[:-1]
+        print('hMat2:', np.shape(hMat2))
+        print('wavediff2:', np.shape(wavediff2))
         wavederiv2 = hMat2 @ wavediff2[:-1]
     
 #     print(derivOp)
