@@ -41,6 +41,7 @@ def FindDxDt(omega, CFL, c):
 # You MUST pass op as an argument or creating a switch for the curl operator will be a pain in the ass!!!
 
 def RungeKutta(omega, physics, u0, CFL, nt, RK, order, diff, func):
+
     u = u0.copy()
     
     cMat = physics.cMat
@@ -73,9 +74,6 @@ def RungeKutta(omega, physics, u0, CFL, nt, RK, order, diff, func):
     t = 0
     for n in range(nt):
         u, t = Scheme(omega, physics, u0, t, dt, order, diff, func)
-        print('n:', n)
-        print(u)
-        print('')
     uCoefs = LA.inv(waves) @ u
     
     return uCoefs
@@ -147,8 +145,10 @@ def CalcTime(omega, CFL, c, nt = 0, t = 0):
     errorMess = ''
     
     dx, dt = FindDxDt(omega, CFL, c)
+    print('dt:', dt)
     
     if (nt <= 0):
+        print('This is what\'s happening.')
         nt = int(t / dt)
         t = nt * dt
         if (t <= 0):
@@ -305,7 +305,7 @@ def ExactTimeDerivOp(omega, waves, cMat):
 
 
 ## Calculate the RHS for E,B in Maxwell's equations using 5th-order upwind
-def WaveEqRHS(omega, physics, u0, t, order, diff):
+def WaveEqRHS(omega, physics, u0, t, orderIn, diff):
     
     degFreed = omega.degFreed
     cs = physics.cVec
@@ -321,10 +321,18 @@ def WaveEqRHS(omega, physics, u0, t, order, diff):
     
     # Fill in ghost cells for left, right domain - need 3 for up5
     if ((diff == 'CD') or (diff == 'C')):
-        order = order + 1
+        if (orderIn % 2 == 0):
+            order = orderIn
+        else:
+            order = int(orderIn + 1)
         Ng = int(order / 2)
     else:
+        if (orderIn % 2 == 0):
+            order = int(orderIn + 1)
+        else:
+            order = orderIn
         Ng = int((order + 1) / 2)
+    
     Eg1, Eg2 = OT.GhostCellsJump(omega, physics, E, Ng, order)
     Bg1, Bg2 = OT.GhostCellsJump(omega, physics, B, Ng, order)
 

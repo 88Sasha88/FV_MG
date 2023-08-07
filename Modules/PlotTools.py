@@ -340,7 +340,19 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
                         if (numGraphs != np.shape(fX[0, :])[0]):
                             errorMess = 'Dimensions of waveCell and fX do not match!'
     else:
-        numGraphs = np.shape(waveCell[0, :])[0]
+#         print('Here is the info you seek.')
+#         print('shape of wavecell:', np.shape(waveCell))
+#         print('shape of shape:', np.shape(np.shape(waveCell)))
+#         print('index you want:', np.shape(waveCell[0, :])[0])
+        waveCellDim = np.shape(waveCell)
+        if (np.shape(waveCellDim)[0] == 1):
+            numGraphs = 1
+        else:
+            if (np.shape(waveCellDim)[0] == 2):
+                numGraphs = waveCellDim[1]
+            else:
+                errorMess = 'The rank of waveCell is too high!'
+#         numGraphs = np.shape(waveCell[0, :])[0]
         if (waveCell != []):
             yMin, yMax, tickHeight = GetYBound(waveCell, sym)
         else:
@@ -624,7 +636,7 @@ def PlotGrid(omega, rescale = 1, save = False, saveName = '', dpi = 600, enlarge
 
 
 def Save(fig, saveString, dpi):
-    fig.savefig(saveString + '.png', bbox_inches = 'tight', dpi = dpi, transparent = False)#True)
+    fig.savefig(saveString + '.png', bbox_inches = 'tight', dpi = dpi, transparent = True)
     print('This image has been saved under ' + saveString + '.')
     return
 
