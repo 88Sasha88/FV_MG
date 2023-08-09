@@ -755,6 +755,53 @@ def GhostCellsJump(omega, physics, phiavg,Ng,P):
     return phig1, phig2
 
 
+def GhostCellsJumpNew(omega, physics, phiavg,Ng,P):
+    print('WARNING: YOU ARE NOT USING HANS\' GhostCellsJump() FUNCTION!!!')
+    
+    dx = omega.h[0]
+    xNode = omega.xNode
+    matInd = physics.matInd
+    loc = physics.locs[0]
+    
+#     print('My x:')
+#     print(xNode[matInd-P:matInd+P+1] - loc)
+    
+    # Create the cell average interpolation matrix
+    x = xNode[matInd-P:matInd+P+1] - loc # np.arange(-P, P + 1).transpose()*dx
+#     print('Hans\' x:')
+#     print(x)
+    print('')
+    x0 = 0
+    ixs = np.arange(2*P).transpose()
+    A = MomentMatrix(x,x0,dx,ixs,P)
+
+    # Build up an interpolant using the jump condition
+    ix = np.arange(P)
+    phi1 = phiavg[int(matInd-P)+ix] # phi avg in domain 1
+    ix2 = np.arange(P)+P # domain 2 entries
+    phi2 = phiavg[int(matInd-P)+ix2] # phi avg in domain 2
+    B = Block([A[ix,:], A[ix2,:]]) # add the fit to the matrix
+#     addOn = np.zeros(2 * P, float)
+#     addOn[0] = 1
+#     addOn[P] = -1
+    
+    # Add the jump cond constraint - constant coef is same at x=0
+#     B = np.vstack([B, addOn])
+    
+    # Solve it with LS
+    phic = LA.inv(B)@np.concatenate([phi1, phi2]) # , np.zeros(1, float)])
+
+    # Evaluate the phi1 ghost cell values
+    ix = P+np.arange(Ng)
+    phig1 = A[ix,:]@phic[:P]
+
+    # Evaluate the phi2 ghost cell values
+    ix = np.arange(P-Ng, P)
+    phig2 = A[ix,:]@phic[P:2*P]
+    
+    return phig1, phig2
+
+
 
 def FaceOp(omega, order, diff, RL, Ng, otherFace = False):
     errorLoc = 'ERROR:\nOperatorTools:\nFaceOp:\n'

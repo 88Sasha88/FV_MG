@@ -34,7 +34,8 @@ def FindDxDt(omega, CFL, c):
     if (np.shape(c) == ()):
         c_max = c
     else:
-        c_max = max(np.diag(c))
+        c_max = min(np.diag(c)) # max(np.diag(c))
+        print('WARNING: YOUR dt IN FindDxDt() IS WRONG!!!')
     dt = CFL * dx_min / c_max
     return dx_min, dt
 
@@ -145,7 +146,6 @@ def CalcTime(omega, CFL, c, nt = 0, t = 0):
     errorMess = ''
     
     dx, dt = FindDxDt(omega, CFL, c)
-    print('dt:', dt)
     
     if (nt <= 0):
         print('This is what\'s happening.')
@@ -159,6 +159,7 @@ def CalcTime(omega, CFL, c, nt = 0, t = 0):
         if (errorMess != ''):
             sys.exit(errorLoc + errorMess)
         t = nt * dt
+    
     return t, nt
 
 def MidpointMeth(omega, physics, u0, t0, dt, order, diff, func): #(omega, waves, u0, nt, const, CFL, func, order = 0):
