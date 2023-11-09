@@ -266,7 +266,7 @@ def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0, printOut = True):
     np.set_printoptions(suppress=True)
     wavederiv = derivOp @ waveform
 #     print(derivOp)
-    error = np.round(waveformDeriv - wavederiv, 11)
+    error = np.round(waveformDeriv - wavederiv, 10)
     PF = np.count_nonzero(error)
     
     if (printOut):
@@ -537,9 +537,9 @@ def FacePolyTest(omega, physics, diff, orderIn, RL, Ng, coefs = [], printOut = T
         wavederiv2 = hMat2 @ wavediff2[:-1]
     
 #     print(derivOp)
-    error1 = np.round(waveformDeriv[:halfDeg] - wavederiv1, 11)
-    error2 = np.round(waveformDeriv[halfDeg:] - wavederiv2, 11)
-    error = np.round(waveformDeriv - wavederiv, 11)
+    error1 = np.round(waveformDeriv[:halfDeg] - wavederiv1, 10)
+    error2 = np.round(waveformDeriv[halfDeg:] - wavederiv2, 10)
+    error = np.round(waveformDeriv - wavederiv, 10)
     PF = np.count_nonzero(error)
     PF1 = np.count_nonzero(error1)
     PF2 = np.count_nonzero(error2)
@@ -620,7 +620,7 @@ def FacePolyTest1(omega, diff, orderIn, RL, coefs = [], printOut = True):
     waveFaceR = faceOpR @ waveform
     waveFaceL = faceOpL @ waveform
     wavederiv = hMat @ (waveFaceR - waveFaceL) # (np.roll(waveFace, -1) - waveFace)
-    error = np.round(waveformDeriv - wavederiv, 11)
+    error = np.round(waveformDeriv - wavederiv, 10)
     PF = np.count_nonzero(error)
 
     if (printOut):

@@ -54,50 +54,56 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
     
     xCell = omega.xCell
     cs = physics.cs
-    x_s = physics.locs[0]
-    mus = physics.mus
-    
-    IRT = IRT.upper()
-    I = IRT.find('I') + 1
-    R = IRT.find('R') + 1
-    T = IRT.find('T') + 1
-    
-    index = np.where(xCell >= x_s)[0][0]
-    
-    waveFuncIT = 0
-    waveFuncR = 0
-    if (I or T):
-        waveFuncIT = Advect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv, tol = tol)
-        EFuncIT = waveFuncIT.copy()
-        # Scale the T part.
-        scale = (2 * cs[1]) / (cs[0] + cs[1]) # Switch numerator to cs[0].
-#         if (field == 'B'):
-#             scale = (mus[0] * scale) / mus[1] # Switch mus.
-        EFuncIT[index:] = scale * EFuncIT[index:]
-        BFuncIT = EFuncIT.copy()
-        BFuncIT[index:] = BFuncIT[index:] / cs[1]
-        BFuncIT[:index] = BFuncIT[:index] / cs[0]
-        if (not I):
-            print('BE AWARE THAT YOU HAVE ELECTED FOR THERE TO BE NO INCIDENT PART!')
-            # Zero out the I part.
-            EFuncIT[:index] = 0
-            BFuncIT[:index] = 0
-        else: # Is I, might be T.
-            if (not T):
-                # Zero out the T part.
-                EFuncIT[index:] = 0
-                BFuncIT[index:] = 0
-                
-    if (R):
-        waveFuncR = Reflect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv, tol = tol)
-        # Scale R part.
-        EFuncR = waveFuncR.copy()
-        scale = (cs[1] - cs[0]) / (cs[0] + cs[1]) # Remove negative sign out front.
-        EFuncR = scale * EFuncR
-        BFuncR = EFuncR.copy()
-        BFuncR = -BFuncR / cs[0]
-    EFunc = EFuncIT + EFuncR
-    BFunc = BFuncIT + BFuncR
+    locs = physics.locs
+    if (locs == []):
+        c = cs[0]
+        EFunc = Advect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv, tol = tol)
+        BFunc = EFunc / c
+    else:
+        x_s = physics.locs[0]
+        mus = physics.mus
+
+        IRT = IRT.upper()
+        I = IRT.find('I') + 1
+        R = IRT.find('R') + 1
+        T = IRT.find('T') + 1
+
+        index = np.where(xCell >= x_s)[0][0]
+
+        waveFuncIT = 0
+        waveFuncR = 0
+        if (I or T):
+            waveFuncIT = Advect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv, tol = tol)
+            EFuncIT = waveFuncIT.copy()
+            # Scale the T part.
+            scale = (2 * cs[1]) / (cs[0] + cs[1]) # Switch numerator to cs[0].
+    #         if (field == 'B'):
+    #             scale = (mus[0] * scale) / mus[1] # Switch mus.
+            EFuncIT[index:] = scale * EFuncIT[index:]
+            BFuncIT = EFuncIT.copy()
+            BFuncIT[index:] = BFuncIT[index:] / cs[1]
+            BFuncIT[:index] = BFuncIT[:index] / cs[0]
+            if (not I):
+                print('BE AWARE THAT YOU HAVE ELECTED FOR THERE TO BE NO INCIDENT PART!')
+                # Zero out the I part.
+                EFuncIT[:index] = 0
+                BFuncIT[:index] = 0
+            else: # Is I, might be T.
+                if (not T):
+                    # Zero out the T part.
+                    EFuncIT[index:] = 0
+                    BFuncIT[index:] = 0
+
+        if (R):
+            waveFuncR = Reflect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv, tol = tol)
+            # Scale R part.
+            EFuncR = waveFuncR.copy()
+            scale = (cs[1] - cs[0]) / (cs[0] + cs[1]) # Remove negative sign out front.
+            EFuncR = scale * EFuncR
+            BFuncR = EFuncR.copy()
+            BFuncR = -BFuncR / cs[0]
+        EFunc = EFuncIT + EFuncR
+        BFunc = BFuncIT + BFuncR
     if (field == 'E'):
         waveFunc = EFunc
     else:
@@ -600,3 +606,48 @@ def SquareWave(omega, x, width, center, deriv, cellAve, tol = 1e-15):
     sqWave[abs(sqWave) < tol] = 0
     
     return sqWave
+
+
+
+def Polynomial(omega, x, x_0, coefs, deriv, cellAve, tol = 1e-15):
+    # Unpack requisite attributes from omega and physics.
+    xCell = omega.xCell
+    
+    order = len(coefs)
+    xL = x[:-1]
+    xR = x[1:]
+    hDiag = xR - xL
+
+    hMat = LA.inv(np.diag(hDiag))
+    
+    poly = 0
+    
+    for p in range(order):
+        if (deriv):
+            if (cellAve):
+                coef = coefs[p]
+                power = p
+            else:
+                coef = p * coefs[p]
+                power = p - 1
+            if (p == 0):
+                coef = 0
+        else:
+            if (cellAve):
+                coef = coefs[p] / (p + 1)
+                power = p + 1
+            else:
+                coef = coefs[p]
+                power = p
+        if (cellAve):
+            mono = coef * (((xR - x_0) ** power) - ((xL - x_0) ** power))
+        else:
+            mono = coef * ((x - x_0) ** power)
+        poly = poly + mono
+            
+    if (cellAve):
+        poly = hMat @ poly
+    
+    poly[abs(poly) < tol] = 0
+    
+    return poly

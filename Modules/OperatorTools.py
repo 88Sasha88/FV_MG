@@ -803,7 +803,7 @@ def GhostCellsJumpNew(omega, physics, phiavg,Ng,P):
 
 
 
-def FaceOp(omega, order, diff, RL, Ng, otherFace = False):
+def FaceOp(omega, order, diff, RL, Ng, otherFace = False, AMROverride = False):
     errorLoc = 'ERROR:\nOperatorTools:\nFaceOp:\n'
     errorMess = ''
     
@@ -859,7 +859,7 @@ def FaceOp(omega, order, diff, RL, Ng, otherFace = False):
       
     spots = np.roll(hs, -1) - hs
     
-    if (all(spots == 0)):
+    if ((all(spots == 0)) or AMROverride):
         p = []
         q = []
         NU = False

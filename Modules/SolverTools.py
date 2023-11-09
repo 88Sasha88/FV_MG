@@ -28,34 +28,44 @@ np.set_printoptions( linewidth = 1000)
 
 # In[2]:
 
-def FindDxDt(omega, CFL, c):
+def FindDxDt(omega, CFL, c, override):
     dx = omega.dx
     dx_min = min(dx)
     if (np.shape(c) == ()):
         c_max = c
     else:
-        c_max = min(np.diag(c)) # max(np.diag(c))
-        print('WARNING: YOUR dt IN FindDxDt() IS WRONG!!!')
+        if (override):
+            c_max = min(np.diag(c))
+            print('WARNING: YOUR dt IN FindDxDt() IS WRONG!!!')
+        else:
+            c_max = max(np.diag(c))
     dt = CFL * dx_min / c_max
     return dx_min, dt
 
 # You MUST pass op as an argument or creating a switch for the curl operator will be a pain in the ass!!!
 
-def RungeKutta(omega, physics, u0, CFL, nt, RK, order, diff, func):
-
+def RungeKutta(omega, physics, u0, CFL, nt, RK, order, diff, func, override = False):
+    errorLoc = 'ERROR:\nSolverTools:\nRungeKutta:\n'
+    errorMess = ''
+    
     u = u0.copy()
     
+    vecLength = np.shape(u)[0]
+    
+    degFreed = omega.degFreed
     cMat = physics.cMat
-    dx, dt = FindDxDt(omega, CFL, cMat)
+    locs = physics.locs
+    dx, dt = FindDxDt(omega, CFL, cMat, override)
     
     waves = WT.MakeWaves(omega)
     nullspace = OT.FindNullspace(omega, waves)
     waves = waves @ nullspace
     
-    if (func == WaveEqRHS):
+    if ((func == WaveEqRHS) and (locs == [])):
+        func = AdvectRHS
+    if ((func == WaveEqRHS) or (vecLength == 2 * degFreed)):
         waves = OT.Block(waves, var = 2)
     
-    errorMess = ''
     if (RK == 1):
         Scheme = ForwardEuler
     else:
@@ -68,7 +78,7 @@ def RungeKutta(omega, physics, u0, CFL, nt, RK, order, diff, func):
                 errorMess = str(RK) + ' is not a valid RK entry!'
             
     if (errorMess != ''):
-        sys.exit(errorMess)
+        sys.exit(errorLoc + errorMess)
     
     np.set_printoptions(suppress = True)
     
@@ -141,11 +151,11 @@ def ForwardEuler(omega, physics, u0, t0, dt, order, diff, func): #(omega, waves,
 #     return u, t
 
 
-def CalcTime(omega, CFL, c, nt = 0, t = 0):
+def CalcTime(omega, CFL, c, nt = 0, t = 0, override = False):
     errorLoc = 'ERROR:\nSolverTools:\nCalcTime:\n'
     errorMess = ''
     
-    dx, dt = FindDxDt(omega, CFL, c)
+    dx, dt = FindDxDt(omega, CFL, c, override)
     
     if (nt <= 0):
         print('This is what\'s happening.')
@@ -307,6 +317,7 @@ def ExactTimeDerivOp(omega, waves, cMat):
 
 ## Calculate the RHS for E,B in Maxwell's equations using 5th-order upwind
 def WaveEqRHS(omega, physics, u0, t, orderIn, diff):
+    print('You are using WaveEqRHS()!')
     
     degFreed = omega.degFreed
     cs = physics.cVec
@@ -372,16 +383,90 @@ def WaveEqRHS(omega, physics, u0, t, orderIn, diff):
     E2f = phil2f + phir2f
     B2f = (-phil2f + phir2f) / c2
     
-    faceOp1r, faceOp2r, faceOpr = OT.FaceOp(omega, 1, 'U', 'R', 1)
-    faceOp1l, faceOp2l, faceOpl = OT.FaceOp(omega, 1, 'U', 'R', 1, True)
+    faceOp1r, faceOp2r, faceOpr = OT.FaceOp(omega, 1, 'U', 'R', 1, AMROverride = False)
+    faceOp1l, faceOp2l, faceOpl = OT.FaceOp(omega, 1, 'U', 'R', 1, otherFace = False, AMROverride = True)
     
     derivOp1 = (faceOp1r - faceOp1l)[1:, :-1]
     derivOp2 = (faceOp2r - faceOp2l)[1:, :-1]
+    
+#     print('derivOp1:')
+#     print(derivOp1)
+#     print('derivOp2:')
+#     print(derivOp2)
 
     # Calculate the RHS for E, B
     rhsE = hMat @ np.append(-c1**2*derivOp1 @ B1f, -c2**2*derivOp2 @ B2f)
     rhsB = hMat @ np.append(-1*derivOp1 @ E1f, -1* derivOp2 @ E2f)
     
     rhs = np.append(rhsE, rhsB)
+
+    return rhs
+
+
+
+
+def AdvectRHS(omega, physics, u0, t, orderIn, diff):
+    errorLoc = 'ERROR:\nSolverTools:\nAdvectRHS:\n'
+    errorMess = ''
+    degFreed = omega.degFreed
+    cMat = physics.cMat
+    cVec = physics.cVec
+    locs = physics.locs
+    
+    c = cVec[0]
+    
+    hMat = OT.StepMatrix(omega)
+    hMatInv = LA.inv(hMat)
+    
+#     if ((diff == 'CD') or (diff == 'C')):
+#         if (orderIn % 2 == 0):
+#             order = orderIn
+#         else:
+#             order = int(orderIn + 1)
+#         Ng = int(order / 2)
+#     else:
+#         if (orderIn % 2 == 0):
+#             order = int(orderIn + 1)
+#         else:
+#             order = orderIn
+#         Ng = int((order + 1) / 2)
+        
+#     faceOp1L, faceOp2L, faceOpL = OT.FaceOp(omega, order, diff, 'L', Ng)
+#     faceOp1R, faceOp2R, faceOpR = OT.FaceOp(omega, order, diff, 'R', Ng, True)
+    
+#     print('Ng:', Ng)
+#     print('faceOpL:')
+#     print(faceOpL)
+#     print('faceOpR:')
+#     print(faceOpR)
+    
+#     derivOp = (faceOpR - faceOpL)[1:, Ng:-Ng]
+#     print('derivOp:')
+#     print(derivOp)
+    
+    derivOp = OT.SpaceDeriv(omega, orderIn, diff)
+    
+#     print('derivOp:')
+#     print(hMatInv @ derivOp)
+    
+    vecLength = np.shape(u0)[0]
+    if (vecLength == degFreed):
+        rhs = -cMat @ derivOp @ u0
+    else:
+        if (vecLength == 2 * degFreed):
+            E = u0[:degFreed]
+            B = u0[degFreed:]
+
+            # Calculate the RHS for E, B
+            print('In SolverTools: AdvectRHS(), you need to fix rhsE to work in non-uniform media!')
+            rhsE = -c**2*derivOp @ B
+            rhsB = -1*derivOp @ E
+
+            rhs = np.append(rhsE, rhsB)
+        else:
+            errorMess = 'Length of u0 must be either degreed or 2 * degFreed!'
+            
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
 
     return rhs
