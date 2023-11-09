@@ -66,6 +66,8 @@ def RungeKutta(omega, physics, u0, CFL, nt, RK, order, diff, func, override = Fa
     if ((func == WaveEqRHS) or (vecLength == 2 * degFreed)):
         waves = OT.Block(waves, var = 2)
     
+    print('func is', func)
+    
     if (RK == 1):
         Scheme = ForwardEuler
     else:
@@ -383,8 +385,8 @@ def WaveEqRHS(omega, physics, u0, t, orderIn, diff):
     E2f = phil2f + phir2f
     B2f = (-phil2f + phir2f) / c2
     
-    faceOp1r, faceOp2r, faceOpr = OT.FaceOp(omega, 1, 'U', 'R', 1, AMROverride = False)
-    faceOp1l, faceOp2l, faceOpl = OT.FaceOp(omega, 1, 'U', 'R', 1, otherFace = False, AMROverride = True)
+    faceOp1r, faceOp2r, faceOpr = OT.FaceOp(omega, 1, 'U', 'R', 1, AMROverride = True)
+    faceOp1l, faceOp2l, faceOpl = OT.FaceOp(omega, 1, 'U', 'R', 1, otherFace = True, AMROverride = True)
     
     derivOp1 = (faceOp1r - faceOp1l)[1:, :-1]
     derivOp2 = (faceOp2r - faceOp2l)[1:, :-1]
