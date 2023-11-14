@@ -364,6 +364,12 @@ def WaveEqRHS(omega, physics, u0, t, orderIn, diff):
     
     faceOp1L, faceOp2L, faceOpL = OT.FaceOp(omega, order, diff, 'L', Ng)
     faceOp1R, faceOp2R, faceOpR = OT.FaceOp(omega, order, diff, 'R', Ng)
+    
+#     print('faceOp1L:')
+#     print(faceOp1L)
+#     print('faceOp1R:')
+#     print(faceOp1R)
+#     print('')
 
     # Face values from upwind (index 1:N for faces left of cell + 1 for mat)
     phil1f = faceOp1L @ np.concatenate((np.full(Ng, phil1[0]), phil1))  # outflow bc's on left
@@ -384,6 +390,8 @@ def WaveEqRHS(omega, physics, u0, t, orderIn, diff):
     B1f = (-phil1f + phir1f) / c1
     E2f = phil2f + phir2f
     B2f = (-phil2f + phir2f) / c2
+    
+    # If AMROverride is set to true, center-difference improves and upwind apparently suffers (at least for low-order. Haven't checked higher orders.) Inverse is also true. (Nevermind. This appears to have only been the case for the polynomial tests?)
     
     faceOp1r, faceOp2r, faceOpr = OT.FaceOp(omega, 1, 'U', 'R', 1, AMROverride = True)
     faceOp1l, faceOp2l, faceOpl = OT.FaceOp(omega, 1, 'U', 'R', 1, otherFace = True, AMROverride = True)
@@ -410,6 +418,7 @@ def WaveEqRHS(omega, physics, u0, t, orderIn, diff):
 def AdvectRHS(omega, physics, u0, t, orderIn, diff):
     errorLoc = 'ERROR:\nSolverTools:\nAdvectRHS:\n'
     errorMess = ''
+    print('You are using AdvectRHS()!')
     degFreed = omega.degFreed
     cMat = physics.cMat
     cVec = physics.cVec
@@ -461,8 +470,10 @@ def AdvectRHS(omega, physics, u0, t, orderIn, diff):
 
             # Calculate the RHS for E, B
             print('In SolverTools: AdvectRHS(), you need to fix rhsE to work in non-uniform media!')
-            rhsE = -c**2*derivOp @ B
-            rhsB = -1*derivOp @ E
+#             rhsE = -c**2*derivOp @ B
+#             rhsB = -1*derivOp @ E
+            rhsE = -cMat @ derivOp @ E
+            rhsB = LA.inv(cMat) @ rhsE
 
             rhs = np.append(rhsE, rhsB)
         else:

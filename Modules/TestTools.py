@@ -503,6 +503,11 @@ def FacePolyTest(omega, physics, diff, orderIn, RL, Ng, coefs = [], printOut = T
         faceOp1L = faceOp1B
         faceOp2R = faceOp2A
         faceOp2L = faceOp2B
+#         print('faceOp1L:')
+#         print(faceOp1L)
+#         print('faceOp1R:')
+#         print(faceOp1R)
+#         print('')
     else:
         faceOpR = faceOpB
         faceOpL = faceOpA

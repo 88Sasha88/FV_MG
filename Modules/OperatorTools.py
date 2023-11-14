@@ -863,11 +863,14 @@ def FaceOp(omega, order, diff, RL, Ng, otherFace = False, AMROverride = False):
         p = []
         q = []
         NU = False
+        print('THIS OPERATOR IS UNIFORM!')
     else:
         # Index before fine-coarse interface
         p = np.where(spots > 0)[0][0]
         # Index before coarse-fine interface
         q = np.where(spots < 0)[0][0]
+        print('p:', p)
+        print('q:', q)
         NU = True
 
     if (otherFace):
