@@ -365,18 +365,39 @@ def WaveEqRHS(omega, physics, u0, t, orderIn, diff):
     faceOp1L, faceOp2L, faceOpL = OT.FaceOp(omega, order, diff, 'L', Ng)
     faceOp1R, faceOp2R, faceOpR = OT.FaceOp(omega, order, diff, 'R', Ng)
     
-#     print('faceOp1L:')
-#     print(faceOp1L)
-#     print('faceOp1R:')
-#     print(faceOp1R)
-#     print('')
 
     # Face values from upwind (index 1:N for faces left of cell + 1 for mat)
     phil1f = faceOp1L @ np.concatenate((np.full(Ng, phil1[0]), phil1))  # outflow bc's on left
     phir1f = faceOp1R @ np.concatenate((np.zeros(Ng), phir1))  # 0 at leftmost face for inflow boundary conditions
     phil2f = faceOp2L @ np.concatenate((phil2, np.zeros(Ng))).transpose()  # 0 at rightmost face for inflow boundary conditions
     phir2f = faceOp2R @ np.concatenate((phir2, np.full(Ng, phir2[matInd + Ng - 1])))  # outflow bc's on right
-
+    
+    
+#     print('')
+#     print('Ng:', Ng)
+#     print('')
+#     print('E1:')
+#     print(E1)
+#     print('B1:')
+#     print(B1)
+#     print('')
+#     print('phil1:')
+#     print(np.concatenate((np.full(Ng, phil1[0]), phil1)))
+#     print('phir1:')
+#     print(np.concatenate((np.zeros(Ng), phir1)))
+#     print('')
+#     print('faceOp1L:')
+#     print(faceOp1L)
+#     print('faceOp1R:')
+#     print(faceOp1R)
+#     print('')
+#     print('phil1f:')
+#     print(phil1f)
+#     print('phir1f:')
+#     print(phir1f)
+#     print('')
+    
+    
     # Correct values at material interface with jump conditions
     T1 = 2 * c1 / (c1 + c2)
     R1 = (c2 - c1) / (c1 + c2)
@@ -384,6 +405,8 @@ def WaveEqRHS(omega, physics, u0, t, orderIn, diff):
     T2 = 2 * c2 / (c1 + c2)
     R2 = (c1 - c2) / (c1 + c2)
     phir2f[0] = R2 * phil2f[0] + T2 * phir1f[matInd]
+    
+    
 
     # Transform back to E,B on faces
     E1f = phil1f + phir1f
