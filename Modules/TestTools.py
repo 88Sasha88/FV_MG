@@ -290,6 +290,8 @@ def DerivPolyTest(omega, diff, orderIn, coefs = [], deriv = 0, printOut = True):
     print(error)
     print('Total Nonzero Error Elements:', PF)
     print('')
+    print(derivOp)
+    print('')
     print('')
     return
 
@@ -493,8 +495,8 @@ def FacePolyTest(omega, physics, diff, orderIn, RL, Ng, coefs = [], printOut = T
     waveformDeriv = (p(x[1:]) - p(x[:-1])) / hs
     
     const = -np.eye(degFreed)
-    faceOp1A, faceOp2A, faceOpA = OT.FaceOp(omega, order, diff, RL, Ng)
-    faceOp1B, faceOp2B, faceOpB = OT.FaceOp(omega, order, diff, RL, Ng, True)
+    faceOp1A, faceOp2A, faceOpA = OT.FaceOp(omega, order, diff, RL, Ng, wrapAround = False)
+    faceOp1B, faceOp2B, faceOpB = OT.FaceOp(omega, order, diff, RL, Ng, otherFace = True, wrapAround = False)
     
     if (RL == 'R'):
         faceOpR = faceOpA
@@ -531,6 +533,18 @@ def FacePolyTest(omega, physics, diff, orderIn, RL, Ng, coefs = [], printOut = T
     wavediff = waveFaceR - waveFaceL
     wavediff1 = waveFace1R - waveFace1L
     wavediff2 = waveFace2R - waveFace2L
+    print('faceOpR:', np.shape(faceOpR))
+    print('faceOp1R:', np.shape(faceOp1R))
+    print('faceOp2R:', np.shape(faceOp2R))
+    print('')
+    print('waveform:', np.shape(waveform), waveform)
+    print('waveform1:', np.shape(waveform1), waveform1)
+    print('waveform2:', np.shape(waveform2), waveform2)
+    print('')
+    print('waveFaceR:', np.shape(waveFaceR), waveFaceR)
+    print('waveFace1R:', np.shape(waveFace1R), waveFace1R)
+    print('waveFace2R:', np.shape(waveFace2R), waveFace2R)
+    print('')
     
     if (RL == 'R'):
         wavederiv = hMat @ wavediff[1:]
@@ -540,7 +554,10 @@ def FacePolyTest(omega, physics, diff, orderIn, RL, Ng, coefs = [], printOut = T
         wavederiv = hMat @ wavediff[:-1]
         wavederiv1 = hMat1 @ wavediff1[:-1]
         wavederiv2 = hMat2 @ wavediff2[:-1]
-    
+    print('wavederiv:', np.shape(wavederiv), wavederiv)
+    print('wavederiv1:', np.shape(wavederiv1), wavederiv1)
+    print('wavederiv2:', np.shape(wavederiv2), wavederiv2)
+    print('')
 #     print(derivOp)
     error1 = np.round(waveformDeriv[:halfDeg] - wavederiv1, 10)
     error2 = np.round(waveformDeriv[halfDeg:] - wavederiv2, 10)
@@ -570,10 +587,28 @@ def FacePolyTest(omega, physics, diff, orderIn, RL, Ng, coefs = [], printOut = T
             print(wavederiv)
     print('Difference Between Actual and Theoretical:')
     if (pieces):
+        print('faceOp1R:')
+        print(faceOp1R)
+        print('')
+        print('faceOp1L:')
+        print(faceOp1L)
+        print('')
+        print('faceOp2R:')
+        print(faceOp2R)
+        print('')
+        print('faceOp2L:')
+        print(faceOp2L)
+        print('')
         print(error1)
         print(error2)
         print('Total Nonzero Error Elements:', PF1 + PF2)
     else:
+        print('faceOpR:')
+        print(faceOpR)
+        print('')
+        print('faceOpL:')
+        print(faceOpL)
+        print('')
         print(error)
         print('Total Nonzero Error Elements:', PF)
     print('')
@@ -610,7 +645,7 @@ def FacePolyTest1(omega, diff, orderIn, RL, coefs = [], printOut = True):
     const = -np.eye(degFreed)
     
     garbage1, garbage2, faceOp1 = OT.FaceOp(omega, order, diff, RL, Ng)
-    garbage1, garbage2, faceOp2 = OT.FaceOp(omega, order, diff, RL, Ng, True)
+    garbage1, garbage2, faceOp2 = OT.FaceOp(omega, order, diff, RL, Ng, otherFace = True)
 
     hMat = OT.StepMatrix(omega)
     if (RL == 'R'):
@@ -642,6 +677,12 @@ def FacePolyTest1(omega, diff, orderIn, RL, coefs = [], printOut = True):
         print('<dp(x)/dx> =\n', waveformDeriv)
         print('Actual:')
         print('<dp(x)/dx> =\n', wavederiv)
+    print('faceOpR:')
+    print(faceOpR)
+    print('')
+    print('faceOpL:')
+    print(faceOpL)
+    print('')
     print('Difference Between Actual and Theoretical:')
     print(error)
     print('Total Nonzero Error Elements:', PF)
