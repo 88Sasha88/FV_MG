@@ -932,9 +932,9 @@ def FaceOp(omega, order, diff, RL, Ng, otherFace = False, AMROverride = False, w
         np.fill_diagonal(derivMat[wrap1:degFreed-wrap2, Ng+wrap1:Ng+degFreed-wrap2], stenc[d]) # np.fill_diagonal(derivMat, stenc[d])
         derivMat = np.roll(derivMat, -s, axis = 1) # np.roll(derivMat, s, axis = 0)
         
-        print('DERIVMAT BEFORE TREATMENT:')
-        print(derivMat)
-        print('')
+#         print('DERIVMAT BEFORE TREATMENT:')
+#         print(derivMat)
+#         print('')
         
         polyMat = IMat + 0
         
