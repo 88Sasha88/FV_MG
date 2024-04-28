@@ -116,7 +116,6 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
         (xs, ys) = DrawLine(xi, yi, height)
         ax.plot(xs, ys, color = 'k', zorder = 1, linewidth = linewidth)
         if (label):
-            print(i)
             if ((i < 3) or (i > nh - 2)):
                 prestring = r'$j = $'
                 istring = prestring + str(i)
@@ -640,7 +639,7 @@ def Save(fig, saveString, dpi):
     print('This image has been saved under ' + saveString + '.')
     return
 
-def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = False):
+def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = False, fill = False):
     if (saveName != ''):
         save = True
     else:
@@ -661,22 +660,29 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
     x = omega.xNode
     length = 2 * h
     k = 2
-    Cosine = lambda x: np.cos(2. * np.pi * k * x)
-    Sine = lambda x: np.sin(2. * np.pi * k * x)
+    move = 0.01
+    numPoints, font, X, savePath = UsefulPlotVals()
+    Cosine = lambda x: np.cos(2. * np.pi * k * (x + move))
+    Sine = lambda x: np.sin(2. * np.pi * k * (x + move))
     factor = 1. / (2 * pi * k * h)
     uNode = Sine(x)
     uCell = factor * (Cosine(x[:-1]) - Cosine(x[1:]))
+    U = Sine(X)
     xCell = omega.xCell
     fig, ax = plt.subplots()
     numPoints, font, X, savePath = UsefulPlotVals()
     yMin, yMax, tickHeight = GetYBound(uNode[1:4], False)
     TickPlot(omega, ax, tickHeight, False, False, u = uNode, labelsize = labelsize, linewidth = linewidth, matVis = matVis)
+    plt.plot(X, U, color = ColorDefault(0), zorder = 0, linewidth = linewidth)
+    if (fill):
+        print('Fill is on.')
+        plt.fill_between(X, 0, U, color = ColorDefault(0), alpha = 0.1)
     if (matVis):
         plt.scatter(x[1], uNode[1], s = 10, color = ColorDefault(2))
         plt.scatter(x[2], uNode[2], s = 10, color = ColorDefault(0))
         plt.scatter(x[3], uNode[3], s = 10, color = ColorDefault(2))
     else:
-        plt.scatter(x[1:4], uNode[1:4], s = 10, color = ColorDefault(2))
+        plt.scatter(x[1:4], uNode[1:4], s = 20, color = ColorDefault(2))
     PiecePlot(omega, numPoints, X, uCell, tickHeight = tickHeight, linewidth = linewidth, matVis = matVis)
     plt.quiver([length], [0], [length], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
     plt.quiver([length], [0], [-length], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)

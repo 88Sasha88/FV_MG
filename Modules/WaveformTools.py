@@ -132,9 +132,9 @@ def Reflect(omega, physics, func, args, t, cellAve = True, BooleAve = False, der
     waveFunc[index:] = 0
     return waveFunc
 
-def Advect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deriv = False, tol = 1e-15):
+def Advect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deriv = False, field = 'EB', tol = 1e-15):
     if (t == 0):
-        waveFunc = InitCond(omega, physics, func, args, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv, tol = tol)
+        waveFunc = InitCond(omega, physics, func, args, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv, field = field, tol = tol)
     else:
         if (func == GaussPacket):
             BooleAve = True
@@ -154,8 +154,14 @@ def Advect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deri
 def InitCond(omega, physics, func, args, cellAve = True, BooleAve = False, deriv = False, field = 'EB', tol = 1e-15):
     xNode = omega.xNode
     xCell = omega.xCell
+    degFreed = omega.degFreed
     x = xNode
     cMat = physics.cMat
+    if (not cellAve):
+        zeroMat = np.zeros((degFreed + 1, degFreed + 1), float)
+        zeroMat[0, 0] = cMat[0, 0]
+        zeroMat[1:, 1:] = cMat
+        cMat = zeroMat
     cMatInv = LA.inv(cMat)
     
     if (func == GaussPacket):
@@ -363,10 +369,48 @@ def GaussPacket(omega, x, sigma, mu, modenumber, deriv = False, cellAve = True, 
 # mu                      real                    Average of Gaussian
 # ----------------------------------------------------------------------------------------------------------------
 
-def GaussParams(x_0 = 0., x_1 = 1., errOrd = 14):
+def GaussParams(x_0 = 0., x_1 = 1., errOrd = 14, deriv = False):
     mu = (x_0 + x_1) / 2.
     sigma = abs((x_1 - x_0) / np.sqrt(8 * errOrd * log(10)))
+    if (deriv):
+        alpha = GaussDerivParam(x_0, x_1, errOrd)
+        sigma = alpha * sigma
     return sigma, mu
+
+
+def GaussDerivParam(x_0, x_1, errOrd):
+      
+    gran = 1000
+    alphMin = 0
+    alphMax = 1
+    i = 0
+    alphaLast = -2
+    alpha = -3
+    while (alpha != alphaLast):
+        alphaLast = alpha
+        alphRange = np.linspace(alphMin, alphMax, num = gran + 1)
+        step = alphRange[1] - alphRange[0]
+        val1 = (alphRange ** 2) * (10 ** (errOrd / (alphRange ** 2)))
+        val2 = ((10 ** errOrd) * errOrd * np.log(10)) / (x_1 - x_0)
+        transc = abs(np.ma.masked_invalid(val1 - val2, nan))
+        minTransc = np.ma.MaskedArray.min(transc)
+        alphLoc = np.where(transc == minTransc)
+        alphLocMin = min(alphLoc[0]) - 1
+        alphLocMax = max(alphLoc[0]) + 1
+        takeStep = 0
+        addStep = 0
+        if (alphLocMin == -1):
+            alphLocMin = alphLocMin + 1
+            takeStep = step
+        if (alphLocMax == gran + 1):
+            alphLocMax = alphLocMax - 1
+            addStep = step
+        alphMin = alphRange[alphLocMin] - takeStep
+        alphMax = alphRange[alphLocMax] + addStep
+        alpha = alphRange[alphLoc[0][0]]
+        i = i + 1
+
+    return alpha
 
 
 # ----------------------------------------------------------------------------------------------------------------
