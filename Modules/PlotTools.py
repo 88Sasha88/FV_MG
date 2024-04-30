@@ -72,13 +72,14 @@ def DrawLine(xCenter, yCenter, tickHeight, center = True):
 # In[4]:
 
 
-def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsize = 10, linewidth = 1.5, matVis = False):
+def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsize = 10, linewidth = 1.5, matVis = False, fill = False):
 #     if (enlarge):
 #         labelsize = 25
 #         linewidth = 4
 #     else:
 #         labelsize = 10
 #         linewidth = 1.5
+    fontsize = 11
     ax = plt.axes(frameon = False)
     if (yGrid):
         ax.grid(True, axis = 'y', zorder = 0)
@@ -88,29 +89,32 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
     yAxis = omega.y
     xCell = omega.xCell
     nh = omega.nh_max
-    shiftX = 0.02
+    shiftX = 0.025
     shiftY = tickHeight
+    extraShift = 0
     
     if (matVis):
         var = r'F'
         ind = r'h'
     else:
         var = r'v'
+        if (fill):
+            var = r'u'
         ind = r'j'
     
     
     if (u != []):
         label = False
-        xAxis = xAxis[1:4]
-        yAxis = yAxis[1:4]
-        shiftX = shiftX / 4
+        xAxis = xAxis[1:5] # 5 was 4
+        yAxis = yAxis[1:5] # 5 was 4
+        shiftX = shiftX / 5 # 5 was 4
     i = 0
     for (xi, yi) in zip(xAxis, yAxis):
         if ((xi == 0) or (xi == 1)):
             height = tickHeight
             shiftY = tickHeight
             if (label):
-                plt.text(xi - shiftX, yi + shiftY, int(xi), fontsize = 12)
+                plt.text(xi - shiftX, yi + shiftY, int(xi), fontsize = fontsize)
         else:
             height = tickHeight / 2
         (xs, ys) = DrawLine(xi, yi, height)
@@ -126,35 +130,56 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                 if (i == nh):
                     istring = prestring + r'$n$'
                     shiftExtra = shiftX
-                plt.text(xi - shiftX - shiftExtra, yi - (1.5 * shiftY), istring, fontsize = 12)
+                plt.text(xi - shiftX - shiftExtra, yi - (1.5 * shiftY), istring, fontsize = fontsize)
         if ( u != []):
             if (i == 0):
                 color = 2
                 topString = r'$' + var + r'_{' + ind + r' - 1}$'
                 botString = r'$x_{' + ind + r' - 1}$'
-                midString = r'$\left<x\right>_{' + ind + r' - 1}$'
+                if (fill):
+                    midString = r'$\Delta x_{' + ind + r' - 1}$'
+                else:
+                    midString = r'$\left<x\right>_{' + ind + r' - 1}$'
                 if (matVis):
                     midString2 = r'$\left<x\right>_{' + ind + r' - 2}$'
-                    plt.text(xCell[i] - shiftX, yi - shiftY, midString2, fontsize = 12)
+                    plt.text(xCell[i] - shiftX, yi - shiftY, midString2, fontsize = fontsize)
             else:
                 if (i == 1):
                     if (matVis):
                         color = 0
                     shiftX = shiftX / 2
+                    extraShift = 0.002
                     topString = r'$' + var + r'_{' + ind + r'}$'
                     botString = r'$x_{' + ind + r'}$'
-                    midString = r'$\left<x\right>_{' + ind + r'}$'
+                    if (fill):
+                        midString = r'$\Delta x_{' + ind + r'}$'
+                    else:
+                        midString = r'$\left<x\right>_{' + ind + r'}$'
                 else:
                     color = 2
                     shiftX = 2 * shiftX
+                    extraShift = 0
                     topString = r'$' + var + r'_{' + ind + r' + 1}$'
                     botString = r'$x_{' + ind + r' + 1}$'
-                    midString = r'$\left<x\right>_{' + ind + r' + 1}$'
+                    if (fill):
+                        midString = r'$\Delta x_{' + ind + r' + 1}$'
+                    else:
+                        midString = r'$\left<x\right>_{' + ind + r' + 1}$'
+                    if (i == 3):
+                        shiftX = shiftX / 5
+                        topString = r'$' + var + r'_{' + ind + r' + 2}$'
+                        botString = r'$x_{' + ind + r' + 2}$'
+                        if (fill):
+                            midString = r'$\Delta x_{' + ind + r' + 2}$'
+                        else:
+                            midString = r'$\left<x\right>_{' + ind + r' + 2}$'
             (xs, ys) = DrawLine(xi, yi, u[i + 1], center = False)
-            ax.plot(xs, ys, color = ColorDefault(color), zorder = 2, linestyle = ':')
-            plt.text(xi - shiftX, u[i + 1] + (shiftY / 2), topString, fontsize = 12)
-            plt.text(xi - shiftX, yi - shiftY, botString, fontsize = 12)
-            plt.text(xCell[i + 1] - shiftX, yi - shiftY, midString, fontsize = 12)
+            if (not fill):
+                ax.plot(xs, ys, color = ColorDefault(color), zorder = 2, linestyle = ':')
+                plt.text(xi - shiftX, u[i + 1] + (shiftY / 2), topString, fontsize = fontsize)
+                plt.text(xi - shiftX, yi - 0.8 * shiftY, botString, fontsize = fontsize)
+            if (i < 3):
+                plt.text(xCell[i + 1] - shiftX - extraShift, yi - 0.8 * shiftY, midString, fontsize = fontsize)
         i = i + 1
     if (u == []):
         ax.plot(xAxis, yAxis, color = 'k', zorder = 0, linewidth = linewidth)
@@ -168,7 +193,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
 # In[5]:
 
 
-def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-', tickHeight = 0, linewidth = 1.5, matVis = False):
+def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-', tickHeight = 0, linewidth = 1.5, matVis = False, fill = False):
     errorLoc = 'ERROR:\nPlotTools:\nPiecePlot:\n'
     errorMess = BT.CheckSize(numPoints, X, nName = 'numPoints', matricaName = 'X')
     if (errorMess != ''):
@@ -184,6 +209,7 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
         shiftY = tickHeight / 2
     cellVals = np.ones(numPoints, float)
     lowIndex = 0
+    fontsize = 11
     
     if (matVis):
         var1 = r'\phi_{1}'
@@ -192,6 +218,9 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
     else:
         var1 = r'v'
         var2 = r'v'
+        if (fill):
+            var1 = r'u'
+            var2 = r'u'
         ind = r'j'
     
     for k in range(n):
@@ -202,6 +231,8 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
         else:
             if ((k != 0) or (tickHeight == 0) or matVis):
                 plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = linestyle, zorder = 3, linewidth = linewidth)
+                if (fill):
+                    plt.fill_between(X[lowIndex-1:highIndex], 0, cellVals[lowIndex-1:highIndex], color = ColorDefault(color), alpha = 0.1)
             if (tickHeight != 0): # ((k != 0) and (tickHeight != 0)):
                 if (k == 0):
                     if (matVis):
@@ -218,7 +249,7 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
                         else:
                             shiftX = 2 * shiftX
                             topString = r'$\left<' + var2 + r'\right>_{' + ind + r' + 1}$'
-                plt.text(xCell[k] - shiftX, pieces[k] + shiftY, topString, fontsize = 12)
+                plt.text(xCell[k] - shiftX, pieces[k] + shiftY, topString, fontsize = fontsize)
         lowIndex = highIndex
     return
 
@@ -658,21 +689,22 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
     omega = BT.Grid(nh)
     h = omega.h[0]
     x = omega.xNode
-    length = 2 * h
+    length = 2.5 * h
     k = 2
-    move = 0.01
+    move = -0.01
+    up = 0.3
     numPoints, font, X, savePath = UsefulPlotVals()
     Cosine = lambda x: np.cos(2. * np.pi * k * (x + move))
     Sine = lambda x: np.sin(2. * np.pi * k * (x + move))
     factor = 1. / (2 * pi * k * h)
-    uNode = Sine(x)
-    uCell = factor * (Cosine(x[:-1]) - Cosine(x[1:]))
-    U = Sine(X)
+    uNode = Sine(x) + up
+    uCell = factor * (Cosine(x[:-1]) - Cosine(x[1:])) + up
+    U = Sine(X) + up
     xCell = omega.xCell
     fig, ax = plt.subplots()
     numPoints, font, X, savePath = UsefulPlotVals()
     yMin, yMax, tickHeight = GetYBound(uNode[1:4], False)
-    TickPlot(omega, ax, tickHeight, False, False, u = uNode, labelsize = labelsize, linewidth = linewidth, matVis = matVis)
+    TickPlot(omega, ax, tickHeight, False, False, u = uNode, labelsize = labelsize, linewidth = linewidth, matVis = matVis, fill = fill)
     plt.plot(X, U, color = ColorDefault(0), zorder = 0, linewidth = linewidth)
     if (fill):
         print('Fill is on.')
@@ -681,12 +713,13 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
         plt.scatter(x[1], uNode[1], s = 10, color = ColorDefault(2))
         plt.scatter(x[2], uNode[2], s = 10, color = ColorDefault(0))
         plt.scatter(x[3], uNode[3], s = 10, color = ColorDefault(2))
+        plt.scatter(x[4], uNode[4], s = 10, color = ColorDefault(2))
     else:
-        plt.scatter(x[1:4], uNode[1:4], s = 20, color = ColorDefault(2))
-    PiecePlot(omega, numPoints, X, uCell, tickHeight = tickHeight, linewidth = linewidth, matVis = matVis)
+        plt.scatter(x[1:5], uNode[1:5], s = 20, color = ColorDefault(2))
+    PiecePlot(omega, numPoints, X, uCell, tickHeight = tickHeight, linewidth = linewidth, matVis = matVis, fill = fill)
     plt.quiver([length], [0], [length], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
     plt.quiver([length], [0], [-length], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
-    plt.xlim([-0.1 * length, 2.1 * length])
+    plt.xlim([-0.1 * length, 2 * length])
     plt.ylim([yMin, yMax])
     plt.show()
     if (save):
