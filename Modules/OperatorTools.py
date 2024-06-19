@@ -707,30 +707,53 @@ def MomentMatrix(x, x0, h, ixs, P):
 
 
 
+# ----------------------------------------------------------------------------------------------------------------
+# Function: GhostCellsJump
+# ----------------------------------------------------------------------------------------------------------------
+# By: Hans Johansen
+#
 # Fill in cell-average ghost cells using jump conditions
+# ----------------------------------------------------------------------------------------------------------------
+# Inputs:
+#
+# omega                   Grid                    Object containing all grid attributes
+# physics                 PhysProps               Object containing all attributes describing the physical setup
+# phiavg                  array                   Vector of field values
+# Ng                      int                     Number of ghost cells
+# P                       float                   Order of interpolation
+# ----------------------------------------------------------------------------------------------------------------
+# Outputs:
+#
+# phig1                   array                   Vector of ghost cells to be concatenated onto right side of face
+#                                                     approximations in left medium (medium 1)
+# phig2                   array                   Vector of ghost cells to be concatenated onto left side of face
+#                                                     approximations in right medium (medium 2)
+# ----------------------------------------------------------------------------------------------------------------
 
 def GhostCellsJump(omega, physics, phiavg,Ng,P):
+    print('\n***************************************************')
+    print('***You\'re using Hans\'s GhostCellsJump!***\n')
+    print('order:', P)
+    print('ghost cells:', Ng)
+    print('input array:', np.shape(phiavg))
     
     dx = omega.h[0]
     xNode = omega.xNode
     matInd = physics.matInd
     loc = physics.locs[0]
     
-#     print('My x:')
-#     print(xNode[matInd-P:matInd+P+1] - loc)
-    
     # Create the cell average interpolation matrix
-    x = xNode[matInd-P:matInd+P+1] - loc # np.arange(-P, P + 1).transpose()*dx
-#     print('Hans\' x:')
-#     print(x)
-    print('')
+    x = xNode[matInd-P:matInd+P+1] - loc #
+    print('x:', x)
     x0 = 0
     ixs = np.arange(2*P).transpose()
     A = MomentMatrix(x,x0,dx,ixs,P)
+    print('A:', A)
 
     # Build up an interpolant using the jump condition
     ix = np.arange(P)
     phi1 = phiavg[int(matInd-P)+ix] # phi avg in domain 1
+    print('data cells:', phi1)
     ix2 = np.arange(P)+P # domain 2 entries
     phi2 = phiavg[int(matInd-P)+ix2] # phi avg in domain 2
     B = Block([A[ix,:], A[ix2,:]]) # add the fit to the matrix
@@ -751,6 +774,10 @@ def GhostCellsJump(omega, physics, phiavg,Ng,P):
     # Evaluate the phi2 ghost cell values
     ix = np.arange(P-Ng, P)
     phig2 = A[ix,:]@phic[P:2*P]
+    
+    print('output array 1:', np.shape(phig1))
+    print('output array 2:', np.shape(phig2))
+    print('***************************************************\n')
     
     return phig1, phig2
 

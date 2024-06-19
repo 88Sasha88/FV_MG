@@ -393,13 +393,7 @@ class Grid:
 # ----------------------------------------------------------------------------------------------------------------
 # By: Sasha Curcic
 #
-# This class stores all the attributes of an AMR grid. The base grid is created upon instantiation of an object
-# from inputs nh, the degrees of freedom on the base grid, and alias, a numerical value set to 1 as the default in
-# case the user wishes to plot examples of aliasing. Additional patches are added using the AddPatch function,
-# which takes in arguments refRatio and cell, which are both overloaded with 1 and [], respectively, for the
-# automatic call at the instantiation of the base level. Data stored in the elements of all list-type attributes,
-# except strings, correspond to each level from lowest to highest refinement, respectively. All other attributes
-# are assumed to apply to the current Grid object (at its highest refinement,) unless otherwise stated.
+# 
 # ----------------------------------------------------------------------------------------------------------------
 # Inputs:
 #

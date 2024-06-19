@@ -176,7 +176,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
             (xs, ys) = DrawLine(xi, yi, u[i + 1], center = False)
             if (not fill):
                 ax.plot(xs, ys, color = ColorDefault(color), zorder = 2, linestyle = ':')
-                plt.text(xi - shiftX, u[i + 1] + (shiftY / 2), topString, fontsize = fontsize)
+                plt.text(xi - shiftX, u[i + 1] + (shiftY / 3), topString, fontsize = fontsize)
                 plt.text(xi - shiftX, yi - 0.8 * shiftY, botString, fontsize = fontsize)
             if (i < 3):
                 plt.text(xCell[i + 1] - shiftX - extraShift, yi - 0.8 * shiftY, midString, fontsize = fontsize)
@@ -206,7 +206,7 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
         label = []
         n = 4
         shiftX = 0.005
-        shiftY = tickHeight / 2
+        shiftY = tickHeight / 3
     cellVals = np.ones(numPoints, float)
     lowIndex = 0
     fontsize = 11

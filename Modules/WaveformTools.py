@@ -69,12 +69,14 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
         T = IRT.find('T') + 1
 
         index = np.where(xCell >= x_s)[0][0]
+        print('index=', index)
 
         waveFuncIT = 0
         waveFuncR = 0
         if (I or T):
             waveFuncIT = Advect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv, tol = tol)
             EFuncIT = waveFuncIT.copy()
+            print('EFuncIT:', np.shape(EFuncIT))
             # Scale the T part.
             scale = (2 * cs[1]) / (cs[0] + cs[1]) # Switch numerator to cs[0].
     #         if (field == 'B'):
@@ -93,6 +95,9 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
                     # Zero out the T part.
                     EFuncIT[index:] = 0
                     BFuncIT[index:] = 0
+        else:
+            EFuncIT = 0
+            BFuncIT = 0
 
         if (R):
             waveFuncR = Reflect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv, tol = tol)
@@ -102,6 +107,12 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
             EFuncR = scale * EFuncR
             BFuncR = EFuncR.copy()
             BFuncR = -BFuncR / cs[0]
+#         print('EFuncIT:', np.shape(EFuncIT))
+#         print('EFuncR:', np.shape(EFuncR))
+        else:
+            EFuncR = 0
+            BFuncR = 0
+        
         EFunc = EFuncIT + EFuncR
         BFunc = BFuncIT + BFuncR
     if (field == 'E'):
@@ -132,7 +143,7 @@ def Reflect(omega, physics, func, args, t, cellAve = True, BooleAve = False, der
     waveFunc[index:] = 0
     return waveFunc
 
-def Advect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deriv = False, field = 'EB', tol = 1e-15):
+def Advect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deriv = False, field = 'E', tol = 1e-15): # You changed field = 'EB' to 'E' on 02062024.
     if (t == 0):
         waveFunc = InitCond(omega, physics, func, args, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv, field = field, tol = tol)
     else:
