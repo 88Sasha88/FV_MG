@@ -72,7 +72,7 @@ def DrawLine(xCenter, yCenter, tickHeight, center = True):
 # In[4]:
 
 
-def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsize = 10, linewidth = 1.5, matVis = False, fill = False):
+def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsize = 10, linewidth = 1.5, matVis = False, fill = False, var = var):
 #     if (enlarge):
 #         labelsize = 25
 #         linewidth = 4
@@ -93,14 +93,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
     shiftY = tickHeight
     extraShift = 0
     
-    if (matVis):
-        var = r'F'
-        ind = r'h'
-    else:
-        var = r'v'
-        if (fill):
-            var = r'u'
-        ind = r'j'
+    ind = r'j'
     
     
     if (u != []):
@@ -140,12 +133,12 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                     midString = r'$\Delta x_{' + ind + r' - 1}$'
                 else:
                     midString = r'$\left<x\right>_{' + ind + r' - 1}$'
-                if (matVis):
-                    midString2 = r'$\left<x\right>_{' + ind + r' - 2}$'
-                    plt.text(xCell[i] - shiftX, yi - shiftY, midString2, fontsize = fontsize)
+#                 if (matVis != ''):
+#                     midString2 = r'$\left<x\right>_{' + ind + r' - 2}$'
+#                     plt.text(xCell[i] - shiftX, yi - shiftY, midString2, fontsize = fontsize)
             else:
                 if (i == 1):
-                    if (matVis):
+                    if (matVis != ''):
                         color = 0
                     shiftX = shiftX / 2
                     extraShift = 0.002
@@ -193,7 +186,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
 # In[5]:
 
 
-def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-', tickHeight = 0, linewidth = 1.5, matVis = False, fill = False):
+def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-', tickHeight = 0, linewidth = 1.5, matVis = False, fill = False, var = ''):
     errorLoc = 'ERROR:\nPlotTools:\nPiecePlot:\n'
     errorMess = BT.CheckSize(numPoints, X, nName = 'numPoints', matricaName = 'X')
     if (errorMess != ''):
@@ -211,17 +204,20 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
     lowIndex = 0
     fontsize = 11
     
-    if (matVis):
-        var1 = r'\phi_{1}'
-        var2 = r'\phi_{2}'
-        ind = r'h'
-    else:
-        var1 = r'v'
-        var2 = r'v'
-        if (fill):
-            var1 = r'u'
-            var2 = r'u'
+#     if (matVis):
+#         var1 = r'\phi_{1}'
+#         var2 = r'\phi_{2}'
+#         ind = r'h'
+#     else:
+#         var1 = r'v'
+#         var2 = r'v'
+#         if (fill):
+#             var1 = r'u'
+#             var2 = r'u'
+    if (matVis == ''):
         ind = r'j'
+    else:
+        ind = r'h'
     
     for k in range(n):
         highIndex = np.where(X <= x[k + 1])[0][::-1][0] + 1
@@ -229,27 +225,28 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
         if ((k == 0) and (label != [])):
             plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = linestyle, zorder = 3, label = label, linewidth = linewidth)
         else:
-            if ((k != 0) or (tickHeight == 0) or matVis):
+            if ((k != 0) or (tickHeight == 0)): # or (matVis != '')):
                 plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = linestyle, zorder = 3, linewidth = linewidth)
                 if (fill):
                     plt.fill_between(X[lowIndex-1:highIndex], 0, cellVals[lowIndex-1:highIndex], color = ColorDefault(color), alpha = 0.1)
-            if (tickHeight != 0): # ((k != 0) and (tickHeight != 0)):
-                if (k == 0):
-                    if (matVis):
-                        topString = r'$\left<' + var1 + r'\right>_{' + ind + r'- 2}$'
-                    else:
-                        topString = ''
-                else:
+                if (tickHeight != 0): # ((k != 0) and (tickHeight != 0)):
+#                 if (k != 0):
+#                 if (k == 0):
+#                     if (matVis != ''):
+#                         topString = r'$\left<' + var + r'\right>_{' + ind + r'- 2}$'
+#                     else:
+#                         topString = ''
+#                 else:
                     if (k == 1):
-                        topString = r'$\left<' + var1 + r'\right>_{' + ind + r' - 1}$'
+                        topString = r'$\left<' + var + r'\right>_{' + ind + r' - 1}$'
                     else:
                         if (k == 2):
                             shiftX = shiftX / 2
-                            topString = r'$\left<' + var2 + r'\right>_{' + ind + r'}$'
+                            topString = r'$\left<' + var + r'\right>_{' + ind + r'}$'
                         else:
                             shiftX = 2 * shiftX
-                            topString = r'$\left<' + var2 + r'\right>_{' + ind + r' + 1}$'
-                plt.text(xCell[k] - shiftX, pieces[k] + shiftY, topString, fontsize = fontsize)
+                            topString = r'$\left<' + var + r'\right>_{' + ind + r' + 1}$'
+                    plt.text(xCell[k] - shiftX, pieces[k] + shiftY, topString, fontsize = fontsize)
         lowIndex = highIndex
     return
 
@@ -272,11 +269,18 @@ def UsefulPlotVals():
 # In[7]:
 
 
-def PlotWaves(omega, physics, waves = [], waveNode = [], nullspace = [], waveTrans = [], ct = 0, save = False, saveName = '', rescale = 1, dpi = 600, enlarge = False):
+def PlotWaves(omega, physics, waves = [], waveNode = [], nullspace = [], waveTrans = [], ct = 0, save = False, saveName = '', rescale = 1, dpi = 600, enlarge = False, alias = False):
+    warnLoc = 'WARNING:\nPlotTools:\nPlotWaves:\n'
     nh = omega.nh_max
     x = omega.xNode
     n = omega.degFreed
     alias = omega.alias
+    if (alias < 2):
+        if (alias):
+            warnMess = 'alias cannot be True! There are no waves to alias.'
+            print(warnLoc + warnMess)
+        alias = False
+    NA = nh
     nh = int(alias * nh)
     N = nh
     numPoints, font, X, savePath = UsefulPlotVals()
@@ -314,6 +318,21 @@ def PlotWaves(omega, physics, waves = [], waveNode = [], nullspace = [], waveTra
         else:
             waveTransfer = []
         fig = PlotWave(omega, physics, numPoints, X, rescale, waveCell[:, k], waveCont[:, k], waveTrans = waveTransfer, xGrid = False, yGrid = False)
+        if (alias):
+            if (k >= NA):
+                kf = k
+                kc = (2 * NA) - kf
+                nodeFact = 1
+                cellFact = -kc / kf
+                if (k % 2 == 1):
+                    kc = kc - 2
+                    nodeFact = -1
+                    cellFact = -cellFact
+                aliasNode = nodeFact * waveCont[:, kc]
+                aliasCell = cellFact * waveCont[:, kc]
+                plt.plot(X, aliasNode, linestyle = ':', color = ColorDefault(2))
+                plt.plot(X, aliasCell, linestyle = '--', color = ColorDefault(3))
+        
         if (waveNode != []):
             plt.scatter(x[:], waveNodes[:, k], color = ColorDefault(2), s = 10, zorder = 4)
         plt.xlim([-0.1, 1.25])
@@ -670,7 +689,7 @@ def Save(fig, saveString, dpi):
     print('This image has been saved under ' + saveString + '.')
     return
 
-def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = False, fill = False):
+def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = '', fill = False, var = 'v'):
     if (saveName != ''):
         save = True
     else:
@@ -684,6 +703,15 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
         linewidth = 1.5
         fontsize = 25
         labelsize = 10
+    
+    if (matVis):
+        var = r'F'
+    else:
+#         var = r'v'
+        if (fill):
+            var = r'u'
+    
+    
     
     nh = 32
     omega = BT.Grid(nh)
@@ -704,19 +732,27 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
     fig, ax = plt.subplots()
     numPoints, font, X, savePath = UsefulPlotVals()
     yMin, yMax, tickHeight = GetYBound(uNode[1:4], False)
-    TickPlot(omega, ax, tickHeight, False, False, u = uNode, labelsize = labelsize, linewidth = linewidth, matVis = matVis, fill = fill)
+    TickPlot(omega, ax, tickHeight, False, False, u = uNode, labelsize = labelsize, linewidth = linewidth, matVis = matVis, fill = fill, var = var)
     plt.plot(X, U, color = ColorDefault(0), zorder = 0, linewidth = linewidth)
     if (fill):
-        print('Fill is on.')
         plt.fill_between(X, 0, U, color = ColorDefault(0), alpha = 0.1)
-    if (matVis):
+    if (matVis == 'R1'):
         plt.scatter(x[1], uNode[1], s = 10, color = ColorDefault(2))
-        plt.scatter(x[2], uNode[2], s = 10, color = ColorDefault(0))
+        plt.scatter(x[2], uNode[2], s = 10, color = ColorDefault(4))
         plt.scatter(x[3], uNode[3], s = 10, color = ColorDefault(2))
         plt.scatter(x[4], uNode[4], s = 10, color = ColorDefault(2))
     else:
-        plt.scatter(x[1:5], uNode[1:5], s = 20, color = ColorDefault(2))
-    PiecePlot(omega, numPoints, X, uCell, tickHeight = tickHeight, linewidth = linewidth, matVis = matVis, fill = fill)
+        if (matVis == 'L2'):
+            q = 1
+        else:
+            if (matVis == 'R2'):
+                q = 1
+            else:
+                if (matVis == 'L1'):
+                    q = 1
+                else:
+                    plt.scatter(x[1:5], uNode[1:5], s = 20, color = ColorDefault(2))
+    PiecePlot(omega, numPoints, X, uCell, tickHeight = tickHeight, linewidth = linewidth, matVis = matVis, fill = fill, var = var)
     plt.quiver([length], [0], [length], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
     plt.quiver([length], [0], [-length], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
     plt.xlim([-0.1 * length, 2 * length])

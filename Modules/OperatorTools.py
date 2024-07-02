@@ -730,9 +730,10 @@ def MomentMatrix(x, x0, h, ixs, P):
 #                                                     approximations in right medium (medium 2)
 # ----------------------------------------------------------------------------------------------------------------
 
-def GhostCellsJump(omega, physics, phiavg,Ng,P):
+def GhostCellsJump(omega, physics, phiavg, Ng, P):
     print('\n***************************************************')
     print('***You\'re using Hans\'s GhostCellsJump!***\n')
+#     P = P + 1
     print('order:', P)
     print('ghost cells:', Ng)
     print('input array:', np.shape(phiavg))
@@ -753,9 +754,10 @@ def GhostCellsJump(omega, physics, phiavg,Ng,P):
     # Build up an interpolant using the jump condition
     ix = np.arange(P)
     phi1 = phiavg[int(matInd-P)+ix] # phi avg in domain 1
-    print('data cells:', phi1)
+    print('data cells 1:', phi1)
     ix2 = np.arange(P)+P # domain 2 entries
     phi2 = phiavg[int(matInd-P)+ix2] # phi avg in domain 2
+    print('data cells 2:', phi2)
     B = Block([A[ix,:], A[ix2,:]]) # add the fit to the matrix
     addOn = np.zeros(2 * P, float)
     addOn[0] = 1
