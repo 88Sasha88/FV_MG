@@ -69,14 +69,14 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
         T = IRT.find('T') + 1
 
         index = np.where(xCell >= x_s)[0][0]
-        print('index=', index)
+#         print('index=', index)
 
         waveFuncIT = 0
         waveFuncR = 0
         if (I or T):
             waveFuncIT = Advect(omega, physics, func, args, t, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv, tol = tol)
             EFuncIT = waveFuncIT.copy()
-            print('EFuncIT:', np.shape(EFuncIT))
+#             print('EFuncIT:', np.shape(EFuncIT))
             # Scale the T part.
             scale = (2 * cs[1]) / (cs[0] + cs[1]) # Switch numerator to cs[0].
     #         if (field == 'B'):

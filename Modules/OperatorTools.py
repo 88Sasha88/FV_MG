@@ -364,7 +364,7 @@ def ExactSpatDerivOp(omega):
     np.fill_diagonal(Op[1:], subsuper[:])
     np.fill_diagonal(Op[:, 1:], -subsuper)
     SpatOp = 2 * np.pi * Op
-    print(Op)
+#     print(Op)
     return SpatOp
 
 
@@ -731,12 +731,12 @@ def MomentMatrix(x, x0, h, ixs, P):
 # ----------------------------------------------------------------------------------------------------------------
 
 def GhostCellsJump(omega, physics, phiavg, Ng, P):
-    print('\n***************************************************')
-    print('***You\'re using Hans\'s GhostCellsJump!***\n')
-#     P = P + 1
+#     print('\n***************************************************')
+#     print('***You\'re using Hans\'s GhostCellsJump!***\n')
+# #     P = P + 1
     print('order:', P)
-    print('ghost cells:', Ng)
-    print('input array:', np.shape(phiavg))
+#     print('ghost cells:', Ng)
+#     print('input array:', np.shape(phiavg))
     
     dx = omega.h[0]
     xNode = omega.xNode
@@ -745,19 +745,19 @@ def GhostCellsJump(omega, physics, phiavg, Ng, P):
     
     # Create the cell average interpolation matrix
     x = xNode[matInd-P:matInd+P+1] - loc #
-    print('x:', x)
+#     print('x:', x)
     x0 = 0
     ixs = np.arange(2*P).transpose()
     A = MomentMatrix(x,x0,dx,ixs,P)
-    print('A:', A)
+#     print('A:', A)
 
     # Build up an interpolant using the jump condition
     ix = np.arange(P)
     phi1 = phiavg[int(matInd-P)+ix] # phi avg in domain 1
-    print('data cells 1:', phi1)
+#     print('data cells 1:', phi1)
     ix2 = np.arange(P)+P # domain 2 entries
     phi2 = phiavg[int(matInd-P)+ix2] # phi avg in domain 2
-    print('data cells 2:', phi2)
+#     print('data cells 2:', phi2)
     B = Block([A[ix,:], A[ix2,:]]) # add the fit to the matrix
     addOn = np.zeros(2 * P, float)
     addOn[0] = 1
@@ -777,9 +777,9 @@ def GhostCellsJump(omega, physics, phiavg, Ng, P):
     ix = np.arange(P-Ng, P)
     phig2 = A[ix,:]@phic[P:2*P]
     
-    print('output array 1:', np.shape(phig1))
-    print('output array 2:', np.shape(phig2))
-    print('***************************************************\n')
+#     print('output array 1:', np.shape(phig1))
+#     print('output array 2:', np.shape(phig2))
+#     print('***************************************************\n')
     
     return phig1, phig2
 
@@ -892,7 +892,7 @@ def FaceOp(omega, order, diff, RL, Ng, otherFace = False, AMROverride = False, w
         p = []
         q = []
         NU = False
-        print('THIS FACE OPERATOR IS UNIFORM!')
+#         print('THIS FACE OPERATOR IS UNIFORM!')
     else:
         # Index before fine-coarse interface
         p = np.where(spots > 0)[0][0]
@@ -946,7 +946,7 @@ def FaceOp(omega, order, diff, RL, Ng, otherFace = False, AMROverride = False, w
         s = int(off - d)
         
         if (not wrapAround):
-            print('No wraparound, ' + str(Ng) + ' ghostcells!')
+#             print('No wraparound, ' + str(Ng) + ' ghostcells!')
             if (Ng <= abs(s)):
                 if (s > 0):
                     wrap1 = s - Ng

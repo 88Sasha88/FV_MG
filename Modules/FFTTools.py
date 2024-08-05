@@ -254,7 +254,7 @@ def PropWaves(omega, waves, ct): # Change was made here!
     return propMat
 
 
-# input: waveform of fully refined grid
+# input: waveformIn on FULLY REFINED grid!
 # output: propagated coef
 def PropRestrictWaves(omega, waveformIn, ct, Hans = False): # Change was made here!
     nh_max = omega.nh_max

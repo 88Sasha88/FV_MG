@@ -72,7 +72,7 @@ def DrawLine(xCenter, yCenter, tickHeight, center = True):
 # In[4]:
 
 
-def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsize = 10, linewidth = 1.5, matVis = False, fill = False, var = var, ghost = ''):
+def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsize = 10, linewidth = 1.5, matVis = False, fill = False, var = var, ghost = '', something = True):
 #     if (enlarge):
 #         labelsize = 25
 #         linewidth = 4
@@ -87,9 +87,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
         ax.grid(True, axis = 'x', zorder = 0)
     xAxis = omega.xNode
     yAxis = omega.y
-    print(xAxis)
-    print(yAxis)
-    print('tickHeight:', tickHeight)
+
     xCell = omega.xCell
     nh = omega.nh_max
     shiftX = 0.025
@@ -104,13 +102,19 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
     
     
     if (u != []):
-        if (ghost == 'G1'):
-            n = 6
-        else:
-            if (ghost == 'G2'):
-                n = 7
+        level = ''
+        if (ghost != ''):
+            level = r'^{(l - 1)}'
+            if (ghost == 'G1'):
+                n = 6
             else:
-                n = 4
+                if (ghost == 'G2'):
+                    n = 7
+                else:
+                    n = 5
+            
+        else:
+            n = 4
         label = False
         xAxis = xAxis[1:n + 1]
         yAxis = yAxis[1:n + 1]
@@ -121,6 +125,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
     LS = ':'
     
     L1R1bot = 0
+    scootch = 0
     
     for (xi, yi) in zip(xAxis, yAxis):
         j = j + 1
@@ -131,7 +136,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                 plt.text(xi - shiftX, yi + shiftY, int(xi), fontsize = fontsize)
         else:
             height = tickHeight / 2
-            print('height:', height)
+#             print('height:', height)
         if (((j != 1) or (matVis != 'L2')) and ((j != 4) or (matVis != 'R1'))):
             (xs, ys) = DrawLine(xi, yi, height)
 #             if (((j == 4) and (matVis == 'L1')) or ((j == 1) and (matVis == 'R2')) or ((j == 3) and (ghost == 'G2'))):
@@ -161,7 +166,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                 else:
                     if ((matVis == 'R1') or (matVis == 'L1') or (ghost != '')):
                         L1R1bot = -0.001
-                        botString = r'$x_{' + ind + r' - 2}$'
+                        botString = r'$x_{' + ind + r' - 2}' + level + r'$'
                     else:
                         botString = r'$x_{' + ind + r' - 1}$'
                 if (fill or (matVis != '')):
@@ -186,11 +191,16 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                     if ((matVis == 'R1') or (matVis == 'L1') or (ghost != '')):
                         extraShift = extraShift + 0.001
                         L1R1bot = -0.002
-#                         if (ghost == 'G1'):
-#                             L1R1bot = L1R1bot - 0.001
-                        botString = r'$x_{' + ind + r' - 1}$'
+                        if (ghost != ''):
+                            L1R1bot = -0.005
+                        if (ghost == 'G2'):
+                            level = r'^{(l)}'
+                            botString = r'$x_{2' + ind + r' - 2}' + level + r'$'
+                        else:
+                            botString = r'$x_{' + ind + r' - 1}' + level + r'$'
                     else:
                         botString = r'$x_{' + ind + r'}$'
+                
                     if (fill or (matVis != '')):
                         if ((matVis == 'R1') or (matVis == 'L1')):
                             midString = r'$\Delta x_{' + ind + r' - 1}$'
@@ -204,18 +214,27 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                     extraShift = 0
                     topString = r'$' + var + r'_{' + ind + r' + 1}$'
                     if (i == 2):
-                        if ((matVis == 'R1') or (matVis == 'L1') or (ghost == 'G1')):
-                            if (ghost != ''):
-                                LS = '-.'
-                            else:
-                                LS = '-'
+                        if ((matVis == 'R1') or (matVis == 'L1')):# or (ghost == 'G1')):
+                            LS = '-'
                             L1R1bot = 0.002
                             botString = r'$x_{' + ind + r'}$'
                         else:
+                            botString = r'$x_{' + ind + r' + 1}$'
+                        
+                        if (ghost != ''):
                             if (ghost == 'G2'):
-                                botString = r'$x_{' + ind + r' - 1/2}$'
+                                botString = r'$x_{2' + ind + r' - 1}' + level + r'$'
                             else:
-                                botString = r'$x_{' + ind + r' + 1}$'
+                                LS = '-.'
+                                if (ghost == 'G1'):
+                                    L1R1bot = 0.002
+                                    level = r'^{(l)}'
+                                    botString = r'$x_{2' + ind + r'}' + level + r'$'
+                                    
+                                else:
+                                    botString = r'$x_{' + ind + r'}' + level + r'$'
+                        
+                        
                         if (fill or (matVis != '')):
                             if (matVis == 'R1'):
                                 midString = ''
@@ -226,47 +245,61 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                                     midString = r'$\Delta x_{' + ind + r' + 1}$'
                         else:
                             midString = r'$\left<x\right>_{' + ind + r' + 1}$'
+                            
                     if (i == 3):
                         shiftX = shiftX / 5
+                        scootch = -0.002
                         topString = r'$' + var + r'_{' + ind + r' + 2}$'
-                        if ((matVis == 'R1') or (matVis == 'L1') or (ghost == 'G1')):
+                        if (matVis == 'R1'):
                             L1R1bot = -0.003
-                            if (matVis == 'R1'):
-                                botString = ''
-                            else:
-                                if ((matVis == 'L1') or (ghost == 'G1')):
-                                    botString = r'$x_{' + ind + r' + 1}$'
+                            botString = ''
                         else:
-                            if (ghost == 'G2'):
-                                L1R1bot = -0.001
-                                botString = r'$x_{' + ind + r'}$'
-                                LS = '-.'
+                            if (matVis == 'L1'):
+                                L1R1bot = -0.003
+                                botString = r'$x_{' + ind + r' + 1}$'
                             else:
+                                L1R1bot = 0#-0.001
                                 botString = r'$x_{' + ind + r' + 2}$'
+                        if (ghost != ''):
+                            level = r'^{(l)}'
+                            if (ghost == 'G1'):
+                                L1R1bot = -0.003
+                                botString = r'$x_{2' + ind + r' + 1}' + level + r'$'
+                            else:
+                                L1R1bot = -0.001
+                                if (ghost == 'G2'):
+                                    botString = r'$x_{2' + ind + r'}' + level + r'$'
+                                    LS = '-.'
+                                else:
+                                    botString = r'$x_{2' + ind + r' + 2}' + level + r'$'
+
                         midString = ''
                     if (i == 4):
                         L1R1bot = -0.001
                         if (ghost == 'G1'):
-                            botString = r'$x_{' + ind + r' + 2}$'
+                            botString = r'$x_{2' + ind + r' + 2}' + level + r'$'
                         else:
-                            botString = r'$x_{' + ind + r' + 1}$'
+                            if (ghost == 'G2'):
+                                botString = r'$x_{2' + ind + r' + 1}' + level + r'$'
+                            else:
+                                botString = r'$x_{2' + ind + r' + 3}' + level + r'$'
                     if (i == 5):
                         L1R1bot = 0.003
                         if (ghost == 'G1'):
-                            botString = r'$x_{' + ind + r' + 3}$'
+                            botString = r'$x_{2' + ind + r' + 3}' + level + r'$'
                         else:
-                            botString = r'$x_{' + ind + r' + 2}$'
+                            botString = r'$x_{2' + ind + r' + 2}' + level + r'$'
                     if (i == 6):
                         L1R1bot = 0.011
-                        botString = r'$x_{' + ind + r' + 3}$'
+                        botString = r'$x_{2' + ind + r' + 3}' + level + r'$'
             if (not fill):
-                if (((i != 0) or (matVis != 'L2')) and ((i != 3) or (matVis != 'R1'))):
+                if (((i != 0) or (matVis != 'L2')) and ((i != 3) or (matVis != 'R1')) and something):
                     (xs, ys) = DrawLine(xi, yi, u[i + 1], center = False)
                     ax.plot(xs, ys, color = ColorDefault(color), zorder = 1, linestyle = LS)
                 LS = ':'
-                if ((matVis == '') and (ghost == '')):
-                    plt.text(xi - shiftX, u[i + 1] + (shiftY / 3), topString, fontsize = fontsize)
-#                 print(i, xi - shiftX + L1R1bot, botString)
+                if ((matVis == '') and (ghost == '') and something):
+                    plt.text(xi - shiftX + scootch, u[i + 1] + (shiftY / 3), topString, fontsize = fontsize)
+                print(i, xi - shiftX + L1R1bot, botString)
                 plt.text(xi - shiftX + L1R1bot, yi - 0.8 * shiftY, botString, fontsize = fontsize)
                 L1R1bot = 0
             if ((i < 3) and (ghost == '')):
@@ -298,11 +331,17 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
         n = 4
         shiftX = 0.005
         shiftY = tickHeight / 3
-        if (ghost == 'G1'):
+        level = ''
+        levShift = 0
+        if (ghost != ''):
             n = 6
+            level = r'^{(l - 1)}'
+            levShift = 0.01#75
+        if (ghost == 'G2'):
+            n = 7
         else:
-            if (ghost == 'G2'):
-                n = 7
+            if (ghost == 'G3'):
+                n = 5
     cellVals = np.ones(numPoints, float)
     lowIndex = 0
     fontsize = 11
@@ -345,19 +384,22 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
                                 LS = '--'
                             else:
                                 if ((matVis == 'L1') or (matVis == 'R1') or (ghost != '')):
-                                    topString = r'$\left<' + var + r'\right>_{' + ind + r' - 2}$'
+                                    topString = r'$\left<' + var + level + r'\right>_{' + ind + r' - 2}$'
                                 else:
                                     topString = r'$\left<' + var + r'\right>_{' + ind + r' - 1}$'
                     else:
                         if (k == 2):
                             if ((matVis == 'L1') or (matVis == 'R1') or (ghost != '')):
+                                levShift = 0.75 * levShift
                                 if (ghost == 'G2'):
                                     shiftX = 1.5 * shiftX
-                                    shiftY = shiftY - 0.2
-                                    topString = r'$\tilde{\left<' + var + r'\right>}_{' + ind + r' - 1}$'
+                                    shiftY = shiftY - 0.015
+                                    level = r'^{(l)}'
+                                    levShift = levShift / 5
+                                    topString = r'$\left<\tilde{' + var + r'}' + level + r'\right>_{2' + ind + r' - 2}$'
                                     LS = '--'
                                 else:
-                                    topString = r'$\left<' + var + r'\right>_{' + ind + r' - 1}$'
+                                    topString = r'$\left<' + var + level + r'\right>_{' + ind + r' - 1}$'
                             else:
                                 shiftX = shiftX / 2
                                 topString = r'$\left<' + var + r'\right>_{' + ind + r'}$'
@@ -372,33 +414,48 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
                                         topString = r'$\tilde{\left<' + var + r'\right>}_{' + ind + r'}$'
                                         LS = '--'
                                     else:
-                                        if (ghost == 'G1'):
-                                            topString = r'$\left<' + var + r'\right>_{' + ind + r'}$'
-                                        else:
+                                        if (ghost != ''):
                                             if (ghost == 'G2'):
-#                                                 shiftX = shiftX / 1.5
-                                                shiftY = shiftY + 0.2
-                                                topString = r'$\tilde{\left<' + var + r'\right>}_{' + ind + r' - 1/2}$'
+                                                levShift = levShift / 200
+                                                shiftY = shiftY + 0.015
+                                                topString = r'$\left<\tilde{' + var + r'}' + level + r'\right>_{2' + ind + r' - 1}$'
                                                 LS = '--'
                                             else:
-                                                shiftX = 2 * shiftX
-                                                topString = r'$\left<' + var + r'\right>_{' + ind + r' + 1}$'
+                                                if (ghost == 'G1'):
+                                                    level = r'^{(l)}'
+                                                    levShift = levShift / 4
+                                                    topString = r'$\left<' + var + level + r'\right>_{2' + ind + r'}$'
+                                                else:
+                                                    levShift = 0.75 * levShift
+                                                    topString = r'$\left<' + var + level + r'\right>_{' + ind + r'}$'
+                                        else:
+                                            shiftX = 2 * shiftX
+                                            topString = r'$\left<' + var + r'\right>_{' + ind + r' + 1}$'
                             if (k == 4):
 #                                 shiftX = 1.5 * shiftX
-                                if (ghost == 'G1'):
-                                    topString = r'$\left<' + var + r'\right>_{' + ind + r' + 1}$'
-                                else:
+                                if (ghost == 'G2'):
                                     shiftX = shiftX / 1.5
-                                    topString = r'$\left<' + var + r'\right>_{' + ind + r'}$'
+                                    levShift = 250 * levShift
+                                    topString = r'$\left<' + var + level + r'\right>_{2' + ind + r'}$'
+                                else:
+                                    if (ghost == 'G3'):
+                                        level = r'^{(l)}'
+                                        levShift = (2 * levShift) / 3
+                                        topString = r'$\left<' + var + level + r'\right>_{2' + ind + r' + 2}$'
+                                    else:
+                                        levShift = 2 * levShift
+                                        topString = r'$\left<' + var + level + r'\right>_{2' + ind + r' + 1}$'
                             if (k == 5):
                                 if (ghost == 'G1'):
-                                    topString = r'$\left<' + var + r'\right>_{' + ind + r' + 2}$'
+                                    topString = r'$\left<' + var + level + r'\right>_{2' + ind + r' + 2}$'
                                 else:
-                                    topString = r'$\left<' + var + r'\right>_{' + ind + r' + 1}$'
+                                    if (ghost == 'G2'):
+                                        levShift = 2 * levShift
+                                    topString = r'$\left<' + var + level + r'\right>_{2' + ind + r' + 1}$'
                             if (k == 6):
-                                topString = r'$\left<' + var + r'\right>_{' + ind + r' + 2}$'
-                    plt.text(xCell[k] - shiftX, pieces[k] + shiftY, topString, fontsize = fontsize, zorder = 5)
-#                     print(k, shiftY, topString, pieces[k])
+                                topString = r'$\left<' + var + level + r'\right>_{2' + ind + r' + 2}$'
+                    plt.text(xCell[k] - shiftX - levShift, pieces[k] + shiftY, topString, fontsize = fontsize, zorder = 5)
+#                     print(k, xCell[k] - shiftX - levShift, topString)#, pieces[k])
                 plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = LS, zorder = 3, linewidth = linewidth)
                 LS = linestyle
         lowIndex = highIndex
@@ -428,14 +485,14 @@ def PlotWaves(omega, physics, waves = [], waveNode = [], nullspace = [], waveTra
     nh = omega.nh_max
     x = omega.xNode
     n = omega.degFreed
-    alias = omega.alias
-    if (alias < 2):
+    aliases = omega.alias
+    if (aliases < 2):
         if (alias):
             warnMess = 'alias cannot be True! There are no waves to alias.'
             print(warnLoc + warnMess)
         alias = False
     NA = nh
-    nh = int(alias * nh)
+    nh = int(aliases * nh)
     N = nh
     numPoints, font, X, savePath = UsefulPlotVals()
     if (saveName != ''):
@@ -455,7 +512,10 @@ def PlotWaves(omega, physics, waves = [], waveNode = [], nullspace = [], waveTra
         nullspace = np.eye(nh, nh)
 #         strings = omega.strings
     else:
-        N = n
+        if (aliases > 1):
+            N = np.shape(nullspace)[1]
+        else:
+            N = n
     
     
     if (waveNode != []):
@@ -473,6 +533,7 @@ def PlotWaves(omega, physics, waves = [], waveNode = [], nullspace = [], waveTra
             waveTransfer = []
         fig = PlotWave(omega, physics, numPoints, X, rescale, waveCell[:, k], waveCont[:, k], waveTrans = waveTransfer, xGrid = False, yGrid = False)
         if (alias):
+            print('alias is', alias)
             if (k >= NA):
                 kf = k
                 kc = (2 * NA) - kf
@@ -503,7 +564,7 @@ def PlotWaves(omega, physics, waves = [], waveNode = [], nullspace = [], waveTra
 # In[8]:
 
 
-def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], title = '', labels = [], waveTrans = [], sym = True, xGrid = False, yGrid = False, enlarge = False):
+def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], title = '', labels = [], waveTrans = [], sym = True, xGrid = False, yGrid = False, enlarge = False, newBounds = []):
     errorLoc = 'ERROR:\nPlotTools:\nPlotWave:\n'
     errorMess = ''
     
@@ -517,7 +578,10 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
         labelsize = 10
     
     if (fX != []):
-        yMin, yMax, tickHeight = GetYBound(fX, sym)
+        if (newBounds == []):
+            yMin, yMax, tickHeight = GetYBound(fX, sym)
+        else:
+            yMin, yMax, tickHeight = GetYBound(newBounds, sym)
         numGraphs = np.ndim(fX)
         if (waveCell is not []):
             if (numGraphs == 1):
@@ -557,7 +621,10 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
                 errorMess = 'The rank of waveCell is too high!'
 #         numGraphs = np.shape(waveCell[0, :])[0]
         if (waveCell != []):
-            yMin, yMax, tickHeight = GetYBound(waveCell, sym)
+            if (newBounds == []):
+                yMin, yMax, tickHeight = GetYBound(waveCell, sym)
+            else:
+                yMin, yMax, tickHeight = GetYBound(newBounds, sym)
         else:
             errorMess = 'Must have argument for either fX or waveCell!'
     if (labels != []):
@@ -619,7 +686,7 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
 # In[9]:
 
 
-def PlotMixedWave(omega, physics, FCoefs, waves = [], title = '', labels = [], rescale = 1, plotCont = True, sym = False, save = False, saveName = '', dpi = 600, ct = 0, xGrid = False, yGrid = False, enlarge = False):
+def PlotMixedWave(omega, physics, FCoefs, waves = [], title = '', labels = [], rescale = 1, plotCont = True, sym = False, save = False, saveName = '', dpi = 600, ct = 0, xGrid = False, yGrid = False, enlarge = False, newBounds = []):
     errorLoc = 'ERROR:\nPlotTools:\nPlotMixedWave:\n'
     nh = omega.nh_max
     degFreed = omega.degFreed
@@ -669,7 +736,7 @@ def PlotMixedWave(omega, physics, FCoefs, waves = [], title = '', labels = [], r
             fXCont = waveCont @ FCoef
         else:
             fXCont = []
-        fig = PlotWave(omega, physics, numPoints, X, rescale, fXCell, fXCont, title = title1, sym = sym, labels = labels, xGrid = xGrid, yGrid = yGrid, enlarge = enlarge)
+        fig = PlotWave(omega, physics, numPoints, X, rescale, fXCell, fXCont, title = title1, sym = sym, labels = labels, xGrid = xGrid, yGrid = yGrid, enlarge = enlarge, newBounds = newBounds)
         plt.xlim([-0.1, 1.1])
         if (save):
             if (numPlots > 1):
@@ -734,8 +801,9 @@ def FixStrings(omega, nullspace, shift):
     else:
         errorMess = BT.CheckSize(degFreed, nullspace[0, :], nName = 'degFreed', matricaName = 'nullspace')
         if (errorMess != ''):
-            sys.exit(errorLoc + errorMess)
-        N = degFreed
+            if (alias < 2):
+                sys.exit(errorLoc + errorMess)
+        N = alias * degFreed
         locations = np.where(nullspace != 0)
     stringsNew = ['' for i in range(N)]
     if (shift):
@@ -810,7 +878,7 @@ def Resize(rescale, tickHeight):
     return size, tickHeight, labelfont
 
 
-def PlotGrid(omega, rescale = 1, save = False, saveName = '', dpi = 600, enlarge = False):
+def PlotGrid(omega, rescale = 1, save = False, saveName = '', dpi = 600, enlarge = False, label = True):
     numPoints, font, X, savePath = UsefulPlotVals()
     if (saveName != ''):
         save = True
@@ -830,7 +898,7 @@ def PlotGrid(omega, rescale = 1, save = False, saveName = '', dpi = 600, enlarge
     yMin, yMax, tickHeight = GetYBound(0, True)
     size, tickHeight, labelfont = Resize(rescale, tickHeight)
     fig, ax = plt.subplots(figsize = size)
-    TickPlot(omega, ax, tickHeight, False, False, label = True, labelsize = labelsize, linewidth = linewidth)
+    TickPlot(omega, ax, tickHeight, False, False, label = label, labelsize = labelsize, linewidth = linewidth)
     plt.ylim([yMin, yMax])
     plt.show()
     if (save):
@@ -843,7 +911,7 @@ def Save(fig, saveString, dpi):
     print('This image has been saved under ' + saveString + '.')
     return
 
-def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = '', fill = False, ghost = '', var = 'v'):
+def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = '', fill = False, ghost = '', var = 'v', something = True):
     if (saveName != ''):
         save = True
     else:
@@ -861,6 +929,9 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
     if (fill):
         var = r'u'
     
+    if (not something):
+        var = ''
+    
     
     
     nh = 32
@@ -873,18 +944,24 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
             n = 6
             off = 3
         else:
-            n = 7
-            off = 2
+            if (ghost == 'G3'):
+                n = 5
+                off = 4
+            else:
+                n = 7
+                off = 2
         cells = list(np.arange(int(nh - off)) + off)
         omega.AddPatch(refRatio, cells)
         
     
-    h = omega.h[0]
+    hs = omega.h
+    h = hs[0]
     x = omega.xNode
     length = 2.5 * h
     k = 2
     move = -0.01
-    up = 0.3
+    up = 0.03 # 0.3
+    fact = 0.5
     
     
     gBlackX = length + np.linspace(-h/2, h/2, 2)
@@ -895,35 +972,72 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
     numPoints, font, X, savePath = UsefulPlotVals()
     cellVals = np.ones(numPoints, float)
     
+
     
-    Cosine = lambda x: np.cos(2. * np.pi * k * (x + move))
-    Sine = lambda x: np.sin(2. * np.pi * k * (x + move))
-    factor = 1. / (2 * pi * k * omega.h)
-    uNode = Sine(x) + up
-    uCell = factor * (Cosine(x[:-1]) - Cosine(x[1:])) + up
-    U = Sine(X) + up
-    xCell = omega.xCell
+    
+    
+    
+    Cosine = lambda x: fact * np.cos(2. * np.pi * k * (x + move))
+    Sine = lambda x: fact * np.sin(2. * np.pi * k * (x + move))
+    factor = 1. / (2 * pi * k)
+    
+    uNode = x * Sine(x) + up
+    U = X * Sine(X) + up
+    term1 = (factor ** 2) * (Sine(x[1:]) - Sine(x[:-1]))
+    term2 = factor * (x[:-1] * (Cosine(x[:-1])) - (x[1:] * Cosine(x[1:])))
+    uCell = ((term1 + term2) / hs) + up
+    if (something):
+        yMin, yMax, tickHeight = GetYBound(uNode[1:n + 1], False) # This started out as just n.
+    else:
+        yMin, yMax, tickHeight = GetYBound(0, True)
+    
+    if ((matVis == 'R2') or (matVis == 'L2')):
+        uNode = uNode[1:]
+        uCell = uCell[1:]
+        newXInds = np.where(X > h)[0]
+        U = U[newXInds]
+        numPoints = len(newXInds)
+        X = X[:numPoints]
+#         print('U:', len(U))
+#         print('X:', len(X))
+#         print(X)
+#         print('gBlackX Before:', gBlackX / h)
+#         gBlackX = gBlackX + h
+#         print('gBlackX After:', gBlackX / h)
+    
+    
+#     factor = 1. / (2 * pi * k * omega.h)
+    
+#     uNode = Sine(x) + up
+#     uCell = factor * (Cosine(x[:-1]) - Cosine(x[1:])) + up
+#     U = Sine(X) + up
+    
+    
+#     xCell = omega.xCell
     fig, ax = plt.subplots()
-    numPoints, font, X, savePath = UsefulPlotVals()
-    yMin, yMax, tickHeight = GetYBound(uNode[1:n], False)
-    TickPlot(omega, ax, tickHeight, False, False, u = uNode, labelsize = labelsize, linewidth = linewidth, matVis = matVis, fill = fill, var = var, ghost = ghost)
+#     numPoints, font, X, savePath = UsefulPlotVals()
+    
+    print('yMax:', yMax)
+    print(uNode[1:n+1])
+    TickPlot(omega, ax, tickHeight, False, False, u = uNode, labelsize = labelsize, linewidth = linewidth, matVis = matVis, fill = fill, var = var, ghost = ghost, something = something)
     if (matVis == 'R1'):
         var = r'R_{1}'
         matInd = np.where(X <= gBlackX[-1])[0][-1]
         XL = X[:matInd]
         UL = U[:matInd]
-        plt.plot(XL, UL, color = ColorDefault(0), zorder = 0, linewidth = linewidth)
+        if (something):
+            plt.plot(XL, UL, color = ColorDefault(0), zorder = 0, linewidth = linewidth)
+            plt.scatter(x[1:n], uNode[1:n], s = 20, color = ColorDefault(2), zorder = 4)
         plt.quiver([length + (h / 2)], [0], [-length - (h / 2)], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
-        plt.scatter(x[1:n], uNode[1:n], s = 20, color = ColorDefault(2), zorder = 4)
     else:
         if (matVis == 'L2'):
             var = r'L_{2}'
             matInd = np.where(X >= gBlackX[0])[0][0]
-            XR = X[matInd:]
-            UR = U[matInd:]
-            plt.plot(XR, UR, color = ColorDefault(0), zorder = 0, linewidth = linewidth)
+            if (something):
+                plt.plot(XR, UR, color = ColorDefault(0), zorder = 0, linewidth = linewidth)
+                plt.scatter(x[2:n + 1], uNode[2:n + 1], s = 20, color = ColorDefault(2), zorder = 4)
             plt.quiver([length - (h / 2)], [0], [length + (h / 2)], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
-            plt.scatter(x[2:n + 1], uNode[2:n + 1], s = 20, color = ColorDefault(2), zorder = 4)
+            
         else:
             if (matVis == 'R2'):
                 var = r'R_{2}'
@@ -932,15 +1046,16 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
                 XR = X[matInd:]
                 UL = U[:matInd]
                 UR = U[matInd:]
-                plt.plot(XL, UL, color = ColorDefault(0), zorder = 0, linewidth = linewidth, linestyle = '--')
-                plt.plot(XR, UR, color = ColorDefault(0), zorder = 0, linewidth = linewidth)
                 gBlackX = gBlackX - h
+                if (something):
+                    plt.plot(XL, UL, color = ColorDefault(0), zorder = 0, linewidth = linewidth, linestyle = '--')
+                    plt.plot(XR, UR, color = ColorDefault(0), zorder = 0, linewidth = linewidth)
+                    plt.plot(gBlackX, gBlackY, color = 'k', linestyle = '--', zorder = 0)
+                    plt.scatter(x[2:n + 1], uNode[2:n + 1], s = 20, color = ColorDefault(2), zorder = 4)
+                    plt.scatter(x[1], uNode[1], s = 20, facecolors = 'none', edgecolors = ColorDefault(2), zorder = 4)
+                
                 plt.quiver([length - (h / 2)], [0], [length + (h / 2)], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
-                plt.plot(gBlackX, gBlackY, color = 'k', linestyle = '--', zorder = 0)
-                # SPLENDID
-#                 plt.plot(gBlackX, gBlackY - 0.075, color = ColorDefault(4), linestyle = '--', zorder = 0, dashes = [2.75, 2.5], dash_capstyle = 'projecting')
-                plt.scatter(x[2:n + 1], uNode[2:n + 1], s = 20, color = ColorDefault(2), zorder = 4)
-                plt.scatter(x[1], uNode[1], s = 20, facecolors = 'none', edgecolors = ColorDefault(2), zorder = 4)
+                
             else:
                 if (matVis == 'L1'):
                     var = r'L_{1}'
@@ -949,13 +1064,15 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
                     XR = X[matInd:]
                     UL = U[:matInd]
                     UR = U[matInd:]
-                    plt.plot(XL, UL, color = ColorDefault(0), zorder = 0, linewidth = linewidth)
-                    plt.plot(XR, UR, color = ColorDefault(0), zorder = 0, linewidth = linewidth, linestyle = '--')
                     gBlackX = gBlackX + h
+                    if (something):
+                        plt.plot(XL, UL, color = ColorDefault(0), zorder = 0, linewidth = linewidth)
+                        plt.plot(XR, UR, color = ColorDefault(0), zorder = 0, linewidth = linewidth, linestyle = '--')
+                        plt.plot(gBlackX, gBlackY, color = 'k', linestyle = '--', zorder = 0)
+                        plt.scatter(x[1:n], uNode[1:n], s = 20, color = ColorDefault(2), zorder = 4)
+                        plt.scatter(x[n], uNode[n], s = 20, facecolors = 'none', edgecolors = ColorDefault(2), zorder = 4)
                     plt.quiver([length + (h / 2)], [0], [-length - (h / 2)], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
-                    plt.plot(gBlackX, gBlackY, color = 'k', linestyle = '--', zorder = 0)
-                    plt.scatter(x[1:n], uNode[1:n], s = 20, color = ColorDefault(2), zorder = 4)
-                    plt.scatter(x[n], uNode[n], s = 20, facecolors = 'none', edgecolors = ColorDefault(2), zorder = 4)
+                    
                 else:
                     if (ghost == 'G2'):
                         g = 2
@@ -963,13 +1080,10 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
                         lowIndex = np.where(X <= x[g])[0][::-1][0] + 1
                         highIndex = np.where(X <= x[g + 2])[0][::-1][0] + 1
                         cellVals[lowIndex:highIndex] = gVal * cellVals[lowIndex:highIndex]
-                        topString = r'$\left<' + var + r'\right>_{j - 1}$'
+                        topString = r'$\left<' + var + r'^{(l - 1)}\right>_{j - 1}$'
                         shiftY = tickHeight / 3
-                        xLoc = X[lowIndex] - 0.001
+                        xLoc = X[lowIndex] - 0.01
                         yLoc = gVal + shiftY
-                        print('what I have:', shiftY, gVal)
-                        
-                        
                         matInd1 = np.where(X >= gBlackX[0])[0][0]
                         matInd2 = np.where(X <= gBlackX[-1])[0][-1]
                         XL = X[:matInd1]
@@ -978,26 +1092,31 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
                         UL = U[:matInd1]
                         UM = U[matInd1:matInd2]
                         UR = U[matInd2:]
-                        plt.plot(XL, UL, color = ColorDefault(0), zorder = 0, linewidth = linewidth)
-                        plt.plot(XM, UM, color = ColorDefault(0), zorder = 0, linewidth = linewidth, linestyle = '--')
-                        plt.plot(XR, UR, color = ColorDefault(0), zorder = 0, linewidth = linewidth)
+                        if (something):
+                            plt.plot(XL, UL, color = ColorDefault(0), zorder = 0, linewidth = linewidth)
+                            plt.plot(XM, UM, color = ColorDefault(0), zorder = 0, linewidth = linewidth, linestyle = '--')
+                            plt.plot(XR, UR, color = ColorDefault(0), zorder = 0, linewidth = linewidth)
+                            #                         plt.plot(gBlackX, gBlackY, color = 'k', linestyle = '--', zorder = 2)
+    #                         plt.quiver([length + (h / 2)], [0], [length - (h / 2)], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
+    #                         plt.quiver([length - (h / 2)], [0], [-length + (h / 2)], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
+                            plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(3), linestyle = '-', zorder = 3, linewidth = linewidth)
+                            plt.scatter(x[4:n + 1], uNode[4:n + 1], s = 20, color = ColorDefault(2), zorder = 4)
+                            plt.scatter(x[3], uNode[3], s = 20, facecolors = 'none', edgecolors = ColorDefault(2), zorder = 4)
+                            plt.scatter(x[1:3], uNode[1:3], s = 20, color = ColorDefault(2), zorder = 4)
+                            plt.text(xLoc, yLoc, topString, fontsize = 11, zorder = 5)
+                    
                         plt.quiver([length], [0], [length], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
                         plt.quiver([length], [0], [-length], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
-#                         plt.plot(gBlackX, gBlackY, color = 'k', linestyle = '--', zorder = 2)
-#                         plt.quiver([length + (h / 2)], [0], [length - (h / 2)], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
-#                         plt.quiver([length - (h / 2)], [0], [-length + (h / 2)], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
-                        plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(3), linestyle = '-', zorder = 3, linewidth = linewidth)
-                        plt.scatter(x[4:n + 1], uNode[4:n + 1], s = 20, color = ColorDefault(2), zorder = 4)
-                        plt.scatter(x[3], uNode[3], s = 20, facecolors = 'none', edgecolors = ColorDefault(2), zorder = 4)
-                        plt.scatter(x[1:3], uNode[1:3], s = 20, color = ColorDefault(2), zorder = 4)
-                        plt.text(xLoc, yLoc, topString, fontsize = 11, zorder = 5)
+
                     else:
                         plt.quiver([length], [0], [length], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
                         plt.quiver([length], [0], [-length], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
-                        plt.plot(X, U, color = ColorDefault(0), zorder = 0, linewidth = linewidth)
-                        plt.scatter(x[1:n + 1], uNode[1:n + 1], s = 20, color = ColorDefault(2), zorder = 4)
-    PiecePlot(omega, numPoints, X, uCell, tickHeight = tickHeight, linewidth = linewidth, matVis = matVis, fill = fill, var = var, ghost = ghost)
-    if (fill):
+                        if (something):
+                            plt.plot(X, U, color = ColorDefault(0), zorder = 0, linewidth = linewidth)
+                            plt.scatter(x[1:n + 1], uNode[1:n + 1], s = 20, color = ColorDefault(2), zorder = 4)
+    if (something):
+        PiecePlot(omega, numPoints, X, uCell, tickHeight = tickHeight, linewidth = linewidth, matVis = matVis, fill = fill, var = var, ghost = ghost)
+    if (fill and something):
         plt.fill_between(X, 0, U, color = ColorDefault(0), alpha = 0.1)
     
     plt.xlim([-0.1 * length, 2 * length])
