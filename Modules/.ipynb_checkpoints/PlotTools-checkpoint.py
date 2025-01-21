@@ -332,7 +332,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
     plt.tick_params(reset = True, axis = 'x', which = 'both', bottom = False, top = False, labelbottom = xGrid, labelsize = labelsize)
     plt.tick_params(reset = True, axis = 'y', which = 'both', left = False, right = False, labelleft = yGrid, labelsize = labelsize)
     print('I\'M RUNNING!!!!!')
-    # ax.spines[['top', 'bottom', 'left', 'right']].set_visible(False) # THIS WAS ADDED AFTER PYTHON UPDATE!!!
+    ax.spines[['top', 'bottom', 'left', 'right']].set_visible(False) # THIS WAS ADDED AFTER PYTHON UPDATE!!!
     if (xGrid): # THIS WAS ADDED AFTER PYTHON UPDATE!!!
         ax.grid(visible = xGrid, zorder = -1, axis = 'x') # THIS WAS ADDED AFTER PYTHON UPDATE!!!
     if (yGrid): # THIS WAS ADDED AFTER PYTHON UPDATE!!!
