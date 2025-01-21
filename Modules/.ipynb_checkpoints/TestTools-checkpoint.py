@@ -26,6 +26,14 @@ from Modules import OperatorTools as OT
 from Modules import GridTransferTools as GTT
 from Modules import SolverTools as ST
 
+# ChatGPT: Override numpy's round with a custom implementation
+def round_half_up(value, decimals=0):
+    factor = 10 ** decimals
+    return np.floor(value * factor + 0.5) / factor if value > 0 else np.ceil(value * factor - 0.5) / factor
+
+# Vectorize the custom rounding function to handle arrays
+np.round = np.vectorize(round_half_up)
+
 
 # This function calculates either the absolute or percent error between the theoretical and actual solutions.
 

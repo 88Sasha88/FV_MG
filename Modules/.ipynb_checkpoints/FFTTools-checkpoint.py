@@ -18,6 +18,14 @@ from Modules import OperatorTools as OT
 from Modules import WaveTools as WT
 from Modules import GridTransferTools as GTT
 
+# ChatGPT: Override numpy's round with a custom implementation
+def round_half_up(value, decimals=0):
+    factor = 10 ** decimals
+    return np.floor(value * factor + 0.5) / factor if value > 0 else np.ceil(value * factor - 0.5) / factor
+
+# Vectorize the custom rounding function to handle arrays
+np.round = np.vectorize(round_half_up)
+
 
 # This function creates a matrix of the coefficients for our wave functions at the respective locations of the FFT values.
 

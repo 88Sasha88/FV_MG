@@ -20,6 +20,15 @@ from Modules import BasicTools as BT
 from Modules import GridTransferTools as GTT
 
 
+# ChatGPT: Override numpy's round with a custom implementation
+def round_half_up(value, decimals=0):
+    factor = 10 ** decimals
+    return np.floor(value * factor + 0.5) / factor if value > 0 else np.ceil(value * factor - 0.5) / factor
+
+# Vectorize the custom rounding function to handle arrays
+np.round = np.vectorize(round_half_up)
+
+
 # This function normalizes the vectors of a matrix. As the default, it normalizes the column vectors. To change to row vectors, set axis equal to 1.
 
 
@@ -415,7 +424,7 @@ def CDStencil(orderIn):
     coefs = np.zeros(loops)
     stenc = np.zeros(order + 1)
     terms = np.arange(order + 1)
-    rCell = np.asarray([1 / sp.math.factorial(j) for j in terms])
+    rCell = np.asarray([1 / np.math.factorial(j) for j in terms])
     lCell = rCell + 0
     lCell[1::2] = -lCell[1::2]
     deltaXFunc = lambda k: k ** terms
@@ -444,7 +453,7 @@ def UDStencil1(order):
     coefs = np.zeros(order + 1)
     stenc = np.zeros(order + 1)
     terms = np.arange(order + 1)
-    cell = np.asarray([1 / sp.math.factorial(j) for j in terms])
+    cell = np.asarray([1 / np.math.factorial(j) for j in terms])
     deltaXFunc = lambda k: k ** terms
     tExp = [[] for j in range(order + 1)]
     for k in range(order + 1):
