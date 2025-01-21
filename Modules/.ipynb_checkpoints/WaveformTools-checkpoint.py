@@ -133,7 +133,7 @@ def Reflect(omega, physics, func, args, t, cellAve = True, BooleAve = False, der
     if (func == GaussPacket):
         BooleAve = True
     if (BooleAve and cellAve):
-        x = BoolesX(omega, physics, t, adv = False) # REFLECTION HERE!!!
+        x = BoolesX(omega, physics, t)#, adv = False) # REFLECTION HERE!!!
         # I set cellAve to False because that changes the function for the Gaussian, and I want the
         # Gaussian to be calculated directly if I'm using Boole's Rule.
         waveFuncPre = func(omega, x, *args, deriv = deriv, cellAve = False, tol = tol)
@@ -264,13 +264,13 @@ def Gauss(omega, x, sigma, mu, deriv, cellAve, tol = 1e-15):
 # x                       np.ndarray              x values needed to calculate Boole's cell averages on AMR grid
 # ----------------------------------------------------------------------------------------------------------------
 
-def BoolesX(omega, physics, t, adv = True):
+def BoolesX(omega, physics, t):#, adv = True):
     # BOOLES X MIGHT NOT BE EFFECTIVELY SET UP FOR SHIFTX FUNCTION!!!
     print('BoolesX:', adv)
     if (t == 0):
         xNode = omega.xNode
     else:
-        xNode = ShiftX(omega, physics, t, adv = adv)
+        xNode = ShiftX(omega, physics, t)#, adv = adv)
     x = xNode
 #     h = omega.h
     xL = x[:-1]
