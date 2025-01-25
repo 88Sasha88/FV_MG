@@ -72,7 +72,7 @@ def DrawLine(xCenter, yCenter, tickHeight, center = True):
 # In[4]:
 
 
-def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsize = 10, linewidth = 1.5, matVis = False, fill = False, var = var, ghost = '', something = True):
+def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsize = 10, linewidth = 1.5, matVis = False, fill = False, var = var, ghost = '', something = True, shift = 0):
 #     if (enlarge):
 #         labelsize = 25
 #         linewidth = 4
@@ -85,7 +85,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
         ax.grid(True, axis = 'y', zorder = 0)
     if (xGrid):
         ax.grid(True, axis = 'x', zorder = 0)
-    xAxis = omega.xNode
+    xAxis = omega.xNode + shift
     yAxis = omega.y
 
     xCell = omega.xCell
@@ -170,7 +170,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                     istring = prestring + r'$n$'
                     shiftExtra = shiftX
                 plt.text(xi - shiftX - shiftExtra, yi - (1.5 * shiftY), istring, fontsize = fontsize)
-        if ( u != []):
+        if (u != []):
             if (i == 0):
                 color = 2
                 topString = r'$' + var + r'_{' + side + ind + r' - 1}$'
@@ -331,7 +331,6 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
         ax.plot(xAxis, yAxis, color = 'k', zorder = 2, linewidth = linewidth)
     plt.tick_params(reset = True, axis = 'x', which = 'both', bottom = False, top = False, labelbottom = xGrid, labelsize = labelsize)
     plt.tick_params(reset = True, axis = 'y', which = 'both', left = False, right = False, labelleft = yGrid, labelsize = labelsize)
-    print('I\'M RUNNING!!!!!')
     ax.spines[['top', 'bottom', 'left', 'right']].set_visible(False) # THIS WAS ADDED AFTER PYTHON UPDATE!!!
     if (xGrid): # THIS WAS ADDED AFTER PYTHON UPDATE!!!
         ax.grid(visible = xGrid, zorder = -1, axis = 'x') # THIS WAS ADDED AFTER PYTHON UPDATE!!!
