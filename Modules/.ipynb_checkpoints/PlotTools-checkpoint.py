@@ -72,7 +72,7 @@ def DrawLine(xCenter, yCenter, tickHeight, center = True):
 # In[4]:
 
 
-def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsize = 10, linewidth = 1.5, matVis = False, fill = False, var = var, ghost = '', something = True, shift = 0):
+def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsize = 10, linewidth = 1.5, matVis = False, fill = False, var = var, ghost = '', something = True):
 #     if (enlarge):
 #         labelsize = 25
 #         linewidth = 4
@@ -85,7 +85,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
         ax.grid(True, axis = 'y', zorder = 0)
     if (xGrid):
         ax.grid(True, axis = 'x', zorder = 0)
-    xAxis = omega.xNode + shift
+    xAxis = omega.xNode
     yAxis = omega.y
 
     xCell = omega.xCell

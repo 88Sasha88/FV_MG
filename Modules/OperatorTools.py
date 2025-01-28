@@ -1035,7 +1035,7 @@ def FaceOp(omega, order, diff, RL, Ng, otherFace = False, AMROverride = False, w
 
 
 
-def FaceOp1(omega, order, diff, RL, Ng, otherFace = False, AMROverride = False, wrapAround = True):
+def FaceOp1(omega, order, diff, RL, Ng, otherFace = False, AMROverride = False):
     errorLoc = 'ERROR:\nOperatorTools:\nFaceOp:\n'
     errorMess = ''
     
@@ -1095,12 +1095,14 @@ def FaceOp1(omega, order, diff, RL, Ng, otherFace = False, AMROverride = False, 
         p = []
         q = []
         NU = False
-        print('THIS FACE OPERATOR IS UNIFORM!')
+        print('THIS OPERATOR IS UNIFORM!')
     else:
         # Index before fine-coarse interface
         p = np.where(spots > 0)[0][0]
         # Index before coarse-fine interface
         q = np.where(spots < 0)[0][0]
+        print('p:', p)
+        print('q:', q)
         NU = True
 
     if (otherFace):
@@ -1158,23 +1160,13 @@ def FaceOp1(omega, order, diff, RL, Ng, otherFace = False, AMROverride = False, 
                 pLo = (p + Ng - 1) % (degFreed + 2 * Ng) # (p - 1) % degFreed
                 qAt = (q - s + Ng + 1) % (degFreed + 2 * Ng) # (q - s + 1) % degFreed #(q + 1) % degFreed
                 for i in range (s):
-                    if ((pAt >= 0) and (pAt < (degFreed + 2 * Ng)) and (pLo >= 0) and (pLo < (degFreed - 2 + 2 * Ng))):
-                        polyMat[pAt, :] = 0
-                        polyMat[pAt, pLo:pLo+2] = 0.5
-                    if ((qAt >= 0) and (qAt < (degFreed + 2 * Ng))):
-                        polyMat[qAt, :] = polyStencSet[j, :]
-                    if (wrapAround):
-                        print('Yes wraparound!')
-                        pAt = (pAt - 1) % (degFreed + 2 * Ng) # (pAt - 1) % degFreed
-                        pLo = (pLo - 2) % (degFreed + 2 * Ng) # (pLo - 2) % degFreed
-                        qAt = (qAt + 1) % (degFreed + 2 * Ng) # (qAt + 1) % degFreed
-                    else:
-                        print('No wraparound!')
-                        pAt = pAt - 1
-                        pLo = pLo - 2
-                        qAt = qAt + 1
+                    polyMat[pAt, :] = 0
+                    polyMat[pAt, pLo:pLo+2] = 0.5
+                    polyMat[qAt, :] = polyStencSet[j, :]
+                    pAt = (pAt - 1) % (degFreed + 2 * Ng) # (pAt - 1) % degFreed
+                    pLo = (pLo - 2) % (degFreed + 2 * Ng) # (pLo - 2) % degFreed
+                    qAt = (qAt + 1) % (degFreed + 2 * Ng) # (qAt + 1) % degFreed
                     j = int(j + 1)
-                    
 
             if (s < 0):
                 j = int(off) # - s - 1
@@ -1182,21 +1174,12 @@ def FaceOp1(omega, order, diff, RL, Ng, otherFace = False, AMROverride = False, 
                 qLo = (q + Ng + 1) % (degFreed + 2 * Ng) # (q + 1) % degFreed
                 pAt = (p + Ng + 1) % (degFreed + 2 * Ng) # (p + 1) % degFreed
                 for i in range(abs(s)):
-                    if ((pAt >= 0) and (pAt < (degFreed + 2 * Ng)) and (pLo >= 0) and (pLo < (degFreed - 2 + 2 * Ng))):
-                        polyMat[qAt, :] = 0
-                        polyMat[qAt, qLo:qLo+2] = 0.5
-                    if ((qAt >= 0) and (qAt < (degFreed + 2 * Ng))):
-                        polyMat[pAt, :] = polyStencSet[j, :]
-                    if (wrapAround):
-                        print('Yes wraparound!')
-                        qAt = (qAt + 1) % (degFreed + 2 * Ng) # (qAt + 1) % degFreed
-                        qLo = (qLo + 2) % (degFreed + 2 * Ng) # (qLo + 2) % degFreed
-                        pAt = (pAt + 1) % (degFreed + 2 * Ng) # (pAt + 1) % degFreed
-                    else:
-                        print('No wraparound!')
-                        qAt = qAt + 1
-                        qLo = qLo + 2
-                        pAt = pAt + 1
+                    polyMat[qAt, :] = 0
+                    polyMat[qAt, qLo:qLo+2] = 0.5
+                    polyMat[pAt, :] = polyStencSet[j, :]
+                    qAt = (qAt + 1) % (degFreed + 2 * Ng) # (qAt + 1) % degFreed
+                    qLo = (qLo + 2) % (degFreed + 2 * Ng) # (qLo + 2) % degFreed
+                    pAt = (pAt + 1) % (degFreed + 2 * Ng) # (pAt + 1) % degFreed
                     j = int(j + 1) # - 1
         
         matThis = derivMat @ polyMat

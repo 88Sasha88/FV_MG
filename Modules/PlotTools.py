@@ -86,7 +86,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
     if (xGrid):
         ax.grid(True, axis = 'x', zorder = 0)
     xAxis = omega.xNode
-    yAxis = omega.y + ShiftY
+    yAxis = omega.y
 
     xCell = omega.xCell
     nh = omega.nh_max
