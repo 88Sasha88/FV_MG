@@ -90,6 +90,9 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
 
     xCell = omega.xCell
     nh = omega.nh_max
+    degFreed = omega.degFreed
+    levels = omega.levels
+    bigN = len(omega.cells[-1])
     shiftX = 0.025
     shiftY = tickHeight
     extraShift = 0
@@ -145,8 +148,8 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
         if ((xi == 0) or (xi == 1)):
             height = tickHeight
             shiftY = tickHeight
-            if (label):
-                plt.text(xi - shiftX, yi + shiftY, int(xi), fontsize = fontsize)
+            if ((label) and (levels == 0)):
+                plt.text(xi - shiftX/2, yi + shiftY, int(xi), fontsize = fontsize)
         else:
             height = tickHeight / 2
 #             print('height:', height)
@@ -159,16 +162,32 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
             ax.plot(xs, ys, color = 'k', zorder = 2, linewidth = linewidth)
             
         if (label):
-            if ((i < 3) or (i > nh - 2)):
+            if (levels == 0):
+                imax = 3
+                imin = degFreed - 2
+            else:
+                imax = 5
+                imin = degFreed - 1
+            if ((i < imax) or (i > imin)):
                 prestring = r'$j = $'
                 istring = prestring + str(i)
-                shiftExtra = 2 * shiftX
-                if (i == nh - 1):
-                    istring = prestring + r'$n - 1$'
-                    shiftExtra = 4 * shiftX
-                if (i == nh):
-                    istring = prestring + r'$n$'
-                    shiftExtra = shiftX
+                shiftExtra = shiftX
+                if (levels > 0):
+                    if (i != 0):
+                        if (i == imax - 1):
+                            istring = prestring + r'$r N^{(1)}$'
+                        else:
+                            if (i == degFreed):
+                                istring = prestring + r'$\overline{n}^{(1)}$'
+                            else:
+                                istring = ''
+                else:
+                    if (i == degFreed - 1):
+                        istring = prestring + r'$n - 1$'
+                        shiftExtra = 4 * shiftX
+                    if (i == degFreed):
+                        istring = prestring + r'$n$'
+                        # shiftExtra = shiftX
                 plt.text(xi - shiftX - shiftExtra, yi - (1.5 * shiftY), istring, fontsize = fontsize)
         if (u != []):
             if (i == 0):
@@ -421,9 +440,9 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
                                 if (ghost == 'G2'):
                                     shiftX = 1.5 * shiftX
                                     shiftY = shiftY - 0.015
-                                    level = r'^{(l)}'
+                                    level = r'^{(l) *}'
                                     levShift = levShift / 5
-                                    topString = r'$\left<\tilde{' + var + r'}' + level + r'\right>_{2' + ind + r' - 2}$' # I can't star this probably because of level.
+                                    topString = r'$\left<' + var + level + r'\right>_{2' + ind + r' - 2}$' # I can't star this probably because of level.
                                     LS = '--'
                                 else:
                                     topString = r'$\left<' + var + level + r'\right>_{' + ind + r' - 1}$'
@@ -445,8 +464,10 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
                                             if (ghost == 'G2'):
                                                 levShift = levShift / 200
                                                 shiftY = shiftY + 0.015
-                                                topString = r'$\left<\tilde{' + var + r'}' + level + r'\right>_{2' + ind + r' - 1}$' # I can't star this probably because of level.
+                                                level = r'^{(l) *}'
+                                                topString = r'$\left<' + var + level + r'\right>_{2' + ind + r' - 1}$' # I can't star this probably because of level.
                                                 LS = '--'
+                                                level = r'^{(l)}'
                                             else:
                                                 if (ghost == 'G1'):
                                                     level = r'^{(l)}'
@@ -558,7 +579,7 @@ def PlotWaves(omega, physics, waves = [], waveNode = [], nullspace = [], waveTra
                 waveTransfer = waveTrans[:, k]
         else:
             waveTransfer = []
-        fig = PlotWave(omega, physics, numPoints, X, rescale, waveCell[:, k], waveCont[:, k], waveTrans = waveTransfer, xGrid = False, yGrid = False)
+        fig = PlotWave(omega, physics, numPoints, X, rescale, waveCell[:, k], waveCont[:, k], waveTrans = waveTransfer, xGrid = False, yGrid = False, enlarge = enlarge)
         if (alias):
             print('alias is', alias)
             if (k >= NA):
@@ -595,14 +616,16 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
     errorLoc = 'ERROR:\nPlotTools:\nPlotWave:\n'
     errorMess = ''
     
-    if (enlarge):
-        linewidth = 4
-        fontsize = 35
-        labelsize = 25
-    else:
-        linewidth = 1.5
-        fontsize = 25
-        labelsize = 10
+    # if (enlarge):
+    #     linewidth = 4
+    #     fontsize = 35
+    #     labelsize = 25
+    # else:
+    #     linewidth = 1.5
+    #     fontsize = 25
+    #     labelsize = 10
+
+    linewidth, fontsize, labelsize = Enlarge(enlarge)
     
     if (fX != []):
         if (newBounds == []):
@@ -703,7 +726,7 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
     for loc in locs:
         locx = loc * np.ones(2)
         locy = np.linspace(yMin, yMax, num = 2)
-        plt.plot(locx, locy, color = 'k', zorder = 1, linewidth = linewidth)
+        plt.plot(locx, locy, color = ColorDefault(2), zorder = 1.5, linewidth = linewidth)
     plt.ylim([yMin, yMax])
     return fig
 
@@ -912,14 +935,16 @@ def PlotGrid(omega, rescale = 1, save = False, saveName = '', dpi = 600, enlarge
     else:
         saveName = 'Grid'
     
-    if (enlarge):
-        linewidth = 4
-        fontsize = 35
-        labelsize = 25
-    else:
-        linewidth = 1.5
-        fontsize = 25
-        labelsize = 10
+    # if (enlarge):
+    #     linewidth = 4
+    #     fontsize = 35
+    #     labelsize = 25
+    # else:
+    #     linewidth = 1.5
+    #     fontsize = 25
+    #     labelsize = 10
+
+    linewidth, fontsize, labelsize = Enlarge(enlarge)
     
     saveString = savePath + saveName
     yMin, yMax, tickHeight = GetYBound(0, True)
@@ -944,14 +969,16 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
     else:
         saveName = 'DivergenceVisual'
     
-    if (enlarge):
-        linewidth = 4
-        fontsize = 35
-        labelsize = 25
-    else:
-        linewidth = 1.5
-        fontsize = 25
-        labelsize = 10
+    # if (enlarge):
+    #     linewidth = 4
+    #     fontsize = 35
+    #     labelsize = 25
+    # else:
+    #     linewidth = 1.5
+    #     fontsize = 25
+    #     labelsize = 10
+
+    linewidth, fontsize, labelsize = Enlarge(enlarge)
     
     if (fill):
         var = r'u'
@@ -1157,5 +1184,17 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
         saveString = savePath + saveName
         Save(fig, saveString, dpi)
     return
+
+
+def Enlarge(enlarge):
+    if (enlarge):
+        linewidth = 4
+        fontsize = 35
+        labelsize = 30
+    else:
+        linewidth = 1.5
+        fontsize = 25
+        labelsize = 10
+    return linewidth, fontsize, labelsize
 
 

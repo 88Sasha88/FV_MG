@@ -20,13 +20,13 @@ from Modules import BasicTools as BT
 from Modules import GridTransferTools as GTT
 
 
-# ChatGPT: Override numpy's round with a custom implementation
-def round_half_up(value, decimals=0):
-    factor = 10 ** decimals
-    return np.floor(value * factor + 0.5) / factor if value > 0 else np.ceil(value * factor - 0.5) / factor
+# # ChatGPT: Override numpy's round with a custom implementation
+# def round_half_up(value, decimals=0):
+#     factor = 10 ** decimals
+#     return np.floor(value * factor + 0.5) / factor if value > 0 else np.ceil(value * factor - 0.5) / factor
 
-# Vectorize the custom rounding function to handle arrays
-np.round = np.vectorize(round_half_up)
+# # Vectorize the custom rounding function to handle arrays
+# np.round = np.vectorize(round_half_up)
 
 
 # This function normalizes the vectors of a matrix. As the default, it normalizes the column vectors. To change to row vectors, set axis equal to 1.
@@ -768,6 +768,13 @@ def GhostCellsJump(omega, physics, phiavg, Ng, P):
     phi2 = phiavg[int(matInd-P)+ix2] # phi avg in domain 2
 #     print('data cells 2:', phi2)
     B = Block([A[ix,:], A[ix2,:]]) # add the fit to the matrix
+    print('B=\n', B)
+    print('')
+    print('BEFORE')
+    print('A[ix,:]=\n', A[ix,:])
+    print('')
+    print('A[ix2,:]=\n', A[ix2,:])
+    print('')
     addOn = np.zeros(2 * P, float)
     addOn[0] = 1
     addOn[P] = -1
@@ -782,9 +789,22 @@ def GhostCellsJump(omega, physics, phiavg, Ng, P):
     ix = P+np.arange(Ng)
     phig1 = A[ix,:]@phic[:P]
 
+    print('MIDWAY')
+    print('A[ix,:]=\n', A[ix,:])
+    print('')
+
     # Evaluate the phi2 ghost cell values
     ix = np.arange(P-Ng, P)
     phig2 = A[ix,:]@phic[P:2*P]
+
+    print('AFTER')
+    print('A[ix,:]=\n', A[ix,:])
+    print('')
+
+    print('phic:', phic[P:2*P])
+    print('phig2 Option 1:', A[ix,:]@phic[P:2*P])
+    print('phig2 Option 2:', A[ix2,:]@phic[P:2*P])
+    
     
 #     print('output array 1:', np.shape(phig1))
 #     print('output array 2:', np.shape(phig2))
