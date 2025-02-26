@@ -23,34 +23,37 @@ from Modules import WaveTools as WT
 
 
 def ColorDefault(k):
-    if (k == 0):
-        color = '#1f77b4'  # blue
+    if (k == 0.5):
+        color = 'k'
     else:
-        if (k % 9 == 0):
-            color = '#17becf'  # cyan
+        if (k == 0):
+            color = '#1f77b4'  # blue
         else:
-            if (k % 8 == 0):
-                color = '#bcbd22'  # sickly greenish tan
+            if (k % 9 == 0):
+                color = '#17becf'  # cyan
             else:
-                if (k % 7 == 0):
-                    color = '#7f7f7f'  # grey
+                if (k % 8 == 0):
+                    color = '#bcbd22'  # sickly greenish tan
                 else:
-                    if (k % 6 == 0):
-                        color = '#e377c2'  # pink
+                    if (k % 7 == 0):
+                        color = '#7f7f7f'  # grey
                     else:
-                        if (k % 5 == 0):
-                            color = '#8c564b'  # brown
+                        if (k % 6 == 0):
+                            color = '#e377c2'  # pink
                         else:
-                            if (k % 4 == 0):
-                                color = '#9467bd'  # purple
+                            if (k % 5 == 0):
+                                color = '#8c564b'  # brown
                             else:
-                                if (k % 3 == 0):
-                                    color = '#d62728'  # red
+                                if (k % 4 == 0):
+                                    color = '#9467bd'  # purple
                                 else:
-                                    if (k % 2 == 0):
-                                        color = '#2ca02c'  # green
+                                    if (k % 3 == 0):
+                                        color = '#d62728'  # red
                                     else:
-                                        color = '#ff7f0e'  # orange
+                                        if (k % 2 == 0):
+                                            color = '#2ca02c'  # green
+                                        else:
+                                            color = '#ff7f0e'  # orange
     return color
 
 
@@ -221,6 +224,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                     
                     if ((matVis == 'R2') or (matVis == 'L2')):
                         LS = '-'
+                        color = 0.5
                     shiftX = shiftX / 2
                     extraShift = 0.002
                     topString = r'$' + var + r'_{' + side + ind + r'}$'
@@ -253,6 +257,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                     if (i == 2):
                         if ((matVis == 'R1') or (matVis == 'L1')):# or (ghost == 'G1')):
                             LS = '-'
+                            color = 0.5
                             L1R1bot = 0.002
                             botString = r'$x_{' + ind + r'}$'
                         else:
@@ -337,6 +342,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                 if (((i != 0) or (matVis != 'L2')) and ((i != 3) or (matVis != 'R1')) and something):
                     (xs, ys) = DrawLine(xi, yi, u[i + 1], center = False)
                     ax.plot(xs, ys, color = ColorDefault(color), zorder = 1, linestyle = LS)
+                    color = 2
                 LS = ':'
                 if ((ghost == '') and something):
                     plt.text(xi - shiftX + scootch, u[i + 1] + (shiftY / 3), topString, fontsize = fontsize, zorder = 6)
@@ -726,7 +732,7 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
     for loc in locs:
         locx = loc * np.ones(2)
         locy = np.linspace(yMin, yMax, num = 2)
-        plt.plot(locx, locy, color = ColorDefault(2), zorder = 1.5, linewidth = linewidth)
+        plt.plot(locx, locy, color = ColorDefault(0.5), zorder = 1.5, linewidth = linewidth)
     plt.ylim([yMin, yMax])
     return fig
 

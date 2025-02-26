@@ -125,6 +125,8 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
     return waveFunc
 
 def Reflect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deriv = False, tol = 1e-15):
+    print('\nREFLECTION:')
+    
     xCell = omega.xCell
     x_s = physics.locs[0]
     print('REFLECT:')
@@ -147,6 +149,8 @@ def Reflect(omega, physics, func, args, t, cellAve = True, BooleAve = False, der
     return waveFunc
 
 def Advect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deriv = False, field = 'E', tol = 1e-15): # You changed field = 'EB' to 'E' on 02062024.
+    print('\nADVECTION:')
+    
     if (t == 0):
         waveFunc = InitCond(omega, physics, func, args, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv, field = field, tol = tol)
     else:
@@ -278,6 +282,11 @@ def BoolesX(omega, physics, t, adv = True):
     h = xR - xL
     for k in range(1, 4):
         x = np.asarray(sorted(set(np.append(x, xNode[:-1] + (k * h) / 4.))))
+    if (not adv):
+        x = x[::-1]
+    print('after treatment:')
+    print(x)
+    print('')
     return x
 
 # ----------------------------------------------------------------------------------------------------------------
@@ -600,6 +609,7 @@ def ShiftX(omega, physics, t, adv = True):
     #     print('')
 
         if (adv):
+            print('TRIGGER 1!')
             if (ixc == []):
                 minimum = max(ixc1)
                 maximum = min(ixc2)
@@ -632,8 +642,11 @@ def ShiftX(omega, physics, t, adv = True):
         #     xShiftR = xShiftR[1:]
         #     xShiftL = xShiftL[:-1]
         else:
+            print('TRIGGER 2')
             xShift = (2 * locs[0]) - (cs[0] * t) - x_0
-    
+    print('\nfresh out:')
+    print(xShift)
+    print('')
     return xShift#, xShiftL, xShiftR
 
 

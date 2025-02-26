@@ -125,6 +125,8 @@ def WaveEq(omega, physics, func, args, t, IRT = 'IRT', cellAve = True, BooleAve 
     return waveFunc
 
 def Reflect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deriv = False, tol = 1e-15):
+    print('\nREFLECTION:')
+    
     xCell = omega.xCell
     x_s = physics.locs[0]
     print('REFLECT:')
@@ -133,7 +135,7 @@ def Reflect(omega, physics, func, args, t, cellAve = True, BooleAve = False, der
     if (func == GaussPacket):
         BooleAve = True
     if (BooleAve and cellAve):
-        x = BoolesX(omega, physics, t)#, adv = False) # REFLECTION HERE!!!
+        x = BoolesX(omega, physics, t, adv = False) # REFLECTION HERE!!!
         # I set cellAve to False because that changes the function for the Gaussian, and I want the
         # Gaussian to be calculated directly if I'm using Boole's Rule.
         waveFuncPre = func(omega, x, *args, deriv = deriv, cellAve = False, tol = tol)
@@ -147,6 +149,8 @@ def Reflect(omega, physics, func, args, t, cellAve = True, BooleAve = False, der
     return waveFunc
 
 def Advect(omega, physics, func, args, t, cellAve = True, BooleAve = False, deriv = False, field = 'E', tol = 1e-15): # You changed field = 'EB' to 'E' on 02062024.
+    print('\nADVECTION:')
+    
     if (t == 0):
         waveFunc = InitCond(omega, physics, func, args, cellAve = cellAve, BooleAve = BooleAve, deriv = deriv, field = field, tol = tol)
     else:
@@ -264,13 +268,13 @@ def Gauss(omega, x, sigma, mu, deriv, cellAve, tol = 1e-15):
 # x                       np.ndarray              x values needed to calculate Boole's cell averages on AMR grid
 # ----------------------------------------------------------------------------------------------------------------
 
-def BoolesX(omega, physics, t):#, adv = True):
+def BoolesX(omega, physics, t, adv = True):
     # BOOLES X MIGHT NOT BE EFFECTIVELY SET UP FOR SHIFTX FUNCTION!!!
     print('BoolesX:', adv)
     if (t == 0):
         xNode = omega.xNode
     else:
-        xNode = ShiftX(omega, physics, t)#, adv = adv)
+        xNode = ShiftX(omega, physics, t, adv = adv)
     x = xNode
 #     h = omega.h
     xL = x[:-1]
@@ -278,6 +282,11 @@ def BoolesX(omega, physics, t):#, adv = True):
     h = xR - xL
     for k in range(1, 4):
         x = np.asarray(sorted(set(np.append(x, xNode[:-1] + (k * h) / 4.))))
+    if (not adv):
+        x = x[::-1]
+    print('after treatment:')
+    print(x)
+    print('')
     return x
 
 # ----------------------------------------------------------------------------------------------------------------
@@ -600,6 +609,7 @@ def ShiftX(omega, physics, t, adv = True):
     #     print('')
 
         if (adv):
+            print('TRIGGER 1!')
             if (ixc == []):
                 minimum = max(ixc1)
                 maximum = min(ixc2)
@@ -632,8 +642,11 @@ def ShiftX(omega, physics, t, adv = True):
         #     xShiftR = xShiftR[1:]
         #     xShiftL = xShiftL[:-1]
         else:
+            print('TRIGGER 2')
             xShift = (2 * locs[0]) - (cs[0] * t) - x_0
-    
+    print('\nfresh out:')
+    print(xShift)
+    print('')
     return xShift#, xShiftL, xShiftR
 
 

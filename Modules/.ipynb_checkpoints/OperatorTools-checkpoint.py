@@ -337,8 +337,14 @@ def Block(matrica, var = 1, diag = True):
 
 def FourierTransOp(waves):
 
+    print('waves:')
+    print(waves)
     prenorm = waves.transpose() @ waves
+    print('prenorm:')
+    print(prenorm)
     norm = LA.inv(prenorm)
+    print('norm:')
+    print(norm)
     FTOp = norm.transpose() @ waves.transpose()
     
     return FTOp
