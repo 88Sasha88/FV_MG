@@ -749,7 +749,7 @@ def GhostCellsJump(omega, physics, phiavg, Ng, P):
 #     print('\n***************************************************')
 #     print('***You\'re using Hans\'s GhostCellsJump!***\n')
 # #     P = P + 1
-    print('order:', P)
+    # print('order:', P)
 #     print('ghost cells:', Ng)
 #     print('input array:', np.shape(phiavg))
     
@@ -774,13 +774,13 @@ def GhostCellsJump(omega, physics, phiavg, Ng, P):
     phi2 = phiavg[int(matInd-P)+ix2] # phi avg in domain 2
 #     print('data cells 2:', phi2)
     B = Block([A[ix,:], A[ix2,:]]) # add the fit to the matrix
-    print('B=\n', B)
-    print('')
-    print('BEFORE')
-    print('A[ix,:]=\n', A[ix,:])
-    print('')
-    print('A[ix2,:]=\n', A[ix2,:])
-    print('')
+    # print('B=\n', B)
+    # print('')
+    # print('BEFORE')
+    # print('A[ix,:]=\n', A[ix,:])
+    # print('')
+    # print('A[ix2,:]=\n', A[ix2,:])
+    # print('')
     addOn = np.zeros(2 * P, float)
     addOn[0] = 1
     addOn[P] = -1
@@ -795,21 +795,21 @@ def GhostCellsJump(omega, physics, phiavg, Ng, P):
     ix = P+np.arange(Ng)
     phig1 = A[ix,:]@phic[:P]
 
-    print('MIDWAY')
-    print('A[ix,:]=\n', A[ix,:])
-    print('')
+    # print('MIDWAY')
+    # print('A[ix,:]=\n', A[ix,:])
+    # print('')
 
     # Evaluate the phi2 ghost cell values
     ix = np.arange(P-Ng, P)
     phig2 = A[ix,:]@phic[P:2*P]
 
-    print('AFTER')
-    print('A[ix,:]=\n', A[ix,:])
-    print('')
+    # print('AFTER')
+    # print('A[ix,:]=\n', A[ix,:])
+    # print('')
 
-    print('phic:', phic[P:2*P])
-    print('phig2 Option 1:', A[ix,:]@phic[P:2*P])
-    print('phig2 Option 2:', A[ix2,:]@phic[P:2*P])
+    # print('phic:', phic[P:2*P])
+    # print('phig2 Option 1:', A[ix,:]@phic[P:2*P])
+    # print('phig2 Option 2:', A[ix2,:]@phic[P:2*P])
     
     
 #     print('output array 1:', np.shape(phig1))
@@ -999,183 +999,6 @@ def FaceOp(omega, order, diff, RL, Ng, otherFace = False, AMROverride = False, w
 #         print('DERIVMAT BEFORE TREATMENT:')
 #         print(derivMat)
 #         print('')
-        
-        polyMat = IMat + 0
-        
-        if (NU):
-            if (s > 0):
-                j = int(off - s)
-                pAt = (p + Ng) % (degFreed + 2 * Ng) # p
-                pLo = (p + Ng - 1) % (degFreed + 2 * Ng) # (p - 1) % degFreed
-                qAt = (q - s + Ng + 1) % (degFreed + 2 * Ng) # (q - s + 1) % degFreed #(q + 1) % degFreed
-                for i in range (s):
-                    polyMat[pAt, :] = 0
-                    polyMat[pAt, pLo:pLo+2] = 0.5
-                    polyMat[qAt, :] = polyStencSet[j, :]
-                    pAt = (pAt - 1) % (degFreed + 2 * Ng) # (pAt - 1) % degFreed
-                    pLo = (pLo - 2) % (degFreed + 2 * Ng) # (pLo - 2) % degFreed
-                    qAt = (qAt + 1) % (degFreed + 2 * Ng) # (qAt + 1) % degFreed
-                    j = int(j + 1)
-
-            if (s < 0):
-                j = int(off) # - s - 1
-                qAt = (q + Ng + 1) % (degFreed + 2 * Ng) # (q + 1) % degFreed
-                qLo = (q + Ng + 1) % (degFreed + 2 * Ng) # (q + 1) % degFreed
-                pAt = (p + Ng + 1) % (degFreed + 2 * Ng) # (p + 1) % degFreed
-                for i in range(abs(s)):
-                    polyMat[qAt, :] = 0
-                    polyMat[qAt, qLo:qLo+2] = 0.5
-                    polyMat[pAt, :] = polyStencSet[j, :]
-                    qAt = (qAt + 1) % (degFreed + 2 * Ng) # (qAt + 1) % degFreed
-                    qLo = (qLo + 2) % (degFreed + 2 * Ng) # (qLo + 2) % degFreed
-                    pAt = (pAt + 1) % (degFreed + 2 * Ng) # (pAt + 1) % degFreed
-                    j = int(j + 1) # - 1
-        
-        matThis = derivMat @ polyMat
-        
-        faceOp = faceOp + matThis
-    
-    finRow = np.zeros((1, halfDeg + 2 * Ng), float)
-    finRowMaj = np.zeros((1, degFreed + 2 * Ng), float)
-    
-    
-    faceOp1 = faceOp[:halfDeg, :halfDeg + 2 * Ng]
-    faceOp2 = faceOp[-halfDeg:, -halfDeg - 2 * Ng:]
-    
-    if (RL == 'R'):
-        if ((order > 1) and (val > 0)):
-            finRow[0, :val] = stenc[-val:]
-            finRowMaj[0, :val] = stenc[-val:]
-        faceOp1 = np.concatenate((finRow, faceOp1), axis = 0)
-        faceOp2 = np.concatenate((finRow, faceOp2), axis = 0)
-        faceOp = np.concatenate((finRowMaj, faceOp), axis = 0)
-    else:
-        if ((order > 1) and (val > 0)):
-            finRow[0, -val:] = stenc[:val]
-            finRowMaj[0, -val:] = stenc[:val]
-        faceOp1 = np.concatenate((faceOp1, finRow), axis = 0)
-        faceOp2 = np.concatenate((faceOp2, finRow), axis = 0)
-        faceOp = np.concatenate((faceOp, finRowMaj), axis = 0)
-        
-    return faceOp1, faceOp2, faceOp
-
-
-
-def FaceOp1(omega, order, diff, RL, Ng, otherFace = False, AMROverride = False):
-    errorLoc = 'ERROR:\nOperatorTools:\nFaceOp:\n'
-    errorMess = ''
-    
-    if (diff == 'C' or diff == 'CD'):
-        stenc = CDFace(order)
-        if (order % 2 == 0):
-            orderStenc = int(order - 1) # order
-        else:
-            orderStenc = order # int(order + 1)
-        off = int(orderStenc / 2)
-        hiBound = (off + 1.) / 2. # off / 2.
-        if (RL == 'L'):
-            off = int(off + 1)
-            hiBound = (off - 1.) / 2. # off / 2.
-        else:
-            if (RL != 'R'):
-                errorMess = 'Variable RL must be set either to \'R\' for right-moving wave or \'L\' for left-moving wave.'
-        loBound = -off / 2.
-    else:
-        orderStenc = order
-        if (order % 2 == 0):
-            orderStenc = order # int(order + 1)
-        else:
-            orderStenc = int(order - 1) # order
-        off = int(orderStenc / 2) # int((orderStenc + 1) / 2)
-        if (diff == 'U' or diff == 'UD'):
-            loBound = -off / 2.
-            hiBound = off / 2. #(off - 1.) / 2.
-            stenc = UDFace(order)
-            if (RL == 'L'):
-                stenc = stenc[::-1]
-            else:
-                if (RL != 'R'):
-                    errorMess = 'Variable RL must be set either to \'R\' for right-moving wave or \'L\' for left-moving wave.'
-        else:
-            errorMess = 'Invalid entry for variable diff. Must be \'C\' or \'CD\', for center-difference, or \'U\' or \'UD\', for upwind-difference.'
-    if (Ng > off + 1):
-        errorMess = 'Too many ghost cells for this order of face approximation!'
-    
-    val = Ng + off
-    
-    if (errorMess != ''):
-        sys.exit(errorLoc + errorMess)
-    
-#     stenc = np.ones(orderStenc + 1)
-    
-    np.set_printoptions(precision=24, suppress=True)
-    
-    degFreed = omega.degFreed
-    hs = omega.h
-    
-    halfDeg = int(degFreed / 2)
-      
-    spots = np.roll(hs, -1) - hs
-    
-    if ((all(spots == 0)) or AMROverride):
-        p = []
-        q = []
-        NU = False
-        print('THIS OPERATOR IS UNIFORM!')
-    else:
-        # Index before fine-coarse interface
-        p = np.where(spots > 0)[0][0]
-        # Index before coarse-fine interface
-        q = np.where(spots < 0)[0][0]
-        print('p:', p)
-        print('q:', q)
-        NU = True
-
-    if (otherFace):
-        val = val - 1
-        if (RL == 'R'): # Then everything shifts left.
-            off = off + 1
-            loBound = loBound - 0.5
-            hiBound = hiBound - 0.5
-        else:
-            off = off - 1
-            loBound = loBound + 0.5
-            hiBound = hiBound + 0.5
-    
-    cellFaces = np.linspace(loBound, hiBound, num = orderStenc + 1)
-    zeroLoc = np.where(cellFaces == 0)[0]
-    if (len(zeroLoc) != 0):
-        cellFaces = np.delete(cellFaces, zeroLoc[0])
-
-    polys = np.shape(cellFaces)[0]
-    polyStencSet = [[] for i in range(polys)]
-    
-    addZeros = np.zeros((polys, Ng), float)
-
-    for i in range(polys):
-        polyStencSet[i], n_c, n_f = GTT.CentGhost(omega, order, cellFaces[i])
-    
-    polyStencSet = np.asarray(polyStencSet)
-    if ((Ng != 0) and (polys != 0)):
-        polyStencSet = np.hstack([addZeros, polyStencSet, addZeros])
-    
-    IMat = np.eye(degFreed + 2 * Ng, degFreed + 2 * Ng) # np.eye(degFreed, degFreed)
-    
-    # YOU'RE GONNA NEED THESE TO RESTRICT FOR HIGHER EVEN ORDERS, TOO.
-    
-    
-    polyMatU = IMat + 0
-    
-    
-    mat = np.zeros((degFreed, degFreed + 2 * Ng), float) # np.zeros((degFreed, degFreed), float)
-    faceOp = mat + 0
-    
-    for d in range(orderStenc + 1):
-        s = int(off - d)
-        
-        derivMat = mat + 0
-        np.fill_diagonal(derivMat[:, Ng:Ng+degFreed], stenc[d]) # np.fill_diagonal(derivMat, stenc[d])
-        derivMat = np.roll(derivMat, -s, axis = 1) # np.roll(derivMat, s, axis = 0)
         
         polyMat = IMat + 0
         
