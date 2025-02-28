@@ -152,7 +152,6 @@ def TestPoly(order, x_0, const = 2, tol = 1e-10):
         else:
             errorMess = 'x_0 cannot be zero!'
     
-    
     # Iterate through monomials up to appropriate order of accuracy to test stencil.
     for k in range(order + 2):
         coefs = np.zeros(k + 1, float)
@@ -165,6 +164,7 @@ def TestPoly(order, x_0, const = 2, tol = 1e-10):
         v = (P(bounds[:-1]) - P(bounds[1:])) / h
 
         theor = (P(x_2) - P(x_1)) / 0.5
+
         act = v.transpose() @ polyInterp
         error = act - theor
         print(theor, act)
@@ -225,7 +225,7 @@ def DerivPolyTest1(omega, diff, orderIn, coefs = [], deriv = 0):
     if (deriv == 0):
         derivOp = OT.SpaceDeriv(omega, order, diff)# DiffFunc(omega, 0, waveform, const, order)
     else:
-        derivOp = OT.SpaceDeriv1(omega, order, diff)
+        derivOp = OT.SpaceDerivOld(omega, order, diff)
     wavederiv = derivOp @ waveform
     print('x:')
     print(x)

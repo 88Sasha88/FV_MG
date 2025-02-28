@@ -142,7 +142,6 @@ def TestPoly(order, x_0, const = 2, tol = 1e-10):
     # Create stencil.
     polyInterp, n_c, n_f = GTT.GhostCellStencil(order, x_0)
     
-<<<<<<< HEAD
     if (x_0 > 0):
         x_1 = x_0 - 0.5
         x_2 = x_0
@@ -153,9 +152,6 @@ def TestPoly(order, x_0, const = 2, tol = 1e-10):
         else:
             errorMess = 'x_0 cannot be zero!'
     
-=======
->>>>>>> 22609fb9c31f53b73be9064c37014e60a0acfed0
-    
     # Iterate through monomials up to appropriate order of accuracy to test stencil.
     for k in range(order + 2):
         coefs = np.zeros(k + 1, float)
@@ -165,16 +161,10 @@ def TestPoly(order, x_0, const = 2, tol = 1e-10):
         print('Order ' + str(k) + ':')
         print('p(x) =\n', p)
         print('P(x) =\n', P)
-<<<<<<< HEAD
         v = (P(bounds[:-1]) - P(bounds[1:])) / h
 
         theor = (P(x_2) - P(x_1)) / 0.5
-=======
-        v = (np.asarray(P(bounds[:-1])) - np.asarray(P(bounds[1:]))) / h
-        print('Order ' + str(k) + ':')
 
-        theor = P(x_0) / 0.5
->>>>>>> 22609fb9c31f53b73be9064c37014e60a0acfed0
         act = v.transpose() @ polyInterp
         error = act - theor
         print(theor, act)

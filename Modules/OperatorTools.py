@@ -379,11 +379,7 @@ def ExactSpatDerivOp(omega):
     np.fill_diagonal(Op[1:], subsuper[:])
     np.fill_diagonal(Op[:, 1:], -subsuper)
     SpatOp = 2 * np.pi * Op
-<<<<<<< HEAD
-#     print(Op)
-=======
-    
->>>>>>> 22609fb9c31f53b73be9064c37014e60a0acfed0
+
     return SpatOp
 
 
@@ -759,7 +755,6 @@ def SpaceDeriv(omega, order, diff, matInd = -1):
                 
 
             if (s < 0):
-<<<<<<< HEAD
                 j = int(off) # - s - 1
                 qAt = (q + 1) % degFreed
                 qLow = (q + 1) % degFreed
@@ -772,28 +767,6 @@ def SpaceDeriv(omega, order, diff, matInd = -1):
                     qLow = (qLow + 2) % degFreed
                     pAt = (pAt + 1) % degFreed
                     j = int(j + 1) # - 1
-=======
-                if (NU):
-                    j = int(off) # - s - 1
-                    qAt = (q + 1) % degFreed
-                    qLow = (q + 1) % degFreed
-                    qHi = (q + 3) % degFreed
-                    pAt = (p + 1) % degFreed#p
-                for i in range(abs(s)):
-                    if (NU):
-                        polyMat[qAt, :] = 0
-                        polyMat[qAt, qLow:qHi] = 0.5
-                        polyMat[pAt, :] = polyStencSet[j, :]
-                        qAt = (qAt + 1) % degFreed
-                        qLow = (qLow + 2) % degFreed
-                        qHi = (qHi + 2) % degFreed
-                        pAt = (pAt + 1) % degFreed
-                        j = int(j + 1) # - 1
-                    if (matInd >= 0): # sign < 0):
-                        print('matInd is', matInd)
-                        polyMat[matInd - i, :] = GTT.CentGhostMaterial(omega, order, matInd, int(matInd - i + s), s)
-                    
->>>>>>> 22609fb9c31f53b73be9064c37014e60a0acfed0
         
         matThis = derivMat @ polyMat
         

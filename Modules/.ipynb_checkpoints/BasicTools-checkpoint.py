@@ -413,6 +413,7 @@ class Grid:
 # L                       float                   Physical length of entire area simulated
 # epsilons                list                    Electric permittivity in SI of materials in order from left
 # mus                     list                    Magnetic permeability in SI of materials in order from left
+# matInd                  int                     Index of material boundary location
 # ----------------------------------------------------------------------------------------------------------------
 
 class PhysProps:
@@ -424,6 +425,8 @@ class PhysProps:
         self.epsilons_r = epsilons
         self.locs = locs
         self.L = L
+        
+        x = omega.xNode
         
         epsilon_0 = 8.85418782e-12
         mu_0 = 1.25663706e-6

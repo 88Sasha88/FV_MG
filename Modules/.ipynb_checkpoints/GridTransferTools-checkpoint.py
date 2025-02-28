@@ -135,6 +135,7 @@ def BoundVals(order, x_0):
             bounds = np.arange(n_c + 1) + (int(x_0) - int((n_c + 1) / 2))
         else:
             bounds = np.arange(n_c + 1) + (int(x_0) - int(n_c / 2))
+    print('bounds:', bounds)
     return bounds, n_c, n_f
 
 
@@ -179,6 +180,7 @@ def MomentVander(order, bounds, xVec):
 #     print(polyCoefs)
 #     print('h 2:')
 #     print(hInv)
+
     VanderMat = hInv @ (A - B) @ polyCoefs
 #     print('Vandermonde 2:')
 #     print(VanderMat[:, ::-1])
@@ -248,7 +250,44 @@ def InterpVec(order, x_0, h_rat = 1):
     errorMess = ''
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
     polyCoefs = np.diag(intCoefs)
-#     print('polyCoefs:', polyCoefs)
+#     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
+#     polyCoefs = np.diag(intCoefs)
+
+#     if (x_0 % 0.5 != 0):
+#         errorMess = 'x_0 must be multiple of 0.5!'
+#     else:
+#         if (x_0 > 0):
+#             xValsR = np.polynomial.polynomial.polyvander(x_0, order + 1)[0][1:][::-1] / 0.5   
+#             xValsL = np.polynomial.polynomial.polyvander(x_0 - 0.5, order + 1)[0][1:][::-1] / 0.5
+#         else:
+#             if (x_0 < 0):
+#                 xValsR = np.polynomial.polynomial.polyvander(x_0 + 0.5, order + 1)[0][1:][::-1] / 0.5
+#                 xValsL = np.polynomial.polynomial.polyvander(x_0, order + 1)[0][1:][::-1] / 0.5
+#             else:
+#                 errorMess = 'x_0 cannot be zero!'
+#     if (errorMess != ''):
+#         sys.exit(errorLoc + errorMess)
+
+#     xVec = (xValsR - xValsL) @ polyCoefs
+    xVec = np.polynomial.polynomial.polyvander(x_0, order)[0][::-1] @ polyCoefs
+    xVec1 = InterpVec(order, x_0)
+    print('xVec:', xVec)
+    print('xVec1:', xVec1)
+
+    bounds, n_c, n_f = BoundVals(order, x_0)
+
+    polyInterp = MomentVander(order, bounds, xVec)
+    
+    return polyInterp, n_c, n_f
+
+
+def InterpVec(order, x_0):
+    errorLoc = 'ERROR:\nGridTransferTools:\nInterpVec:\n'
+    errorMess = ''
+    intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
+    polyCoefs = np.diag(intCoefs)
+    print('polyCoefs:', polyCoefs)
+
     if (x_0 % 0.5 != 0):
         errorMess = 'x_0 must be multiple of 0.5!'
     else:
@@ -263,11 +302,15 @@ def InterpVec(order, x_0, h_rat = 1):
                 errorMess = 'x_0 cannot be zero!'
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
+    
+    
+    print('xValsL:', xValsL)
+    print('xValsR:', xValsR)
+        
 
     xVec = (xValsR - xValsL) @ polyCoefs
+    
     return xVec
-
-
 
 
 # ----------------------------------------------------------------------------------------------------------------
@@ -329,7 +372,6 @@ def CentGhost(omega, order, x_0):
 
         cells = n_c + n_f
 
-
         fullStenc = np.zeros(degFreed, float)
 
         if (x_0 > 0):
@@ -346,10 +388,7 @@ def CentGhost(omega, order, x_0):
         if (errorMess != ''):
             sys.exit(errorLoc + errorMess)
     
-    
     return fullStenc, n_c, n_f
-
-
 
 
 
@@ -393,6 +432,7 @@ def CentGhostMaterial(omega, order, matInd, centCellInd, offDiagInd, revBounds =
     errorMess = ''
     
     degFreed = omega.degFreed
+
     centCellInd = centCellInd % degFreed
     
     stenc = np.zeros(degFreed, float)
@@ -412,6 +452,7 @@ def CentGhostMaterial(omega, order, matInd, centCellInd, offDiagInd, revBounds =
                 stenc[degFreed - order - 1:degFreed] = ghostStenc
             else:
                 stenc[matInd - order:matInd + 1] = ghostStenc # [matInd - order:matInd + 1]
+
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
     
@@ -437,8 +478,6 @@ def GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd, revB
 def MaterialInterpVec(omega, order, centCellInd, offDiagInd):
     xNode = omega.xNode
     xCell = omega.xCell
-    degFreed = omega.degFreed
-#     print('centCellInd is', centCellInd)
     
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
     polyCoefs = np.diag(intCoefs)
@@ -490,19 +529,4 @@ def MaterialInterpBounds(omega, order, matInd, offDiagInd, revBounds):
 #     print('Bounds are:', bounds, '<=', xNode[matInd])
     
     return bounds
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
