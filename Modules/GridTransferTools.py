@@ -135,6 +135,7 @@ def BoundVals(order, x_0):
             bounds = np.arange(n_c + 1) + (int(x_0) - int((n_c + 1) / 2))
         else:
             bounds = np.arange(n_c + 1) + (int(x_0) - int(n_c / 2))
+    print('bounds:', bounds)
     return bounds, n_c, n_f
 
 
@@ -175,10 +176,17 @@ def MomentVander(order, bounds, xVec):
 #     print('A:', A)
     B = np.diag(bounds[:-1]) @ np.vander(bounds[:-1])
 #     print('B:', B)
+<<<<<<< HEAD
 #     print(hInv)
 #     print(polyCoefs)
 #     print('h 2:')
 #     print(hInv)
+=======
+    print('hInv:', np.shape(hInv))
+    print('A:', np.shape(A))
+    print('B:', np.shape(B))
+    print('polyCoefs:', np.shape(polyCoefs))
+>>>>>>> 22609fb9c31f53b73be9064c37014e60a0acfed0
     VanderMat = hInv @ (A - B) @ polyCoefs
 #     print('Vandermonde 2:')
 #     print(VanderMat[:, ::-1])
@@ -248,7 +256,44 @@ def InterpVec(order, x_0, h_rat = 1):
     errorMess = ''
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
     polyCoefs = np.diag(intCoefs)
-#     print('polyCoefs:', polyCoefs)
+#     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
+#     polyCoefs = np.diag(intCoefs)
+
+#     if (x_0 % 0.5 != 0):
+#         errorMess = 'x_0 must be multiple of 0.5!'
+#     else:
+#         if (x_0 > 0):
+#             xValsR = np.polynomial.polynomial.polyvander(x_0, order + 1)[0][1:][::-1] / 0.5   
+#             xValsL = np.polynomial.polynomial.polyvander(x_0 - 0.5, order + 1)[0][1:][::-1] / 0.5
+#         else:
+#             if (x_0 < 0):
+#                 xValsR = np.polynomial.polynomial.polyvander(x_0 + 0.5, order + 1)[0][1:][::-1] / 0.5
+#                 xValsL = np.polynomial.polynomial.polyvander(x_0, order + 1)[0][1:][::-1] / 0.5
+#             else:
+#                 errorMess = 'x_0 cannot be zero!'
+#     if (errorMess != ''):
+#         sys.exit(errorLoc + errorMess)
+
+#     xVec = (xValsR - xValsL) @ polyCoefs
+    xVec = np.polynomial.polynomial.polyvander(x_0, order)[0][::-1] @ polyCoefs
+    xVec1 = InterpVec(order, x_0)
+    print('xVec:', xVec)
+    print('xVec1:', xVec1)
+
+    bounds, n_c, n_f = BoundVals(order, x_0)
+
+    polyInterp = MomentVander(order, bounds, xVec)
+    
+    return polyInterp, n_c, n_f
+
+
+def InterpVec(order, x_0):
+    errorLoc = 'ERROR:\nGridTransferTools:\nInterpVec:\n'
+    errorMess = ''
+    intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
+    polyCoefs = np.diag(intCoefs)
+    print('polyCoefs:', polyCoefs)
+
     if (x_0 % 0.5 != 0):
         errorMess = 'x_0 must be multiple of 0.5!'
     else:
@@ -263,12 +308,22 @@ def InterpVec(order, x_0, h_rat = 1):
                 errorMess = 'x_0 cannot be zero!'
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
+    
+    
+    print('xValsL:', xValsL)
+    print('xValsR:', xValsR)
+        
 
     xVec = (xValsR - xValsL) @ polyCoefs
+<<<<<<< HEAD
     return xVec
 
 
 
+=======
+    
+    return xVec
+>>>>>>> 22609fb9c31f53b73be9064c37014e60a0acfed0
 
 # ----------------------------------------------------------------------------------------------------------------
 # Function: CentGhost
@@ -329,7 +384,6 @@ def CentGhost(omega, order, x_0):
 
         cells = n_c + n_f
 
-
         fullStenc = np.zeros(degFreed, float)
 
         if (x_0 > 0):
@@ -347,7 +401,11 @@ def CentGhost(omega, order, x_0):
             sys.exit(errorLoc + errorMess)
     
     
+<<<<<<< HEAD
     return fullStenc, n_c, n_f
+=======
+    return fullStenc
+>>>>>>> 22609fb9c31f53b73be9064c37014e60a0acfed0
 
 
 
@@ -360,6 +418,7 @@ def CentGhost(omega, order, x_0):
 
 
 
+<<<<<<< HEAD
 
 
 
@@ -389,19 +448,30 @@ def CentGhost(omega, order, x_0):
 
 
 def CentGhostMaterial(omega, order, matInd, centCellInd, offDiagInd, revBounds = False):
+=======
+def CentGhostMaterial(omega, order, matInd, centCellInd, offDiagInd):
+>>>>>>> 22609fb9c31f53b73be9064c37014e60a0acfed0
     errorLoc = 'ERROR:\nGridTransferTools:\nCenterGhostCellMaterial:\n'
     errorMess = ''
     
     degFreed = omega.degFreed
+<<<<<<< HEAD
     centCellInd = centCellInd % degFreed
     
     stenc = np.zeros(degFreed, float)
     
     ghostStenc = GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd, revBounds)
+=======
+    
+    stenc = np.zeros(degFreed, float)
+    
+    ghostStenc = GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd)
+>>>>>>> 22609fb9c31f53b73be9064c37014e60a0acfed0
     
     if ((type(offDiagInd) != int) or (offDiagInd == 0)):
         errorMess = 'offDiagInd must be a nonzero integer identifying the number of cells from material boundary!'
     else:
+<<<<<<< HEAD
         if (revBounds or (offDiagInd > 0)):
             if (matInd == degFreed - 1):
                 stenc[:order + 1] = ghostStenc
@@ -412,12 +482,19 @@ def CentGhostMaterial(omega, order, matInd, centCellInd, offDiagInd, revBounds =
                 stenc[degFreed - order - 1:degFreed] = ghostStenc
             else:
                 stenc[matInd - order:matInd + 1] = ghostStenc # [matInd - order:matInd + 1]
+=======
+        if (offDiagInd > 0):
+            stenc[matInd + 1:matInd + order + 2] = ghostStenc
+        else:
+            stenc[matInd - order:matInd + 1] = ghostStenc
+>>>>>>> 22609fb9c31f53b73be9064c37014e60a0acfed0
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
     
     return stenc
 
 
+<<<<<<< HEAD
 def GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd, revBounds):
     errorLoc = 'ERROR:\nGridTransferTools:\nGhostCellMaterialStencil:\n'
     errorMess = ''
@@ -430,6 +507,17 @@ def GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd, revB
 
     polyInterp = MomentVander(order, bounds, xVec)
 #     print('polyInterp is', polyInterp)
+=======
+def GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd):
+    errorLoc = 'ERROR:\nGridTransferTools:\nGhostCellMaterialStencil:\n'
+    errorMess = ''
+    
+    bounds = MaterialInterpBounds(omega, order, matInd, offDiagInd)
+
+    xVec = MaterialInterpVec(omega, order, centCellInd, offDiagInd)
+
+    polyInterp = MomentVander(order, bounds, xVec)
+>>>>>>> 22609fb9c31f53b73be9064c37014e60a0acfed0
     
     return polyInterp
 
@@ -437,14 +525,18 @@ def GhostCellMaterialStencil(omega, order, matInd, centCellInd, offDiagInd, revB
 def MaterialInterpVec(omega, order, centCellInd, offDiagInd):
     xNode = omega.xNode
     xCell = omega.xCell
+<<<<<<< HEAD
     degFreed = omega.degFreed
 #     print('centCellInd is', centCellInd)
+=======
+>>>>>>> 22609fb9c31f53b73be9064c37014e60a0acfed0
     
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
     polyCoefs = np.diag(intCoefs)
     
     bounds = xNode[centCellInd:centCellInd + 2]
     h = bounds[-1] - bounds[0]
+<<<<<<< HEAD
     bounds = bounds - (offDiagInd * h) # Possible source of error.
     
 #     print('bounds is', bounds, '(This isn\'t right yet.)')
@@ -461,15 +553,32 @@ def MaterialInterpVec(omega, order, centCellInd, offDiagInd):
 
 
 def MaterialInterpBounds(omega, order, matInd, offDiagInd, revBounds):
+=======
+    bounds = bounds - (offDiagInd * h)
+    
+    xValsR = np.polynomial.polynomial.polyvander(bounds[-1], order + 1)[0][1:][::-1] / h  
+    xValsL = np.polynomial.polynomial.polyvander(bounds[0], order + 1)[0][1:][::-1] / h
+    
+    xVec = (xValsR - xValsL) @ polyCoefs
+    
+    return xVec
+
+
+def MaterialInterpBounds(omega, order, matInd, offDiagInd):
+>>>>>>> 22609fb9c31f53b73be9064c37014e60a0acfed0
     errorLoc = 'ERROR:\nGridTransferTools:\nMaterialInterpBounds:\n'
     errorMess = ''
     
     xNode = omega.xNode
+<<<<<<< HEAD
     degFreed = omega.degFreed
+=======
+>>>>>>> 22609fb9c31f53b73be9064c37014e60a0acfed0
     
     if ((type(offDiagInd) != int) or (offDiagInd == 0)):
         errorMess = 'offDiagInd must be a nonzero integer identifying the number of cells from material boundary!'
     else:
+<<<<<<< HEAD
         if (revBounds or (offDiagInd > 0)): # Possible source of error.
 #             print('k should be positive, or this is an exception case.')
             if (matInd == degFreed - 1):
@@ -506,3 +615,16 @@ def MaterialInterpBounds(omega, order, matInd, offDiagInd, revBounds):
 
 
 
+=======
+        if (offDiagInd > 0):
+            print('this one.')
+            bounds = xNode[matInd:matInd+order+2]
+        else:
+            bounds = xNode[matInd-order-1:matInd + 1]
+    if (errorMess != ''):
+        sys.exit(errorLoc + errorMess)
+    
+    print('Bounds are:', bounds, '<=', xNode[matInd])
+    
+    return bounds
+>>>>>>> 22609fb9c31f53b73be9064c37014e60a0acfed0
