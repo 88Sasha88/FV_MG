@@ -250,44 +250,7 @@ def InterpVec(order, x_0, h_rat = 1):
     errorMess = ''
     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
     polyCoefs = np.diag(intCoefs)
-#     intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
-#     polyCoefs = np.diag(intCoefs)
-
-#     if (x_0 % 0.5 != 0):
-#         errorMess = 'x_0 must be multiple of 0.5!'
-#     else:
-#         if (x_0 > 0):
-#             xValsR = np.polynomial.polynomial.polyvander(x_0, order + 1)[0][1:][::-1] / 0.5   
-#             xValsL = np.polynomial.polynomial.polyvander(x_0 - 0.5, order + 1)[0][1:][::-1] / 0.5
-#         else:
-#             if (x_0 < 0):
-#                 xValsR = np.polynomial.polynomial.polyvander(x_0 + 0.5, order + 1)[0][1:][::-1] / 0.5
-#                 xValsL = np.polynomial.polynomial.polyvander(x_0, order + 1)[0][1:][::-1] / 0.5
-#             else:
-#                 errorMess = 'x_0 cannot be zero!'
-#     if (errorMess != ''):
-#         sys.exit(errorLoc + errorMess)
-
-#     xVec = (xValsR - xValsL) @ polyCoefs
-    xVec = np.polynomial.polynomial.polyvander(x_0, order)[0][::-1] @ polyCoefs
-    xVec1 = InterpVec(order, x_0)
-    print('xVec:', xVec)
-    print('xVec1:', xVec1)
-
-    bounds, n_c, n_f = BoundVals(order, x_0)
-
-    polyInterp = MomentVander(order, bounds, xVec)
-    
-    return polyInterp, n_c, n_f
-
-
-def InterpVec(order, x_0):
-    errorLoc = 'ERROR:\nGridTransferTools:\nInterpVec:\n'
-    errorMess = ''
-    intCoefs = (np.arange(order + 1) + 1)[::-1]**-1.
-    polyCoefs = np.diag(intCoefs)
-    print('polyCoefs:', polyCoefs)
-
+#     print('polyCoefs:', polyCoefs)
     if (x_0 % 0.5 != 0):
         errorMess = 'x_0 must be multiple of 0.5!'
     else:
@@ -302,14 +265,8 @@ def InterpVec(order, x_0):
                 errorMess = 'x_0 cannot be zero!'
     if (errorMess != ''):
         sys.exit(errorLoc + errorMess)
-    
-    
-    print('xValsL:', xValsL)
-    print('xValsR:', xValsR)
-        
 
     xVec = (xValsR - xValsL) @ polyCoefs
-    
     return xVec
 
 

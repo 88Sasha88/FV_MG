@@ -1194,3 +1194,49 @@ def FaceOp(omega, order, diff, RL, Ng, otherFace = False, AMROverride = False, w
         faceOp = np.concatenate((faceOp, finRowMaj), axis = 0)
         
     return faceOp1, faceOp2, faceOp
+
+
+def RefluxOp(omega, physics, orderIn, deriv, dt):
+    degFreed = omega.degFreed
+    hs = omega.h
+    spots = np.roll(hs, -1) - hs
+    cMat = physics.cMat
+    
+    halfDeg = int(degFreed / 2)
+    dx_max = np.max(hs)
+
+    scalFact = -dt / dx_max
+
+    refluxOp = np.zeros((degFreed, degFreed), float)
+    
+    if (all(spots == 0)):
+        p = []
+        q = []
+    #         print('THIS FACE OPERATOR IS UNIFORM!')
+    else:
+        # Index before fine-coarse interface
+        p = np.where(spots > 0)[0][0]
+        # Index before coarse-fine interface
+        q = np.where(spots < 0)[0][0]
+    
+        faceOp1, faceOp2, faceOp = FaceOp(omega, orderIn, deriv, 'R', 0, wrapAround = False)
+        faceOp = faceOp[1:, :]
+        
+        # Zero out all of faceOp except this
+        inversOpC = faceOp + 0
+        inversOpC[[q, p + 1], :] = 0
+        fluxOpC = faceOp - inversOpC
+        
+        inversOpF = faceOp + 0
+        inversOpF[[q + 1, p], :] = 0
+        preFluxOpF = faceOp - inversOpF
+        fluxOpF = np.zeros((degFreed, degFreed), float)
+        fluxOpF[q, :] = preFluxOpF[q + 1, :]
+        fluxOpF[p + 1, :] = preFluxOpF[p, :]
+        
+        refluxOp = fluxOpF - fluxOpC
+        refluxOp = scalFact * cMat @ refluxOp
+    
+    refluxOp1 = refluxOp[:halfDeg, :halfDeg]
+    refluxOp2 = refluxOp[halfDeg:, halfDeg:]
+    return refluxOp1, refluxOp2, refluxOp

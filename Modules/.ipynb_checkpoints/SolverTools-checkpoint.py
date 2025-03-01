@@ -119,7 +119,7 @@ def RungeKutta(omega, physics, u0, CFL, nt, RK, order, diff, func, override = Fa
 
 def ForwardEuler(omega, physics, u0, t0, dt, order, diff, func): #(omega, waves, u0, nt, const, CFL, func, order = 0):
 
-    u = u0 + (dt * func(omega, physics, u0, t0, order, diff))
+    u = u0 + (dt * func(omega, physics, u0, t0, order, diff, dt))
     t = t0 + dt
 #         if (func == TimePoly):
 #             if (n == nt - 1):
@@ -174,8 +174,8 @@ def CalcTime(omega, CFL, c, nt = 0, t = 0, override = False):
 
 def MidpointMeth(omega, physics, u0, t0, dt, order, diff, func): #(omega, waves, u0, nt, const, CFL, func, order = 0):
     
-    k1 = func(omega, physics, u0, t0, order, diff)
-    k2 = func(omega, physics, u0 + ((dt / 2.) * k1), t0 + (dt / 2.), order, diff)
+    k1 = func(omega, physics, u0, t0, order, diff, dt)
+    k2 = func(omega, physics, u0 + ((dt / 2.) * k1), t0 + (dt / 2.), order, diff, dt)
     u = u0 + (dt * k2)
     t = t0 + dt
     
@@ -196,10 +196,10 @@ def MidpointMeth(omega, physics, u0, t0, dt, order, diff, func): #(omega, waves,
 
 def RK4(omega, physics, u0, t0, dt, order, diff, func): # (omega, waves, u0, nt, const, CFL, func, order = 0):
     
-    k1 = func(omega, physics, u0, t0, order, diff)
-    k2 = func(omega, physics, u0 + ((dt / 2.) * k1), t0 + (dt / 2.), order, diff)
-    k3 = func(omega, physics, u0 + ((dt / 2.) * k2), t0 + (dt / 2.), order, diff)
-    k4 = func(omega, physics, u0 + (dt * k3), t0 + dt, order, diff)
+    k1 = func(omega, physics, u0, t0, order, diff, dt)
+    k2 = func(omega, physics, u0 + ((dt / 2.) * k1), t0 + (dt / 2.), order, diff, dt)
+    k3 = func(omega, physics, u0 + ((dt / 2.) * k2), t0 + (dt / 2.), order, diff, dt)
+    k4 = func(omega, physics, u0 + (dt * k3), t0 + dt, order, diff, dt)
     u = u0 + ((dt / 6.) * (k1 + (2. * k2) + (2. * k3) + k4))
     t = t0 + dt
     
@@ -316,7 +316,8 @@ def ExactTimeDerivOp(omega, waves, cMat):
 
 
 ## Calculate the RHS for E,B in Maxwell's equations using 5th-order upwind
-def WaveEqRHS(omega, physics, u0, t, orderIn, diff):
+## Calculate the RHS for E,B in Maxwell's equations using 5th-order upwind
+def WaveEqRHS(omega, physics, u0, t, orderIn, diff, dt):
     print('You are using WaveEqRHS()!')
     
     degFreed = omega.degFreed
@@ -328,6 +329,11 @@ def WaveEqRHS(omega, physics, u0, t, orderIn, diff):
     
     E = u0[:degFreed]
     B = u0[degFreed:]
+
+    refluxOp1, refluxOp2, refluxOp = OT.RefluxOp(omega, physics, orderIn, diff, dt)
+
+    refluxE = refluxOp @ E
+    refluxB = refluxOp @ B
     
     hMat = OT.StepMatrix(omega)
     
@@ -363,37 +369,11 @@ def WaveEqRHS(omega, physics, u0, t, orderIn, diff):
     faceOp1L, faceOp2L, faceOpL = OT.FaceOp(omega, order, diff, 'L', Ng)
     faceOp1R, faceOp2R, faceOpR = OT.FaceOp(omega, order, diff, 'R', Ng)
     
-
     # Face values from upwind (index 1:N for faces left of cell + 1 for mat)
     phil1f = faceOp1L @ np.concatenate((np.full(Ng, phil1[0]), phil1))  # outflow bc's on left
     phir1f = faceOp1R @ np.concatenate((np.zeros(Ng), phir1))  # 0 at leftmost face for inflow boundary conditions
     phil2f = faceOp2L @ np.concatenate((phil2, np.zeros(Ng))).transpose()  # 0 at rightmost face for inflow boundary conditions
     phir2f = faceOp2R @ np.concatenate((phir2, np.full(Ng, phir2[matInd + Ng - 1])))  # outflow bc's on right
-    
-    
-#     print('')
-#     print('Ng:', Ng)
-#     print('')
-#     print('E1:')
-#     print(E1)
-#     print('B1:')
-#     print(B1)
-#     print('')
-#     print('phil1:')
-#     print(np.concatenate((np.full(Ng, phil1[0]), phil1)))
-#     print('phir1:')
-#     print(np.concatenate((np.zeros(Ng), phir1)))
-#     print('')
-#     print('faceOp1L:')
-#     print(faceOp1L)
-#     print('faceOp1R:')
-#     print(faceOp1R)
-#     print('')
-#     print('phil1f:')
-#     print(phil1f)
-#     print('phir1f:')
-#     print(phir1f)
-#     print('')
     
     
     # Correct values at material interface with jump conditions
@@ -404,9 +384,7 @@ def WaveEqRHS(omega, physics, u0, t, orderIn, diff):
     R2 = (c1 - c2) / (c1 + c2)
     phir2f[0] = R2 * phil2f[0] + T2 * phir1f[matInd]
     
-    
-
-    # Transform back to E,B on faces
+    # Transform back to E, B on faces
     E1f = phil1f + phir1f
     B1f = (-phil1f + phir1f) / c1
     E2f = phil2f + phir2f
@@ -419,15 +397,10 @@ def WaveEqRHS(omega, physics, u0, t, orderIn, diff):
     
     derivOp1 = (faceOp1r - faceOp1l)[1:, :-1]
     derivOp2 = (faceOp2r - faceOp2l)[1:, :-1]
-    
-#     print('derivOp1:')
-#     print(derivOp1)
-#     print('derivOp2:')
-#     print(derivOp2)
 
     # Calculate the RHS for E, B
-    rhsE = hMat @ np.append(-c1**2*derivOp1 @ B1f, -c2**2*derivOp2 @ B2f)
-    rhsB = hMat @ np.append(-1*derivOp1 @ E1f, -1* derivOp2 @ E2f)
+    rhsE = hMat @ np.append(-c1**2*derivOp1 @ B1f, -c2**2*derivOp2 @ B2f) + refluxE
+    rhsB = hMat @ np.append(-1*derivOp1 @ E1f, -1* derivOp2 @ E2f) + refluxB
     
     rhs = np.append(rhsE, rhsB)
 
@@ -435,8 +408,7 @@ def WaveEqRHS(omega, physics, u0, t, orderIn, diff):
 
 
 
-
-def AdvectRHS(omega, physics, u0, t, orderIn, diff):
+def AdvectRHS(omega, physics, u0, t, orderIn, diff, dt):
     errorLoc = 'ERROR:\nSolverTools:\nAdvectRHS:\n'
     errorMess = ''
     print('You are using AdvectRHS()!')
