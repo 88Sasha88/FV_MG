@@ -84,7 +84,7 @@ def RungeKutta(omega, physics, u0, CFL, nt, RK, order, diff, func, override = Fa
     
     t = 0
     for n in range(nt):
-        u, t = Scheme(omega, physics, u0, t, dt, order, diff, func)
+        u, t = Scheme(omega, physics, u, t, dt, order, diff, func)
     uCoefs = LA.inv(waves) @ u
     
     return uCoefs
@@ -308,14 +308,7 @@ def ExactTimeDerivOp(omega, waves, cMat):
     ETDerivOp = -cMat @ waves @ SpatOp @ FTop
     return ETDerivOp
 
-# In[ ]:
 
-
-
-
-
-
-## Calculate the RHS for E,B in Maxwell's equations using 5th-order upwind
 ## Calculate the RHS for E,B in Maxwell's equations using 5th-order upwind
 def WaveEqRHS(omega, physics, u0, t, orderIn, diff, dt):
     print('You are using WaveEqRHS()!')
@@ -399,8 +392,8 @@ def WaveEqRHS(omega, physics, u0, t, orderIn, diff, dt):
     derivOp2 = (faceOp2r - faceOp2l)[1:, :-1]
 
     # Calculate the RHS for E, B
-    rhsE = hMat @ np.append(-c1**2*derivOp1 @ B1f, -c2**2*derivOp2 @ B2f) + refluxE
-    rhsB = hMat @ np.append(-1*derivOp1 @ E1f, -1* derivOp2 @ E2f) + refluxB
+    rhsE = hMat @ np.append(-c1**2*derivOp1 @ B1f, -c2**2*derivOp2 @ B2f)# + refluxE
+    rhsB = hMat @ np.append(-1*derivOp1 @ E1f, -1* derivOp2 @ E2f)# + refluxB
     
     rhs = np.append(rhsE, rhsB)
 

@@ -135,7 +135,7 @@ def BoundVals(order, x_0):
             bounds = np.arange(n_c + 1) + (int(x_0) - int((n_c + 1) / 2))
         else:
             bounds = np.arange(n_c + 1) + (int(x_0) - int(n_c / 2))
-    print('bounds:', bounds)
+    # print('bounds:', bounds)
     return bounds, n_c, n_f
 
 
