@@ -95,7 +95,7 @@ def NormVersusCFL(func, omega, waves, u_0, const, CFL_0, nt_0, normType = 'max',
 # In[6]:
 
 
-def AmpError(omega, theoreticalIn, actualIn, tol = 1e-20, printOut = False):
+def AmpError(omega, theoreticalIn, actualIn, tol = 1e-15, printOut = False):
     # Check size of theoretical and actual.
     nh = omega.nh_max
     numKs = int((nh / 2) + 1)
@@ -324,20 +324,34 @@ def VectorNorm(v, normType = 'L2'):
     return norm
 
 
-def SolverAmpTheoretical(omega, RK, deriv, CFL):
+def SolverAmpTheoretical(omega, RK, deriv, order, CFL):
     nh_max = omega.nh_max
     ks = np.arange((nh_max / 2) + 1)
     theta = (2 * np.pi * ks) / nh_max
+    Upwind = lambda theta: CFL * (np.exp(1j * theta) - 1)
+    Center = lambda theta: CFL * (np.exp(1j * theta) - np.exp(-1j * theta))
     if (deriv == 'U'):
-        print('Upwind', RK)
-        x = CFL * (np.exp(1j * theta) - 1) # CFL * (1 - np.exp(-1j * theta))
+        if (order == 1):
+            x = Upwind(theta) # CFL * (1 - np.exp(-1j * theta))
+        else:
+            if (order == 3):
+                x = ((3 / 2) * Upwind(theta)) - ((1 / 2) * Upwind(2 * theta)) # ChatGPT
+            else:
+                if (order == 5):
+                    x = ((25 / 12) * Upwind(theta)) - ((4 / 3) * Upwind(2 * theta)) + ((1 / 4) * Upwind(3 * theta)) # ChatGPT
     else:
-        x = 0.5 * CFL * (np.exp(1j * theta) - np.exp(-1j * theta))
+        if (order == 2):
+            x = 0.5 * Center(theta)
+        else:
+            if (order == 4):
+                x = ((2 / 3) * Center(theta)) - ((1 / 12) * Center(2 * theta)) # ChatGPT
+            else:
+                if (order == 6):
+                    x = ((3 / 4) * Center(theta)) - ((3 / 20) * Center(2 * theta)) + ((1 / 60) * Center(3 * theta)) # ChatGPT
     coefs = np.arange(RK + 1)[::-1]
     coefs = sp.special.factorial(coefs)**-1
     # coefs[1::2] = -coefs[1::2]
     p = np.poly1d(coefs)
-    print(p)
     amps = p(x)
     return ks, amps
 
