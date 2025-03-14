@@ -323,10 +323,10 @@ def WaveEqRHS(omega, physics, u0, t, orderIn, diff, dt):
     E = u0[:degFreed]
     B = u0[degFreed:]
 
-    refluxOp1, refluxOp2, refluxOp = OT.RefluxOp(omega, physics, orderIn, diff, dt)
+    # refluxOp1, refluxOp2, refluxOp = OT.RefluxOp(omega, physics, orderIn, diff, dt)
 
-    refluxE = refluxOp @ E
-    refluxB = refluxOp @ B
+    # refluxE = refluxOp @ E
+    # refluxB = refluxOp @ B
     
     hMat = OT.StepMatrix(omega)
     
