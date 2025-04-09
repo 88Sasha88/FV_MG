@@ -323,10 +323,15 @@ def WaveEqRHS(omega, physics, u0, t, orderIn, diff, dt):
     E = u0[:degFreed]
     B = u0[degFreed:]
 
-    # refluxOp1, refluxOp2, refluxOp = OT.RefluxOp(omega, physics, orderIn, diff, dt)
+    refluxOp1, refluxOp2, refluxOp = OT.RefluxOp(omega, physics, orderIn, diff, dt)
 
-    # refluxE = refluxOp @ E
-    # refluxB = refluxOp @ B
+    refluxE = refluxOp @ E
+    refluxB = refluxOp @ B
+
+    # print('refluxE:')
+    # print(refluxE)
+    # print('refluxB:')
+    # print(refluxB)
     
     hMat = OT.StepMatrix(omega)
     
@@ -392,8 +397,8 @@ def WaveEqRHS(omega, physics, u0, t, orderIn, diff, dt):
     derivOp2 = (faceOp2r - faceOp2l)[1:, :-1]
 
     # Calculate the RHS for E, B
-    rhsE = hMat @ np.append(-c1**2*derivOp1 @ B1f, -c2**2*derivOp2 @ B2f)# + refluxE
-    rhsB = hMat @ np.append(-1*derivOp1 @ E1f, -1* derivOp2 @ E2f)# + refluxB
+    rhsE = hMat @ np.append(-c1**2*derivOp1 @ B1f, -c2**2*derivOp2 @ B2f) + refluxE
+    rhsB = hMat @ np.append(-1*derivOp1 @ E1f, -1* derivOp2 @ E2f) + refluxB
     
     rhs = np.append(rhsE, rhsB)
 

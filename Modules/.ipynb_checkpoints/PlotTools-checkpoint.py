@@ -712,7 +712,7 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
         i = 0
         for j in range(numGraphs):
             if (fX != []):
-                plt.plot(X, fX[:, j], color = ColorDefault(i), zorder = 2, label = labelsOut[j])
+                plt.plot(X, fX[:, j], color = ColorDefault(i), zorder = 2, label = labelsOut[j], linewidth = linewidth)
                 pieceColor = 3
                 pieceLabel = []
             else:
@@ -732,7 +732,7 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
     for loc in locs:
         locx = loc * np.ones(2)
         locy = np.linspace(yMin, yMax, num = 2)
-        plt.plot(locx, locy, color = ColorDefault(2), zorder = 1.5, linewidth = linewidth)
+        plt.plot(locx, locy, color = ColorDefault(0.5), zorder = 1.5, linewidth = linewidth)
     plt.ylim([yMin, yMax])
     return fig
 

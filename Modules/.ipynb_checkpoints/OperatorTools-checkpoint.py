@@ -1235,7 +1235,11 @@ def RefluxOp(omega, physics, orderIn, deriv, dt):
         fluxOpF[p + 1, :] = preFluxOpF[p, :]
         
         refluxOp = fluxOpF - fluxOpC
+        # print('reflux before:')
+        # print(refluxOp)
         refluxOp = scalFact * cMat @ refluxOp
+        # print('reflux after:')
+        # print(refluxOp)
     
     refluxOp1 = refluxOp[:halfDeg, :halfDeg]
     refluxOp2 = refluxOp[halfDeg:, halfDeg:]
