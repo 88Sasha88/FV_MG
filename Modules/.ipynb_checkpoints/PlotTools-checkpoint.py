@@ -88,6 +88,8 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
         ax.grid(True, axis = 'y', zorder = 0)
     if (xGrid):
         ax.grid(True, axis = 'x', zorder = 0)
+    ax.set_axisbelow(True)
+    # fig.canvas.draw()
     xAxis = omega.xNode
     yAxis = omega.y
 
