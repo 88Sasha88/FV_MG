@@ -142,7 +142,7 @@ def Reflect(omega, physics, func, args, t, cellAve = True, BooleAve = False, der
     else:
         x = ShiftX(omega, physics, t, adv = False) # REFLECTION HERE!!!
         waveFunc = func(omega, x, *args, deriv = deriv, cellAve = cellAve, tol = tol)
-        print(x)
+        # print(x)
     waveFunc[index:] = 0
     return waveFunc
 
