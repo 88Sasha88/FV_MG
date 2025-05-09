@@ -28,7 +28,7 @@ np.set_printoptions( linewidth = 1000)
 
 # In[2]:
 
-def FindDxDt(omega, CFL, c, override):
+def FindDxDt(omega, CFL, c, override, refRatio = 1):
     dx = omega.dx
     dx_min = min(dx)
     if (np.shape(c) == ()):
@@ -39,12 +39,14 @@ def FindDxDt(omega, CFL, c, override):
             print('WARNING: YOUR dt IN FindDxDt() IS WRONG!!!')
         else:
             c_max = max(np.diag(c))
-    dt = CFL * dx_min / c_max
+    dt = (CFL * dx_min) / (refRatio * c_max)
+
+    print('dx_min =', dx_min, 'dt =', dt)
     return dx_min, dt
 
 # You MUST pass op as an argument or creating a switch for the curl operator will be a pain in the ass!!!
 
-def RungeKutta(omega, physics, u0, CFL, nt, RK, order, diff, func, override = False):
+def RungeKutta(omega, physics, u0, CFL, nt, RK, order, diff, func, override = False, refRatio = 1):
     errorLoc = 'ERROR:\nSolverTools:\nRungeKutta:\n'
     errorMess = ''
     
@@ -55,7 +57,7 @@ def RungeKutta(omega, physics, u0, CFL, nt, RK, order, diff, func, override = Fa
     degFreed = omega.degFreed
     cMat = physics.cMat
     locs = physics.locs
-    dx, dt = FindDxDt(omega, CFL, cMat, override)
+    dx, dt = FindDxDt(omega, CFL, cMat, override, refRatio = refRatio)
     
     waves = WT.MakeWaves(omega)
     nullspace = OT.FindNullspace(omega, waves)
@@ -151,11 +153,11 @@ def ForwardEuler(omega, physics, u0, t0, dt, order, diff, func): #(omega, waves,
 #     return u, t
 
 
-def CalcTime(omega, CFL, c, nt = 0, t = 0, override = False):
+def CalcTime(omega, CFL, c, nt = 0, t = 0, override = False, refRatio = 1):
     errorLoc = 'ERROR:\nSolverTools:\nCalcTime:\n'
     errorMess = ''
     
-    dx, dt = FindDxDt(omega, CFL, c, override)
+    dx, dt = FindDxDt(omega, CFL, c, override, refRatio = refRatio)
     
     if (nt <= 0):
         print('This is what\'s happening.')
