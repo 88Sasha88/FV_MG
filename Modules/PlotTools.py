@@ -82,7 +82,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
 #     else:
 #         labelsize = 10
 #         linewidth = 1.5
-    fontsize = 11
+    fontsize = 12
     # ax = plt.axes(frameon = False # THIS WAS REMOVED AFTER PYTHON UPDATE!!!
     if (yGrid):
         ax.grid(True, axis = 'y', zorder = 0)
@@ -109,7 +109,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
     color = 2
     
     
-    if (u != []):
+    if (not BT.Empty(u)):
         level = ''
         if (ghost != ''):
             level = r'^{(l - 1)}'
@@ -194,7 +194,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                         istring = prestring + r'$n$'
                         # shiftExtra = shiftX
                 plt.text(xi - shiftX - shiftExtra, yi - (1.5 * shiftY), istring, fontsize = fontsize)
-        if (u != []):
+        if (not BT.Empty(u)):
             if (i == 0):
                 color = 2
                 topString = r'$' + var + r'_{' + side + ind + r' - 1}$'
@@ -354,7 +354,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
             if ((i < 3) and (ghost == '')):
                 plt.text(xCell[i + 1] - shiftX - extraShift, yi - 0.8 * shiftY, midString, fontsize = fontsize)
         i = i + 1
-    if (u == []):
+    if (BT.Empty(u)):
         ax.plot(xAxis, yAxis, color = 'k', zorder = 2, linewidth = linewidth)
     plt.tick_params(reset = True, axis = 'x', which = 'both', bottom = False, top = False, labelbottom = xGrid, labelsize = labelsize)
     plt.tick_params(reset = True, axis = 'y', which = 'both', left = False, right = False, labelleft = yGrid, labelsize = labelsize)
@@ -398,7 +398,7 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
                 n = 5
     cellVals = np.ones(numPoints, float)
     lowIndex = 0
-    fontsize = 11
+    fontsize = 12
     
     LS = linestyle
     
@@ -421,7 +421,7 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
     for k in range(n):
         highIndex = np.where(X <= x[k + 1])[0][::-1][0] + 1
         cellVals[lowIndex:highIndex] = pieces[k] * cellVals[lowIndex:highIndex]
-        if ((k == 0) and (label != [])):
+        if ((k == 0) and (not BT.Empty(label))):
             plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = LS, zorder = 3, label = label, linewidth = linewidth)
         else:
             if ((k != 0) or (tickHeight == 0)): # or (matVis != '')):
@@ -564,7 +564,7 @@ def PlotWaves(omega, physics, waves = [], waveNode = [], nullspace = [], waveTra
         rotMat = np.eye(nh, nh)
         shift = False
     strings = FixStrings(omega, nullspace, shift)
-    if (nullspace == []):
+    if (BT.Empty(nullspace)):
         nullspace = np.eye(nh, nh)
 #         strings = omega.strings
     else:
@@ -574,15 +574,15 @@ def PlotWaves(omega, physics, waves = [], waveNode = [], nullspace = [], waveTra
             N = n
     
     
-    if (waveNode != []):
+    if (not BT.Empty(waveNode)):
         waveNodes = waveNode @ rotMat @ nullspace
-    if (waves == []):
+    if (BT.Empty(waves)):
         waveCell = np.asarray([[[] for i in range(N)] for j in range(n)])
     else:
         waveCell = waves @ nullspace
     waveCont = waveCont @ rotMat @ nullspace
     for k in range(N):
-        if (waveTrans != []):
+        if (not BT.Empty(waveTrans)):
             if (k < np.shape(waveTrans)[1]):
                 waveTransfer = waveTrans[:, k]
         else:
@@ -604,7 +604,7 @@ def PlotWaves(omega, physics, waves = [], waveNode = [], nullspace = [], waveTra
                 plt.plot(X, aliasNode, linestyle = ':', color = ColorDefault(2), zorder = 4)
                 plt.plot(X, aliasCell, linestyle = '--', color = ColorDefault(3), zorder = 3)
         
-        if (waveNode != []):
+        if (not BT.Empty(waveNode)):
             plt.scatter(x[:], waveNodes[:, k], color = ColorDefault(2), s = 10, zorder = 4)
         plt.xlim([-0.1, 1.25])
         plt.text(1.1, 0, strings[k], fontsize = font)
@@ -635,8 +635,8 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
 
     linewidth, fontsize, labelsize = Enlarge(enlarge)
     
-    if (fX != []):
-        if (newBounds == []):
+    if (not BT.Empty(fX)):
+        if (BT.Empty(newBounds)):
             yMin, yMax, tickHeight = GetYBound(fX, sym)
         else:
             yMin, yMax, tickHeight = GetYBound(newBounds, sym)
@@ -678,14 +678,14 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
             else:
                 errorMess = 'The rank of waveCell is too high!'
 #         numGraphs = np.shape(waveCell[0, :])[0]
-        if (waveCell != []):
-            if (newBounds == []):
+        if (not BT.Empty(waveCell)):
+            if (BT.Empty(newBounds)):
                 yMin, yMax, tickHeight = GetYBound(waveCell, sym)
             else:
                 yMin, yMax, tickHeight = GetYBound(newBounds, sym)
         else:
             errorMess = 'Must have argument for either fX or waveCell!'
-    if (labels != []):
+    if (not BT.Empty(labels)):
         if (len(labels) != numGraphs):
             errorMess = 'Dimensions of input graph(s) do(es) not match size of labels!'
             print('labels:', len(labels))
@@ -699,33 +699,33 @@ def PlotWave(omega, physics, numPoints, X, rescale, waveCell = [], fX = [], titl
         sys.exit(errorLoc + errorMess)
     size, tickHeight, labelfont = Resize(rescale, tickHeight)
     fig, ax = plt.subplots(figsize = size)
-    if (waveTrans != []):
+    if (not BT.Empty(waveTrans)):
         PiecePlot(omega, numPoints, X, waveTrans, color = 3, linewidth = linewidth)
     TickPlot(omega, ax, tickHeight, xGrid, yGrid, linewidth = linewidth, labelsize = labelsize)
     if (numGraphs == 1):
-        if (fX != []):
+        if (not BT.Empty(fX)):
             plt.plot(X, fX, color = ColorDefault(0), zorder = 2, label = labelsOut[0], linewidth = linewidth) # Fuck with this when you have time to worry about the line thickness of the analytic solution for a single plot.
             pieceLabel = []
         else:
             pieceLabel = labelsOut[0]
-        if (waveCell != []):
+        if (not BT.Empty(waveCell)):
             PiecePlot(omega, numPoints, X, waveCell, label = pieceLabel, linewidth = linewidth)
     else:
         i = 0
         for j in range(numGraphs):
-            if (fX != []):
+            if (not BT.Empty(fX)):
                 plt.plot(X, fX[:, j], color = ColorDefault(i), zorder = 2, label = labelsOut[j], linewidth = linewidth)
                 pieceColor = 3
                 pieceLabel = []
             else:
                 pieceColor = j
                 pieceLabel = labelsOut[j]
-            if (waveCell != []):
+            if (not BT.Empty(waveCell)):
                 PiecePlot(omega, numPoints, X, waveCell[:, j], color = pieceColor, label = pieceLabel, linewidth = linewidth)
             i = i + 1
             if (j == 2):
                 i = i + 1
-        if (labels != []):
+        if (not BT.Empty(labels)):
             plt.legend(fontsize = labelfont)
             print('Are you *sure* your labels are ordered correctly?')
     if (title != ''):
@@ -786,7 +786,7 @@ def PlotMixedWave(omega, physics, FCoefs, waves = [], title = '', labels = [], r
         else:
             FCoef = FCoefs[k * nh:(k + 1) * nh, :]
             
-        if (waves != []):
+        if (not BT.Empty(waves)):
             fXCell = waves[:nh, :nh] @ FCoef
         else:
             fXCell = []
@@ -852,7 +852,7 @@ def FixStrings(omega, nullspace, shift):
     degFreed = omega.degFreed# [::-1][0]
     nh = omega.nh_max
     alias = omega.alias
-    if (nullspace == []):
+    if (BT.Empty(nullspace)):
         N = int(alias * nh)
         location = np.arange(N)
         locations = [np.asarray(location), np.asarray(location)]
@@ -1168,7 +1168,7 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
                             plt.scatter(x[4:n + 1], uNode[4:n + 1], s = 20, color = ColorDefault(2), zorder = 4)
                             plt.scatter(x[3], uNode[3], s = 20, facecolors = 'none', edgecolors = ColorDefault(2), zorder = 4)
                             plt.scatter(x[1:3], uNode[1:3], s = 20, color = ColorDefault(2), zorder = 4)
-                            plt.text(xLoc, yLoc, topString, fontsize = 11, zorder = 5)
+                            plt.text(xLoc, yLoc, topString, fontsize = 12, zorder = 5)
                     
                         plt.quiver([length], [0], [length], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
                         plt.quiver([length], [0], [-length], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)

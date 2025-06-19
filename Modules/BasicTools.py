@@ -461,3 +461,8 @@ class PhysProps:
         else:
             self.matInd = max(np.where(x[:-1] < locs[0])[0]) + 1
 
+
+def Empty(val):
+    boolVal = isinstance(val, list) and len(val) == 0
+    return boolVal
+
