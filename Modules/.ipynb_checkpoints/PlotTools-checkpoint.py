@@ -110,6 +110,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
     
     
     if (not BT.Empty(u)):
+        print('IT\'S HAPPENING!!!')
         level = ''
         if (ghost != ''):
             level = r'^{(l - 1)}'
@@ -126,7 +127,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
         label = False
         xAxis = xAxis[1:n + 1]
         yAxis = yAxis[1:n + 1]
-        shiftX = shiftX / 5
+        shiftX = shiftX / 4
     i = 0
     j = 0
     
@@ -189,9 +190,10 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                 else:
                     if (i == degFreed - 1):
                         istring = prestring + r'$n - 1$'
-                        shiftExtra = 4 * shiftX
+                        shiftExtra = 3 * shiftX
                     if (i == degFreed):
                         istring = prestring + r'$n$'
+                        shiftExtra = -0.5 * shiftX
                         # shiftExtra = shiftX
                 plt.text(xi - shiftX - shiftExtra, yi - (1.5 * shiftY), istring, fontsize = fontsize)
         if (not BT.Empty(u)):
@@ -227,12 +229,12 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                     if ((matVis == 'R2') or (matVis == 'L2')):
                         LS = '-'
                         color = 0.5
-                    shiftX = shiftX / 2
+                    shiftX = shiftX / 3
                     extraShift = 0.002
                     topString = r'$' + var + r'_{' + side + ind + r'}$'
                     if ((matVis == 'R1') or (matVis == 'L1') or (ghost != '')):
-                        extraShift = extraShift + 0.001
-                        L1R1bot = -0.002
+                        extraShift = extraShift + 0.002
+                        L1R1bot = -0.004
                         if (ghost != ''):
                             L1R1bot = -0.005
                         if (ghost == 'G2'):
@@ -253,14 +255,14 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                         midString = r'$\left<x\right>_{' + ind + r'}$'
                 else:
 #                     color = 2
-                    shiftX = 2 * shiftX
                     extraShift = 0
                     topString = r'$' + var + r'_{' + side + ind + r' + 1}$'
                     if (i == 2):
+                        shiftX = 3 * shiftX
                         if ((matVis == 'R1') or (matVis == 'L1')):# or (ghost == 'G1')):
                             LS = '-'
                             color = 0.5
-                            L1R1bot = 0.002
+                            L1R1bot = 0.004
                             botString = r'$x_{' + ind + r'}$'
                         else:
                             botString = r'$x_{' + ind + r' + 1}$'
@@ -271,7 +273,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                             else:
                                 LS = '-.'
                                 if (ghost == 'G1'):
-                                    L1R1bot = 0.002
+                                    L1R1bot = 0.001
                                     level = r'^{(l)}'
                                     botString = r'$x_{2' + ind + r'}' + level + r'$'
                                     
@@ -293,7 +295,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                             midString = r'$\left<x\right>_{' + ind + r' + 1}$'
                             
                     if (i == 3):
-                        shiftX = shiftX / 5
+                        shiftX = (2 * shiftX) / 5
                         scootch = -0.002
                         topString = r'$' + var + r'_{' + side + ind + r' + 2}$'
                         if (matVis == 'R1'):
@@ -311,34 +313,39 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                         if (ghost != ''):
                             level = r'^{(l)}'
                             if (ghost == 'G1'):
-                                L1R1bot = -0.003
+                                L1R1bot = -0.0055
                                 botString = r'$x_{2' + ind + r' + 1}' + level + r'$'
                             else:
-                                L1R1bot = -0.001
+                                L1R1bot = -0.00275
                                 if (ghost == 'G2'):
                                     botString = r'$x_{2' + ind + r'}' + level + r'$'
                                     LS = '-.'
                                 else:
+                                    L1R1bot = -0.004
                                     botString = r'$x_{2' + ind + r' + 2}' + level + r'$'
 
                         midString = ''
                     if (i == 4):
-                        L1R1bot = -0.001
+                        # L1R1bot = -0.001
                         if (ghost == 'G1'):
+                            L1R1bot = -0.004
                             botString = r'$x_{2' + ind + r' + 2}' + level + r'$'
                         else:
                             if (ghost == 'G2'):
+                                L1R1bot = -0.0055
                                 botString = r'$x_{2' + ind + r' + 1}' + level + r'$'
                             else:
+                                L1R1bot = -0.002
                                 botString = r'$x_{2' + ind + r' + 3}' + level + r'$'
                     if (i == 5):
-                        L1R1bot = 0.003
                         if (ghost == 'G1'):
+                            L1R1bot = -0.002
                             botString = r'$x_{2' + ind + r' + 3}' + level + r'$'
                         else:
+                            L1R1bot = -0.004
                             botString = r'$x_{2' + ind + r' + 2}' + level + r'$'
                     if (i == 6):
-                        L1R1bot = 0.011
+                        L1R1bot = -0.002
                         botString = r'$x_{2' + ind + r' + 3}' + level + r'$'
             if (not fill):
                 if (((i != 0) or (matVis != 'L2')) and ((i != 3) or (matVis != 'R1')) and something):
@@ -347,12 +354,11 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                     color = 2
                 LS = ':'
                 if ((ghost == '') and something):
-                    plt.text(xi - shiftX + scootch, u[i + 1] + (shiftY / 3), topString, fontsize = fontsize, zorder = 6)
-                print(i, xi - shiftX + L1R1bot, botString)
-                plt.text(xi - shiftX + L1R1bot, yi - 0.8 * shiftY, botString, fontsize = fontsize)
+                    plt.text(xi - shiftX + scootch + L1R1bot, u[i + 1] + (shiftY / 3), topString, fontsize = fontsize, zorder = 6)
+                plt.text(xi - shiftX + L1R1bot, yi - 0.85 * shiftY, botString, fontsize = fontsize)
                 L1R1bot = 0
             if ((i < 3) and (ghost == '')):
-                plt.text(xCell[i + 1] - shiftX - extraShift, yi - 0.8 * shiftY, midString, fontsize = fontsize)
+                plt.text(xCell[i + 1] - shiftX - extraShift, yi - 0.85 * shiftY, midString, fontsize = fontsize)
         i = i + 1
     if (BT.Empty(u)):
         ax.plot(xAxis, yAxis, color = 'k', zorder = 2, linewidth = linewidth)
@@ -386,7 +392,7 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
         shiftX = 0.005
         shiftY = tickHeight / 3
         level = ''
-        levShift = 0
+        levShift = 0.003
         if (ghost != ''):
             n = 6
             level = r'^{(l - 1)}'
@@ -399,7 +405,6 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
     cellVals = np.ones(numPoints, float)
     lowIndex = 0
     fontsize = 12
-    
     LS = linestyle
     
 #     if (matVis):
@@ -419,6 +424,7 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
     
     
     for k in range(n):
+        print('iter:', k)
         highIndex = np.where(X <= x[k + 1])[0][::-1][0] + 1
         cellVals[lowIndex:highIndex] = pieces[k] * cellVals[lowIndex:highIndex]
         if ((k == 0) and (not BT.Empty(label))):
@@ -444,26 +450,31 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
                     else:
                         if (k == 2):
                             if ((matVis == 'L1') or (matVis == 'R1') or (ghost != '')):
-                                levShift = 0.75 * levShift
+                                if (ghost != ''):
+                                    levShift = 0.009
                                 if (ghost == 'G2'):
                                     shiftX = 1.5 * shiftX
                                     shiftY = shiftY - 0.015
                                     level = r'^{(l) *}'
-                                    levShift = levShift / 5
+                                    levShift = 0.15 * levShift# / 5
                                     topString = r'$\left<' + var + level + r'\right>_{2' + ind + r' - 2}$' # I can't star this probably because of level.
                                     LS = '--'
                                 else:
                                     topString = r'$\left<' + var + level + r'\right>_{' + ind + r' - 1}$'
                             else:
+                                levShift = 0.002
                                 shiftX = shiftX / 2
                                 topString = r'$\left<' + var + r'\right>_{' + ind + r'}$'
                         else:
                             if (k == 3):
+                                if (matVis != 0):
+                                    levShift = 0.002
                                 if (matVis == 'R1'):
                                     topString = ''
                                     LS = ''
                                 else:
                                     if (matVis == 'L1'):
+                                        levShift = 0.003
                                         shiftX = shiftX / 2
                                         topString = r'$\left<' + var + r'^{*}\right>_{' + ind + r'}$'
                                         LS = '--'
@@ -479,10 +490,10 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
                                             else:
                                                 if (ghost == 'G1'):
                                                     level = r'^{(l)}'
-                                                    levShift = levShift / 4
+                                                    levShift = 0.003
                                                     topString = r'$\left<' + var + level + r'\right>_{2' + ind + r'}$'
                                                 else:
-                                                    levShift = 0.75 * levShift
+                                                    levShift = 0.005
                                                     topString = r'$\left<' + var + level + r'\right>_{' + ind + r'}$'
                                         else:
                                             shiftX = 2 * shiftX
@@ -491,26 +502,27 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
 #                                 shiftX = 1.5 * shiftX
                                 if (ghost == 'G2'):
                                     shiftX = shiftX / 1.5
-                                    levShift = 250 * levShift
+                                    levShift = 0.003
                                     topString = r'$\left<' + var + level + r'\right>_{2' + ind + r'}$'
                                 else:
                                     if (ghost == 'G3'):
                                         level = r'^{(l)}'
-                                        levShift = (2 * levShift) / 3
+                                        levShift = 0.005
                                         topString = r'$\left<' + var + level + r'\right>_{2' + ind + r' + 2}$'
                                     else:
-                                        levShift = 2 * levShift
+                                        levShift = 0.005
                                         topString = r'$\left<' + var + level + r'\right>_{2' + ind + r' + 1}$'
                             if (k == 5):
                                 if (ghost == 'G1'):
                                     topString = r'$\left<' + var + level + r'\right>_{2' + ind + r' + 2}$'
                                 else:
                                     if (ghost == 'G2'):
-                                        levShift = 2 * levShift
+                                        levShift = 0.005
                                     topString = r'$\left<' + var + level + r'\right>_{2' + ind + r' + 1}$'
                             if (k == 6):
                                 topString = r'$\left<' + var + level + r'\right>_{2' + ind + r' + 2}$'
                     plt.text(xCell[k] - shiftX - levShift, pieces[k] + shiftY, topString, fontsize = fontsize, zorder = 5)
+                    print('xLoc =', xCell[k] - shiftX - levShift, levShift)
 #                     print(k, xCell[k] - shiftX - levShift, topString)#, pieces[k])
                 plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = LS, zorder = 3, linewidth = linewidth)
                 LS = linestyle
@@ -1078,9 +1090,6 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
 #     xCell = omega.xCell
     fig, ax = plt.subplots()
 #     numPoints, font, X, savePath = UsefulPlotVals()
-    
-    print('yMax:', yMax)
-    print(uNode[1:n+1])
     
     TickPlot(omega, ax, tickHeight, False, False, u = uNode, labelsize = labelsize, linewidth = linewidth, matVis = matVis, fill = fill, var = var, ghost = ghost, something = something)
     if (matVis == 'R1'):
