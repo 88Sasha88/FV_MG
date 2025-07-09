@@ -81,7 +81,8 @@ def MakeLinearInterp(nh):
 def CoarsenOp(omega):
     hs = omega.h
     nh_max = omega.nh_max
-    h_min = 1. / nh_max
+    alias = omega.alias
+    h_min = 1. / (alias * nh_max)
     weights = h_min / hs
     sizes = np.asarray(1 / weights, int)
     matrices = [w * np.ones(s, float) for (w, s) in zip(weights, sizes)]

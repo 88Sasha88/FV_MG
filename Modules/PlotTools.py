@@ -1156,7 +1156,7 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
                         cellVals[lowIndex:highIndex] = gVal * cellVals[lowIndex:highIndex]
                         topString = r'$\left<' + var + r'^{(l - 1)}\right>_{j - 1}$'
                         shiftY = tickHeight / 3
-                        xLoc = X[lowIndex] - 0.01
+                        xLoc = X[lowIndex] - 0.013
                         yLoc = gVal + shiftY
                         matInd1 = np.where(X >= gBlackX[0])[0][0]
                         matInd2 = np.where(X <= gBlackX[-1])[0][-1]
