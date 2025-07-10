@@ -313,7 +313,7 @@ def ExactTimeDerivOp(omega, waves, cMat):
 
 ## Calculate the RHS for E,B in Maxwell's equations using 5th-order upwind
 def WaveEqRHS(omega, physics, u0, t, orderIn, diff, dt):
-    print('You are using WaveEqRHS()!')
+    # print('You are using WaveEqRHS()!')
     
     degFreed = omega.degFreed
     cs = physics.cVec
@@ -411,7 +411,7 @@ def WaveEqRHS(omega, physics, u0, t, orderIn, diff, dt):
 def AdvectRHS(omega, physics, u0, t, orderIn, diff, dt):
     errorLoc = 'ERROR:\nSolverTools:\nAdvectRHS:\n'
     errorMess = ''
-    print('You are using AdvectRHS()!')
+    # print('You are using AdvectRHS()!')
     degFreed = omega.degFreed
     cMat = physics.cMat
     cVec = physics.cVec
