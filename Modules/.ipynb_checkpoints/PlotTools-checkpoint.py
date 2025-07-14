@@ -138,16 +138,27 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
     side = ''
 
     if ((matVis == 'R1') or (matVis == 'R2')):
-        var = 'R'
+        print('CHECK 1')
+        if (var == r'L_{1}'):
+            var = 'L'
+        else:
+            var = 'R'
         side = '1'
         if (matVis == 'R2'):
             side = '2'
+        print('CHECK 2')
     else:
         if ((matVis == 'L1') or (matVis == 'L2')):
-            var = 'L'
-            side = '1'
             if (matVis == 'L2'):
+                if (var == r'R_{2}'):
+                    var = 'R'
+                else:
+                    var = 'L'
                 side = '2'
+            else:
+                var = 'L'
+                side = '1'
+    print('CHECK 3')
     
     for (xi, yi) in zip(xAxis, yAxis):
         j = j + 1
@@ -272,11 +283,12 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                                 botString = r'$x_{2' + ind + r' - 1}' + level + r'$'
                             else:
                                 LS = '-.'
+                                L1R1bot = 0.001
                                 if (ghost == 'G1'):
-                                    L1R1bot = 0.001
+                                    # L1R1bot = 0.001
                                     level = r'^{(l)}'
                                     botString = r'$x_{2' + ind + r'}' + level + r'$'
-                                    
+                            
                                 else:
                                     botString = r'$x_{' + ind + r'}' + level + r'$'
                         
@@ -356,6 +368,7 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
                 if ((ghost == '') and something):
                     plt.text(xi - shiftX + scootch + L1R1bot, u[i + 1] + (shiftY / 3), topString, fontsize = fontsize, zorder = 6)
                 plt.text(xi - shiftX + L1R1bot, yi - 0.85 * shiftY, botString, fontsize = fontsize)
+                print('iter =', i, 'xLoc =', xi - shiftX + L1R1bot, L1R1bot)
                 L1R1bot = 0
             if ((i < 3) and (ghost == '')):
                 plt.text(xCell[i + 1] - shiftX - extraShift, yi - 0.85 * shiftY, midString, fontsize = fontsize)
@@ -424,7 +437,7 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
     
     
     for k in range(n):
-        print('iter:', k)
+        # print('iter:', k)
         highIndex = np.where(X <= x[k + 1])[0][::-1][0] + 1
         cellVals[lowIndex:highIndex] = pieces[k] * cellVals[lowIndex:highIndex]
         if ((k == 0) and (not BT.Empty(label))):
@@ -522,7 +535,7 @@ def PiecePlot(omega, numPoints, X, pieces, color = 3, label = [], linestyle = '-
                             if (k == 6):
                                 topString = r'$\left<' + var + level + r'\right>_{2' + ind + r' + 2}$'
                     plt.text(xCell[k] - shiftX - levShift, pieces[k] + shiftY, topString, fontsize = fontsize, zorder = 5)
-                    print('xLoc =', xCell[k] - shiftX - levShift, levShift)
+                    # print('xLoc =', xCell[k] - shiftX - levShift, levShift)
 #                     print(k, xCell[k] - shiftX - levShift, topString)#, pieces[k])
                 plt.plot(X[lowIndex:highIndex], cellVals[lowIndex:highIndex], color = ColorDefault(color), linestyle = LS, zorder = 3, linewidth = linewidth)
                 LS = linestyle
@@ -1093,7 +1106,8 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
     
     TickPlot(omega, ax, tickHeight, False, False, u = uNode, labelsize = labelsize, linewidth = linewidth, matVis = matVis, fill = fill, var = var, ghost = ghost, something = something)
     if (matVis == 'R1'):
-        var = r'R_{1}'
+        if (var != r'L_{1}'):
+            var = r'R_{1}'
         matInd = np.where(X <= gBlackX[-1])[0][-1]
         XL = X[:matInd]
         UL = U[:matInd]
@@ -1103,7 +1117,8 @@ def DivergVis(save = False, saveName = '', dpi = 600, enlarge = False, matVis = 
         plt.quiver([length + (h / 2)], [0], [-length - (h / 2)], [0], color = ['k', 'k'], angles = 'xy', scale_units = 'xy', scale = 1, width = 0.005, headwidth = 8, headlength = 8)
     else:
         if (matVis == 'L2'):
-            var = r'L_{2}'
+            if (var != r'R_{2}'):
+                var = r'L_{2}'
             matInd = np.where(X >= gBlackX[0])[0][0]
             XR = X[matInd:]
             UR = U[matInd:]
