@@ -138,7 +138,6 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
     side = ''
 
     if ((matVis == 'R1') or (matVis == 'R2')):
-        print('CHECK 1')
         if (var == r'L_{1}'):
             var = 'L'
         else:
@@ -146,7 +145,6 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
         side = '1'
         if (matVis == 'R2'):
             side = '2'
-        print('CHECK 2')
     else:
         if ((matVis == 'L1') or (matVis == 'L2')):
             if (matVis == 'L2'):
@@ -158,7 +156,6 @@ def TickPlot(omega, ax, tickHeight, xGrid, yGrid, label = False, u = [], labelsi
             else:
                 var = 'L'
                 side = '1'
-    print('CHECK 3')
     
     for (xi, yi) in zip(xAxis, yAxis):
         j = j + 1
