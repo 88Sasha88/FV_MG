@@ -395,7 +395,7 @@ def GaussParams(x_0 = 0., x_1 = 1., errOrd = 14, deriv = False):
     mu = (x_0 + x_1) / 2.
     sigma = abs((x_1 - x_0) / np.sqrt(8 * errOrd * log(10)))
     if (deriv):
-        alpha = GaussDerivParam(x_0, x_1, errOrd)
+        alpha = GaussDerivParam1(x_0, x_1, errOrd)
         sigma = alpha * sigma
     return sigma, mu
 
@@ -414,6 +414,41 @@ def GaussDerivParam(x_0, x_1, errOrd):
         step = alphRange[1] - alphRange[0]
         val1 = (alphRange ** 2) * (10 ** (errOrd / (alphRange ** 2)))
         val2 = ((10 ** errOrd) * errOrd * np.log(10)) / (x_1 - x_0)
+        transc = abs(np.ma.masked_invalid(val1 - val2, nan))
+        minTransc = np.ma.MaskedArray.min(transc)
+        alphLoc = np.where(transc == minTransc)
+        alphLocMin = min(alphLoc[0]) - 1
+        alphLocMax = max(alphLoc[0]) + 1
+        takeStep = 0
+        addStep = 0
+        if (alphLocMin == -1):
+            alphLocMin = alphLocMin + 1
+            takeStep = step
+        if (alphLocMax == gran + 1):
+            alphLocMax = alphLocMax - 1
+            addStep = step
+        alphMin = alphRange[alphLocMin] - takeStep
+        alphMax = alphRange[alphLocMax] + addStep
+        alpha = alphRange[alphLoc[0][0]]
+        i = i + 1
+
+    return alpha
+
+
+def GaussDerivParam1(x_0, x_1, errOrd):
+      
+    gran = 1000
+    alphMin = 0
+    alphMax = 1
+    i = 0
+    alphaLast = -2
+    alpha = -3
+    while (alpha != alphaLast):
+        alphaLast = alpha
+        alphRange = np.linspace(alphMin, alphMax, num = gran + 1)
+        step = alphRange[1] - alphRange[0]
+        val1 = 10 ** (errOrd / (alphRange ** 2))
+        val2 = ((10 ** errOrd) * errOrd * np.log(10)) / ((alphRange ** 2) * (x_1 - x_0))
         transc = abs(np.ma.masked_invalid(val1 - val2, nan))
         minTransc = np.ma.MaskedArray.min(transc)
         alphLoc = np.where(transc == minTransc)
